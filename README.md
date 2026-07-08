@@ -56,6 +56,14 @@ Run the scalability study:
 python -m experiments.run_scalability
 ```
 
+Run the sensitivity analyses:
+
+```bash
+python -m experiments.run_sensitivity
+```
+
+The sensitivity script keeps the main 40-task benchmark setting unchanged: 20 mobile devices, 4 edge servers, 2 cloud servers, 40 heterogeneous tasks, population size 50, maximum iterations 150, and 30 independent runs. It uses the same seed sequence as the main experiment so that corresponding runs are generated from comparable task instances.
+
 ## Included result files
 
 - `results/raw/main_30_raw_results.csv`
@@ -76,6 +84,13 @@ python -m experiments.run_scalability
 - `results/figures/ablation_study_multicolor.png`
 - `results/figures/scalability.png`
 - `results/figures/radar_chart.png`
+- `results/sensitivity/raw/weight_sensitivity_raw_results.csv`
+- `results/sensitivity/summary/weight_sensitivity_summary_mean_std.csv`
+- `results/sensitivity/raw/dynamic_penalty_sensitivity_raw_results.csv`
+- `results/sensitivity/summary/dynamic_penalty_sensitivity_summary_mean_std.csv`
+- `results/sensitivity/figures/weight_sensitivity_fitness.png`
+- `results/sensitivity/figures/weight_sensitivity_qoe_fairness_csr.png`
+- `results/sensitivity/figures/penalty_sensitivity_heatmaps.png`
 
 ## Experimental setting
 
@@ -91,3 +106,15 @@ Compared methods:
 - Greedy-ED
 
 The one-sided paired Wilcoxon signed-rank test compares RDHO fitness against RIME, DBO, TLBO-HHO, and CWTSSA across the 30 paired runs, using the alternative hypothesis that RDHO obtains lower fitness.
+
+## Sensitivity analyses
+
+The objective-weight sensitivity analysis evaluates RDHO under five weight vectors:
+
+- `S1`: `(w_E, w_D, w_A, w_Q, w_J) = (0.15, 0.15, 0.20, 0.25, 0.25)`, original setting.
+- `S2`: `(0.20, 0.20, 0.20, 0.20, 0.20)`, equal weighting.
+- `S3`: `(0.25, 0.25, 0.20, 0.15, 0.15)`, energy-delay priority.
+- `S4`: `(0.10, 0.10, 0.15, 0.325, 0.325)`, QoE-fairness priority.
+- `S5`: `(0.125, 0.125, 0.35, 0.20, 0.20)`, AoI-freshness priority.
+
+The dynamic-penalty sensitivity analysis keeps the original objective weights and varies `lambda0` in `{0.5, 1.0, 2.0}` and `alpha` in `{1.0, 2.0, 3.0}`. The original setting is `lambda0=1.0, alpha=2.0`. RDHO uses `lambda0 * (1 + 2t / T)^alpha` as the iteration-dependent penalty scale when dynamic penalty is enabled.
