@@ -73,11 +73,13 @@ python -m experiments.run_scalability
 - `results/figures/aoi_comparison.png`
 - `results/figures/qoe_fairness_comparison.png`
 - `results/figures/csr_comparison.png`
+- `results/figures/ablation_study_multicolor.png`
+- `results/figures/scalability.png`
 - `results/figures/radar_chart.png`
 
 ## Experimental setting
 
-The main experiment uses 20 mobile devices, 4 edge servers, 2 cloud servers, 40 tasks, population size 50, maximum iterations 150, and 30 independent runs. For a fixed seed, all algorithms run on the same generated task set.
+The main experiment uses 20 mobile devices, 4 edge servers, 2 cloud servers, 40 tasks, population size 50, maximum iterations 150, and 30 independent runs. For a fixed seed, all algorithms run on the same generated task set. Task-generation ranges are exported in `results/raw/task_generation_ranges.csv` and `paper_tables/task_generation_ranges.md`.
 
 Compared methods:
 
@@ -88,4 +90,4 @@ Compared methods:
 - CWTSSA
 - Greedy-ED
 
-The Wilcoxon signed-rank test compares RDHO fitness against RIME, DBO, TLBO-HHO, and CWTSSA across the 30 paired runs.
+The one-sided paired Wilcoxon signed-rank test compares RDHO fitness against RIME, DBO, TLBO-HHO, and CWTSSA across the 30 paired runs, using the alternative hypothesis that RDHO obtains lower fitness.
