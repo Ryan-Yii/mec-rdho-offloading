@@ -127,5 +127,86 @@ def generate_main_figures(raw_csv: str | Path, convergence_csv: str | Path, outp
     plot_radar(df, output / "radar_chart.png")
 
 
+def plot_weight_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> None:
+    output = Path(output_dir)
+    output.mkdir(parents=True, exist_ok=True)
+    df = pd.read_csv(raw_csv)
+    settings = list(dict.fromkeys(df["setting"].tolist()))
+    x = np.arange(len(settings))
+
+    fig, ax = plt.subplots(figsize=(8.5, 5.0))
+    means = np.asarray([df[df["setting"] == setting]["fitness"].mean() for setting in settings])
+    stds = np.asarray([df[df["setting"] == setting]["fitness"].std(ddof=1) for setting in settings])
+    ax.bar(x, means, yerr=np.nan_to_num(stds), capsize=4, color="#4472c4", edgecolor="black")
+    ax.set_xticks(x)
+    ax.set_xticklabels(settings)
+    ax.set_ylabel("Fitness")
+    ax.grid(axis="y", alpha=0.25)
+    fig.tight_layout()
+    fig.savefig(output / "weight_sensitivity_fitness.png", dpi=300)
+    plt.close(fig)
+
+    metrics = [("qoe", "QoE", "#4472c4"), ("fairness", "Fairness", "#70ad47"), ("csr", "CSR", "#ed7d31")]
+    width = 0.24
+    fig, ax = plt.subplots(figsize=(9.2, 5.2))
+    for offset, (metric, label, color) in zip((-width, 0.0, width), metrics):
+        values = np.asarray([df[df["setting"] == setting][metric].mean() for setting in settings])
+        errors = np.asarray([df[df["setting"] == setting][metric].std(ddof=1) for setting in settings])
+        ax.bar(x + offset, values, width, yerr=np.nan_to_num(errors), capsize=3, label=label, color=color, edgecolor="black")
+    ax.set_xticks(x)
+    ax.set_xticklabels(settings)
+    ax.set_ylim(0, 1.05)
+    ax.set_ylabel("Score")
+    ax.legend()
+    ax.grid(axis="y", alpha=0.25)
+    fig.tight_layout()
+    fig.savefig(output / "weight_sensitivity_qoe_fairness_csr.png", dpi=300)
+    plt.close(fig)
+
+
+def _heatmap_table(df: pd.DataFrame, metric: str) -> tuple[list[float], list[float], np.ndarray]:
+    lambdas = sorted(float(value) for value in df["lambda0"].unique())
+    alphas = sorted(float(value) for value in df["alpha"].unique())
+    table = np.zeros((len(lambdas), len(alphas)), dtype=float)
+    for i, lambda0 in enumerate(lambdas):
+        for j, alpha in enumerate(alphas):
+            subset = df[(df["lambda0"] == lambda0) & (df["alpha"] == alpha)]
+            table[i, j] = float(subset[metric].mean())
+    return lambdas, alphas, table
+
+
+def plot_penalty_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> None:
+    output = Path(output_dir)
+    output.mkdir(parents=True, exist_ok=True)
+    df = pd.read_csv(raw_csv)
+    fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.8))
+    for ax, metric, title, cmap in zip(axes, ("csr", "fitness"), ("CSR", "Fitness"), ("YlGnBu", "YlOrRd")):
+        lambdas, alphas, values = _heatmap_table(df, metric)
+        im = ax.imshow(values, cmap=cmap, aspect="auto")
+        ax.set_xticks(np.arange(len(alphas)))
+        ax.set_xticklabels([f"{value:.1f}" for value in alphas])
+        ax.set_yticks(np.arange(len(lambdas)))
+        ax.set_yticklabels([f"{value:.1f}" for value in lambdas])
+        ax.set_xlabel("alpha")
+        ax.set_ylabel("lambda0")
+        ax.set_title(title)
+        for i in range(values.shape[0]):
+            for j in range(values.shape[1]):
+                ax.text(j, i, f"{values[i, j]:.3f}", ha="center", va="center", color="black", fontsize=9)
+        fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    fig.tight_layout()
+    fig.savefig(output / "penalty_sensitivity_heatmaps.png", dpi=300)
+    plt.close(fig)
+
+
+def generate_sensitivity_figures(
+    weight_raw_csv: str | Path,
+    penalty_raw_csv: str | Path,
+    output_dir: str | Path = "results/sensitivity/figures",
+) -> None:
+    plot_weight_sensitivity(weight_raw_csv, output_dir)
+    plot_penalty_sensitivity(penalty_raw_csv, output_dir)
+
+
 if __name__ == "__main__":
     generate_main_figures("results/raw/main_30_raw_results.csv", "results/raw/main_30_convergence.csv")

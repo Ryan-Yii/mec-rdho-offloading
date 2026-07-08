@@ -12,7 +12,7 @@ from src.algorithms import CWTSSA, DBO, RDHO, RIME, TLBOHHO, GreedyEnergyDelay
 from src.metrics import FitnessWeights, evaluate_solution
 from src.system_model import SystemModel
 from src.task_generator import generate_system, task_parameter_rows
-from src.utils.io import load_yaml, write_rows
+from src.utils.io import ensure_parent, load_yaml, write_rows
 from src.utils.seed import derive_seed
 
 
@@ -77,12 +77,16 @@ def make_optimizer(
     max_iter: int,
     population_size: int,
     weights: FitnessWeights | None = None,
+    penalty_base: float = 1.0,
+    dynamic_penalty_alpha: float = 2.0,
 ):
     label = algorithm_name
     kwargs = {}
     if algorithm_name in RDHO_VARIANTS:
         label = "RDHO"
         kwargs.update(RDHO_VARIANTS[algorithm_name])
+    if label == "RDHO":
+        kwargs["dynamic_penalty_alpha"] = dynamic_penalty_alpha
 
     cls = ALGORITHM_CLASSES[label]
     return cls(
@@ -91,6 +95,7 @@ def make_optimizer(
         population_size=population_size,
         seed=derive_seed(seed, algorithm_name),
         weights=weights,
+        penalty_base=penalty_base,
         **kwargs,
     )
 
@@ -103,6 +108,8 @@ def run_optimizer(
     max_iter: int,
     population_size: int,
     weights: FitnessWeights | None = None,
+    penalty_base: float = 1.0,
+    dynamic_penalty_alpha: float = 2.0,
 ) -> Tuple[Dict[str, float | int | str], List[float]]:
     optimizer = make_optimizer(
         algorithm_name=algorithm_name,
@@ -111,6 +118,8 @@ def run_optimizer(
         max_iter=max_iter,
         population_size=population_size,
         weights=weights,
+        penalty_base=penalty_base,
+        dynamic_penalty_alpha=dynamic_penalty_alpha,
     )
     start = time.perf_counter()
     result = optimizer.optimize()
@@ -153,6 +162,9 @@ def run_algorithm_suite(
 ) -> Tuple[List[Dict], List[Dict]]:
     experiment = config["experiment"]
     weights = weights_from_config(config.get("weights"))
+    penalty = config.get("penalty", {})
+    penalty_base = float(penalty.get("lambda0", penalty.get("base", 1.0)))
+    dynamic_penalty_alpha = float(penalty.get("alpha", 2.0))
     max_iter = int(experiment["max_iterations"])
     population_size = int(experiment["population_size"])
     seeds = list(seeds or [int(experiment["seed_start"]) + idx for idx in range(n_runs)])
@@ -171,6 +183,8 @@ def run_algorithm_suite(
                 max_iter=max_iter,
                 population_size=population_size,
                 weights=weights,
+                penalty_base=penalty_base,
+                dynamic_penalty_alpha=dynamic_penalty_alpha,
             )
             if task_number is not None:
                 row["task_number"] = task_number
@@ -219,6 +233,7 @@ def write_raw_and_summary(raw_path: str | Path, summary_path: str | Path, rows: 
         ordered_rows.append({col: row[col] for col in [*first_cols, *remaining]})
     write_rows(raw_path, ordered_rows)
     summary = summarize_mean_std(rows, group_cols=group_cols)
+    ensure_parent(summary_path)
     summary.to_csv(summary_path, index=False)
     return summary
 

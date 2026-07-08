@@ -14,6 +14,7 @@ class RDHO(MetaheuristicOptimizer):
         adaptive_roles: bool = True,
         elite_preservation: bool = True,
         dynamic_penalty: bool = True,
+        dynamic_penalty_alpha: float = 2.0,
         hybrid_update: bool = True,
         **kwargs,
     ) -> None:
@@ -22,13 +23,14 @@ class RDHO(MetaheuristicOptimizer):
         self.adaptive_roles = adaptive_roles
         self.elite_preservation = elite_preservation
         self.dynamic_penalty = dynamic_penalty
+        self.dynamic_penalty_alpha = dynamic_penalty_alpha
         self.hybrid_update = hybrid_update
 
     def penalty_scale(self, iteration: int) -> float:
         if not self.dynamic_penalty:
             return self.penalty_base
         progress = iteration / max(self.max_iter, 1)
-        return self.penalty_base * ((1.0 + 2.0 * progress) ** 2)
+        return self.penalty_base * ((1.0 + 2.0 * progress) ** self.dynamic_penalty_alpha)
 
     def initialize_population(self) -> np.ndarray:
         if not self.dual_source_initialization:
