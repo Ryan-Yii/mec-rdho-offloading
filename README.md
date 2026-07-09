@@ -8,20 +8,24 @@ The implementation was developed and extended from internal research code with p
 
 ```text
 mec-rdho-offloading/
-├── configs/
-├── experiments/
-├── paper_tables/
-├── results/
-│   ├── raw/
-│   ├── summary/
-│   └── figures/
-├── src/
-│   ├── algorithms/
-│   ├── utils/
-│   ├── metrics.py
-│   ├── system_model.py
-│   └── task_generator.py
-└── tests/
+|-- configs/
+|-- experiments/
+|-- paper_tables/
+|-- results/
+|   |-- raw/
+|   |-- summary/
+|   |-- figures/
+|   `-- sensitivity/
+|       |-- raw/
+|       |-- summary/
+|       `-- figures/
+|-- src/
+|   |-- algorithms/
+|   |-- utils/
+|   |-- metrics.py
+|   |-- system_model.py
+|   `-- task_generator.py
+`-- tests/
 ```
 
 ## Reproduce the experiments
