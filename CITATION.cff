@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this code or the generated experimental results, please cite the associated manuscript and this repository."
+title: "Hybrid RIME-DBO Optimisation for QoE- and Fairness-Aware Task Offloading in Mobile Edge Computing"
+type: software
+authors:
+  - family-names: Su
+    given-names: Haoru
+  - family-names: Bai
+    given-names: Jie
+  - family-names: Zhou
+    given-names: Jiangyi
+repository-code: "https://github.com/Ryan-Yii/mec-rdho-offloading"
+url: "https://github.com/Ryan-Yii/mec-rdho-offloading"
+license: MIT
+version: "1.0.0"
+date-released: "2026-07-09"
+keywords:
+  - mobile edge computing
+  - task offloading
+  - resource allocation
+  - Quality of Experience
+  - fairness
+  - hybrid metaheuristic optimisation
+abstract: >
+  This repository provides the implementation, configuration files, raw
+  outputs, summary tables, and generated figures for experiments on Hybrid
+  RIME-DBO Optimisation (RDHO), a QoE- and fairness-aware task offloading
+  method for mobile edge computing.

@@ -12,4 +12,4 @@ Suggested manuscript wording:
 The experimental code was developed and extended by the authors based on the research code used in the project. This repository provides the scripts, raw results, and generated figures used to reproduce the reported experiments.
 ```
 
-Unless a license file is added by the repository owner, no public open-source license is granted.
+The repository owner has added an MIT license for the code and documentation in this cleaned research artefact. Third-party publications, algorithms, and concepts cited by the manuscript remain governed by their original rights holders.
