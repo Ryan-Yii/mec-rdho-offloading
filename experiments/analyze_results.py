@@ -7,13 +7,16 @@ import numpy as np
 import pandas as pd
 
 
-ALGO_ORDER = ["RDHO", "RIME", "DBO", "TLBO-HHO", "CWTSSA", "Greedy-ED"]
+ALGO_ORDER = ["RDHO", "RIME", "DBO", "TLBO-HHO", "CWTSSA", "GA", "PSO", "DE", "Greedy-ED"]
 COLORS = {
     "RDHO": "#1f4e79",
     "RIME": "#ed7d31",
     "DBO": "#5b9bd5",
     "TLBO-HHO": "#c55a11",
     "CWTSSA": "#70ad47",
+    "GA": "#7f7f7f",
+    "PSO": "#ffc000",
+    "DE": "#a64d79",
     "Greedy-ED": "#8064a2",
 }
 
@@ -125,6 +128,62 @@ def generate_main_figures(raw_csv: str | Path, convergence_csv: str | Path, outp
     plot_qoe_fairness(df, output / "qoe_fairness_comparison.png")
     plot_bar(df, "csr", "Constraint satisfaction rate", output / "csr_comparison.png", higher_is_better=True)
     plot_radar(df, output / "radar_chart.png")
+
+
+def plot_ablation(df: pd.DataFrame, output_path: str | Path) -> None:
+    variants = list(dict.fromkeys(df["algorithm"].tolist()))
+    means = np.asarray([df[df["algorithm"] == variant]["fitness"].mean() for variant in variants])
+    stds = np.nan_to_num(
+        np.asarray([df[df["algorithm"] == variant]["fitness"].std(ddof=1) for variant in variants])
+    )
+    y = np.arange(len(variants))
+    palette = plt.get_cmap("tab10")
+    fig, ax = plt.subplots(figsize=(10.0, max(4.8, 0.65 * len(variants))))
+    bars = ax.barh(
+        y,
+        means,
+        xerr=stds,
+        capsize=4,
+        color=[palette(idx % 10) for idx in range(len(variants))],
+        edgecolor="black",
+    )
+    best_idx = int(np.argmin(means))
+    bars[best_idx].set_linewidth(2.5)
+    bars[best_idx].set_edgecolor("#f2c811")
+    ax.set_yticks(y)
+    ax.set_yticklabels(variants)
+    ax.invert_yaxis()
+    ax.set_xlabel("Reported fitness")
+    ax.grid(axis="x", alpha=0.25)
+    fig.tight_layout()
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output, dpi=300)
+    plt.close(fig)
+
+
+def plot_scalability(df: pd.DataFrame, output_path: str | Path) -> None:
+    task_numbers = sorted(int(value) for value in df["task_number"].unique())
+    metrics = (
+        ("fitness", "Reported fitness", "#1f4e79"),
+        ("csr", "Constraint satisfaction rate", "#70ad47"),
+        ("runtime", "Runtime (s)", "#ed7d31"),
+    )
+    fig, axes = plt.subplots(1, 3, figsize=(13.2, 4.5))
+    for ax, (metric, ylabel, color) in zip(axes, metrics):
+        means = np.asarray([df[df["task_number"] == task_number][metric].mean() for task_number in task_numbers])
+        stds = np.nan_to_num(
+            np.asarray([df[df["task_number"] == task_number][metric].std(ddof=1) for task_number in task_numbers])
+        )
+        ax.errorbar(task_numbers, means, yerr=stds, marker="o", capsize=4, color=color, linewidth=1.8)
+        ax.set_xlabel("Number of tasks")
+        ax.set_ylabel(ylabel)
+        ax.grid(alpha=0.25)
+    fig.tight_layout()
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output, dpi=300)
+    plt.close(fig)
 
 
 def plot_weight_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> None:

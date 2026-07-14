@@ -20,6 +20,16 @@ class FitnessWeights:
 @dataclass(frozen=True)
 class Metrics:
     fitness: float
+    reported_fitness: float
+    base_fitness: float
+    search_fitness: float
+    penalty_scale: float
+    report_penalty_scale: float
+    search_penalty: float
+    report_penalty: float
+    energy_norm: float
+    delay_norm: float
+    aoi_norm: float
     energy: float
     delay: float
     aoi: float
@@ -53,7 +63,12 @@ def evaluate_solution(
     solution: np.ndarray,
     weights: FitnessWeights | None = None,
     penalty_scale: float = 1.0,
+    report_penalty_scale: float = 1.0,
+    budget=None,
 ) -> Metrics:
+    if budget is not None:
+        budget.consume()
+
     weights = weights or DEFAULT_WEIGHTS
     solution = _clip_solution(solution)
     modes = solution[:, 0].astype(int)
@@ -141,18 +156,30 @@ def evaluate_solution(
     delay_norm = float(np.mean([d / max(t.max_delay_s, 1.0e-9) for d, t in zip(delay_arr, system.tasks)]))
     aoi_norm = float(np.mean([a / max(t.aoi_threshold_s, 1.0e-9) for a, t in zip(aoi_arr, system.tasks)]))
     qoe = float(np.mean(qoe_arr)) if qoe_arr.size else 0.0
-    penalty = penalty_scale * (1.0 - csr)
-    fitness = (
+    base_fitness = (
         weights.energy * energy_norm
         + weights.delay * delay_norm
         + weights.aoi * aoi_norm
         + weights.qoe * (1.0 - qoe)
         + weights.fairness * (1.0 - fairness)
-        + penalty
     )
+    search_penalty = penalty_scale * (1.0 - csr)
+    report_penalty = report_penalty_scale * (1.0 - csr)
+    search_fitness = base_fitness + search_penalty
+    reported_fitness = base_fitness + report_penalty
 
     return Metrics(
-        fitness=float(fitness),
+        fitness=float(reported_fitness),
+        reported_fitness=float(reported_fitness),
+        base_fitness=float(base_fitness),
+        search_fitness=float(search_fitness),
+        penalty_scale=float(penalty_scale),
+        report_penalty_scale=float(report_penalty_scale),
+        search_penalty=float(search_penalty),
+        report_penalty=float(report_penalty),
+        energy_norm=float(energy_norm),
+        delay_norm=float(delay_norm),
+        aoi_norm=float(aoi_norm),
         energy=float(np.sum(energy_arr)),
         delay=float(np.mean(delay_arr)),
         aoi=float(np.mean(aoi_arr)),

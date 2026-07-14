@@ -1,14 +1,52 @@
 from __future__ import annotations
 
-from experiments.experiment_core import load_config, run_algorithm_suite, write_raw_and_summary
+import sys
+from datetime import datetime, timezone
+
+import pandas as pd
+
+from experiments.analyze_results import plot_ablation
+from experiments.experiment_core import (
+    copy_artifact,
+    ensure_fresh_run,
+    load_config,
+    parse_force_flag,
+    run_algorithm_suite,
+    write_raw_and_summary,
+    write_run_manifest,
+)
 
 
 def main() -> None:
+    force = parse_force_flag()
+    outputs = [
+        "results/raw/ablation_30_raw_results.csv",
+        "results/summary/ablation_30_summary_mean_std.csv",
+        "results/figures/ablation_study_multicolor.png",
+        "paper_tables/ablation_30_summary_mean_std.md",
+        "figures/fig07_ablation_study.png",
+    ]
+    ensure_fresh_run(outputs, force=force)
+    started_at = datetime.now(timezone.utc).isoformat()
     config = load_config("configs/ablation.yaml")
     variants = config["experiment"]["variants"]
     n_runs = int(config["experiment"]["independent_runs"])
     rows, _ = run_algorithm_suite(config, variants, n_runs=n_runs)
-    write_raw_and_summary("results/raw/ablation_30_raw_results.csv", "results/summary/ablation_30_summary_mean_std.csv", rows)
+    summary = write_raw_and_summary("results/raw/ablation_30_raw_results.csv", "results/summary/ablation_30_summary_mean_std.csv", rows)
+    plot_ablation(pd.DataFrame(rows), "results/figures/ablation_study_multicolor.png")
+    summary.to_markdown("paper_tables/ablation_30_summary_mean_std.md", index=False)
+    copy_artifact("results/figures/ablation_study_multicolor.png", "figures/fig07_ablation_study.png")
+    experiment = config["experiment"]
+    write_run_manifest(
+        "results/manifests/ablation_30_manifest.json",
+        config_path="configs/ablation.yaml",
+        output_paths=outputs,
+        command=[sys.executable, "-m", "experiments.run_ablation_30", *sys.argv[1:]],
+        master_seed=int(experiment.get("master_seed", experiment["seed_start"])),
+        max_evaluations=int(experiment["max_evaluations"]),
+        started_at=started_at,
+        ended_at=datetime.now(timezone.utc).isoformat(),
+    )
 
 
 if __name__ == "__main__":

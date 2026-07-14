@@ -1,12 +1,22 @@
 from __future__ import annotations
 
+import sys
 from copy import deepcopy
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
 
 from experiments.analyze_results import generate_sensitivity_figures
-from experiments.experiment_core import load_config, run_algorithm_suite, write_raw_and_summary
+from experiments.experiment_core import (
+    copy_artifact,
+    ensure_fresh_run,
+    load_config,
+    parse_force_flag,
+    run_algorithm_suite,
+    write_raw_and_summary,
+    write_run_manifest,
+)
 
 
 WEIGHT_RAW = "results/sensitivity/raw/weight_sensitivity_raw_results.csv"
@@ -31,33 +41,9 @@ def _write_markdown_table(csv_path: str, markdown_path: str) -> None:
     pd.read_csv(csv_path).to_markdown(markdown_path, index=False)
 
 
-def _weight_raw_complete(path: str, settings: list[str], n_runs: int) -> bool:
-    if not Path(path).exists():
-        return False
-    df = pd.read_csv(path)
-    counts = df.groupby("setting").size().to_dict()
-    return all(counts.get(setting) == n_runs for setting in settings)
-
-
-def _penalty_raw_complete(path: str, lambdas: list[float], alphas: list[float], n_runs: int) -> bool:
-    if not Path(path).exists():
-        return False
-    df = pd.read_csv(path)
-    counts = df.groupby(["lambda0", "alpha"]).size().to_dict()
-    expected = [(float(lambda0), float(alpha)) for lambda0 in lambdas for alpha in alphas]
-    return all(counts.get(pair) == n_runs for pair in expected)
-
-
 def run_weight_sensitivity(config: dict) -> None:
     n_runs = int(config["experiment"]["independent_runs"])
-    settings = [setting["setting"] for setting in config["weight_settings"]]
     group_cols = ["setting", "description", "weights", "w_energy", "w_delay", "w_aoi", "w_qoe", "w_fairness"]
-    if _weight_raw_complete(WEIGHT_RAW, settings, n_runs):
-        print(f"Reusing completed weight sensitivity raw results from {WEIGHT_RAW}...")
-        rows = pd.read_csv(WEIGHT_RAW).to_dict("records")
-        write_raw_and_summary(WEIGHT_RAW, WEIGHT_SUMMARY, rows, group_cols=group_cols)
-        _write_markdown_table(WEIGHT_SUMMARY, "paper_tables/weight_sensitivity_summary.md")
-        return
 
     all_rows = []
     for setting in config["weight_settings"]:
@@ -93,15 +79,6 @@ def run_weight_sensitivity(config: dict) -> None:
 
 def run_penalty_sensitivity(config: dict) -> None:
     n_runs = int(config["experiment"]["independent_runs"])
-    lambdas = [float(value) for value in config["penalty_grid"]["lambda0"]]
-    alphas = [float(value) for value in config["penalty_grid"]["alpha"]]
-    if _penalty_raw_complete(PENALTY_RAW, lambdas, alphas, n_runs):
-        print(f"Reusing completed penalty sensitivity raw results from {PENALTY_RAW}...")
-        rows = pd.read_csv(PENALTY_RAW).to_dict("records")
-        write_raw_and_summary(PENALTY_RAW, PENALTY_SUMMARY, rows, group_cols=["lambda0", "alpha"])
-        _write_markdown_table(PENALTY_SUMMARY, "paper_tables/dynamic_penalty_sensitivity_summary.md")
-        return
-
     all_rows = []
     for lambda0 in config["penalty_grid"]["lambda0"]:
         for alpha in config["penalty_grid"]["alpha"]:
@@ -126,10 +103,48 @@ def run_penalty_sensitivity(config: dict) -> None:
 
 
 def main() -> None:
+    force = parse_force_flag()
+    outputs = [
+        WEIGHT_RAW,
+        WEIGHT_SUMMARY,
+        PENALTY_RAW,
+        PENALTY_SUMMARY,
+        "paper_tables/weight_sensitivity_summary.md",
+        "paper_tables/dynamic_penalty_sensitivity_summary.md",
+        "results/sensitivity/figures",
+        "figures/fig09_weight_sensitivity_qoe_fairness_csr.png",
+        "figures/fig10_penalty_sensitivity_heatmaps.png",
+        "figures/supp_weight_sensitivity_fitness.png",
+    ]
+    ensure_fresh_run(outputs, force=force)
+    started_at = datetime.now(timezone.utc).isoformat()
     config = load_config("configs/sensitivity.yaml")
     run_weight_sensitivity(config)
     run_penalty_sensitivity(config)
     generate_sensitivity_figures(WEIGHT_RAW, PENALTY_RAW, "results/sensitivity/figures")
+    copy_artifact(
+        "results/sensitivity/figures/weight_sensitivity_qoe_fairness_csr.png",
+        "figures/fig09_weight_sensitivity_qoe_fairness_csr.png",
+    )
+    copy_artifact(
+        "results/sensitivity/figures/penalty_sensitivity_heatmaps.png",
+        "figures/fig10_penalty_sensitivity_heatmaps.png",
+    )
+    copy_artifact(
+        "results/sensitivity/figures/weight_sensitivity_fitness.png",
+        "figures/supp_weight_sensitivity_fitness.png",
+    )
+    experiment = config["experiment"]
+    write_run_manifest(
+        "results/manifests/sensitivity_manifest.json",
+        config_path="configs/sensitivity.yaml",
+        output_paths=outputs,
+        command=[sys.executable, "-m", "experiments.run_sensitivity", *sys.argv[1:]],
+        master_seed=int(experiment.get("master_seed", experiment["seed_start"])),
+        max_evaluations=int(experiment["max_evaluations"]),
+        started_at=started_at,
+        ended_at=datetime.now(timezone.utc).isoformat(),
+    )
 
 
 if __name__ == "__main__":
