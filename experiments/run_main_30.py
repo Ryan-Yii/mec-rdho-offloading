@@ -8,7 +8,9 @@ import pandas as pd
 from experiments.analyze_results import generate_main_figures
 from experiments.experiment_core import (
     copy_artifact,
+    capture_git_state,
     ensure_fresh_run,
+    ensure_legacy_snapshot,
     export_task_parameters,
     load_config,
     parse_force_flag,
@@ -23,6 +25,8 @@ from src.utils.io import write_rows
 
 def main() -> None:
     force = parse_force_flag()
+    git_state = capture_git_state()
+    ensure_legacy_snapshot()
     outputs = [
         "results/raw/main_30_raw_results.csv",
         "results/raw/main_30_convergence.csv",
@@ -78,6 +82,7 @@ def main() -> None:
         command=[sys.executable, "-m", "experiments.run_main_30", *sys.argv[1:]],
         master_seed=int(experiment.get("master_seed", experiment["seed_start"])),
         max_evaluations=int(experiment["max_evaluations"]),
+        git_state=git_state,
         started_at=started_at,
         ended_at=datetime.now(timezone.utc).isoformat(),
     )

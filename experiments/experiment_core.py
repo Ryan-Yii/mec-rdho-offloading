@@ -14,7 +14,7 @@ from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import pandas as pd
-from scipy.stats import wilcoxon
+from scipy.stats import rankdata, wilcoxon
 
 from src.algorithms import (
     CWTSSA,
@@ -354,29 +354,57 @@ def write_wilcoxon_results(raw_rows: List[Dict], output_path: str | Path) -> pd.
     comparisons = [("RDHO", algorithm) for algorithm in df["algorithm"].unique() if algorithm != "RDHO"]
     records = []
     pair_cols = ["scenario_id", "replicate_id"] if {"scenario_id", "replicate_id"} <= set(df.columns) else ["run_id"]
-    pivot = df.pivot_table(index=pair_cols, columns="algorithm", values="fitness", aggfunc="first")
+    key_cols = [*pair_cols, "algorithm"]
+    duplicates = df.duplicated(key_cols, keep=False)
+    if duplicates.any():
+        duplicate_keys = df.loc[duplicates, key_cols].drop_duplicates().to_dict("records")
+        raise ValueError(f"duplicate paired result rows: {duplicate_keys}")
+    pivot = df.pivot(index=pair_cols, columns="algorithm", values="fitness")
     for left, right in comparisons:
         if left not in pivot or right not in pivot:
             continue
         paired = pivot[[left, right]].dropna()
         if paired.empty:
             continue
-        if np.allclose(paired[left], paired[right]):
+        differences = paired[left].to_numpy(dtype=float) - paired[right].to_numpy(dtype=float)
+        nonzero = differences[~np.isclose(differences, 0.0)]
+        if nonzero.size == 0:
             statistic = 0.0
-            p_value = 1.0
+            raw_p_value = 1.0
+            rank_biserial = 0.0
         else:
-            stat = wilcoxon(paired[left], paired[right], alternative="less", zero_method="wilcox")
+            stat = wilcoxon(paired[left], paired[right], alternative="two-sided", zero_method="wilcox")
             statistic = float(stat.statistic)
-            p_value = float(stat.pvalue)
+            raw_p_value = float(stat.pvalue)
+            ranks = rankdata(np.abs(nonzero))
+            positive = float(ranks[nonzero > 0].sum())
+            negative = float(ranks[nonzero < 0].sum())
+            rank_biserial = (positive - negative) / float(ranks.sum())
+        median_difference = float(np.median(differences))
+        better_algorithm = left if median_difference < 0 else right if median_difference > 0 else "Tie"
         records.append(
             {
                 "comparison": f"{left} vs {right}",
                 "n_pairs": int(len(paired)),
                 "statistic": statistic,
-                "p_value": p_value,
-                "significant": "Yes" if p_value < 0.05 else "No",
+                "raw_p_value": raw_p_value,
+                "median_difference": median_difference,
+                "rank_biserial": float(rank_biserial),
+                "better_algorithm": better_algorithm,
             }
         )
+
+    if records:
+        ordered = sorted(range(len(records)), key=lambda idx: records[idx]["raw_p_value"])
+        running_max = 0.0
+        total = len(records)
+        for rank, idx in enumerate(ordered):
+            adjusted = min(1.0, (total - rank) * records[idx]["raw_p_value"])
+            running_max = max(running_max, adjusted)
+            records[idx]["adjusted_p_value"] = running_max
+        for record in records:
+            record["p_value"] = record["adjusted_p_value"]
+            record["significant"] = "Yes" if record["adjusted_p_value"] < 0.05 else "No"
     result = pd.DataFrame(records)
     ensure_parent(output_path)
     result.to_csv(output_path, index=False)
@@ -433,6 +461,55 @@ def backup_legacy_results(results_root: str | Path = "results") -> Path:
     return backup_root
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def ensure_legacy_snapshot(results_root: str | Path = "results") -> Path:
+    root = Path(results_root)
+    backup_root = root / "legacy_before_methodology_revision"
+    manifest_path = backup_root / "legacy_snapshot_manifest.json"
+
+    if not backup_root.exists() or not any(backup_root.iterdir()):
+        backup_root = backup_legacy_results(root)
+
+    snapshot_files = sorted(
+        path for path in backup_root.rglob("*") if path.is_file() and path != manifest_path
+    )
+    if manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        for record in manifest.get("files", []):
+            snapshot_file = backup_root / record["path"]
+            if not snapshot_file.exists():
+                raise RuntimeError(f"legacy snapshot file missing: {record['path']}")
+            if _sha256_file(snapshot_file) != record["sha256"]:
+                raise RuntimeError(f"legacy snapshot hash mismatch: {record['path']}")
+        recorded = {record["path"] for record in manifest.get("files", [])}
+        actual = {path.relative_to(backup_root).as_posix() for path in snapshot_files}
+        if recorded != actual:
+            raise RuntimeError("legacy snapshot file set does not match its manifest")
+        return backup_root
+
+    manifest = {
+        "schema_version": 1,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "files": [
+            {
+                "path": path.relative_to(backup_root).as_posix(),
+                "size": path.stat().st_size,
+                "sha256": _sha256_file(path),
+            }
+            for path in snapshot_files
+        ],
+    }
+    manifest_path.write_text(json.dumps(manifest, indent=2, ensure_ascii=True) + "\n", encoding="utf-8")
+    return backup_root
+
+
 def _git_value(*args: str) -> str:
     result = subprocess.run(
         ["git", *args],
@@ -443,6 +520,15 @@ def _git_value(*args: str) -> str:
         errors="replace",
     )
     return result.stdout.strip() if result.returncode == 0 else "unavailable"
+
+
+def capture_git_state() -> dict[str, str | bool]:
+    status = _git_value("status", "--porcelain")
+    return {
+        "commit": _git_value("rev-parse", "HEAD"),
+        "branch": _git_value("branch", "--show-current"),
+        "dirty": bool(status and status != "unavailable"),
+    }
 
 
 def _dependency_versions() -> dict[str, str]:
@@ -463,12 +549,12 @@ def write_run_manifest(
     command: Iterable[str],
     master_seed: int,
     max_evaluations: int | None,
+    git_state: dict[str, str | bool] | None = None,
     started_at: str | None = None,
     ended_at: str | None = None,
 ) -> dict:
     config_file = Path(config_path)
     config_hash = hashlib.sha256(config_file.read_bytes()).hexdigest()
-    status = _git_value("status", "--porcelain")
     manifest = {
         "schema_version": 1,
         "started_at": started_at or datetime.now(timezone.utc).isoformat(),
@@ -483,11 +569,7 @@ def write_run_manifest(
         },
         "max_evaluations": max_evaluations,
         "output_paths": [str(path) for path in output_paths],
-        "git": {
-            "commit": _git_value("rev-parse", "HEAD"),
-            "branch": _git_value("branch", "--show-current"),
-            "dirty": bool(status and status != "unavailable"),
-        },
+        "git": dict(git_state or capture_git_state()),
         "environment": {
             "python": sys.version,
             "platform": platform.platform(),

@@ -66,6 +66,8 @@ def evaluate_solution(
     report_penalty_scale: float = 1.0,
     budget=None,
 ) -> Metrics:
+    if not np.isclose(report_penalty_scale, 1.0):
+        raise ValueError("report_penalty_scale must remain fixed at 1.0")
     if budget is not None:
         budget.consume()
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from ..metrics import FitnessWeights
 from ..system_model import SystemModel
-from .base import MetaheuristicOptimizer, OptimizerResult, greedy_seed_solution
+from .base import MetaheuristicOptimizer, OptimizerResult, greedy_seed_solution_with_metrics
 
 
 class GreedyEnergyDelay(MetaheuristicOptimizer):
@@ -28,8 +28,11 @@ class GreedyEnergyDelay(MetaheuristicOptimizer):
         )
 
     def optimize(self) -> OptimizerResult:
-        solution = greedy_seed_solution(self.system, self.weights, budget=self.evaluation_budget)
-        metrics = self.evaluate_metrics(solution, penalty_scale=1.0)
+        solution, metrics = greedy_seed_solution_with_metrics(
+            self.system,
+            self.weights,
+            budget=self.evaluation_budget,
+        )
         return OptimizerResult(
             solution=solution,
             fitness=metrics.reported_fitness,

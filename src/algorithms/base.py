@@ -94,8 +94,14 @@ class MetaheuristicOptimizer:
     def initialize_population(self) -> np.ndarray:
         return self.random_population("uniform")
 
+    def minimum_initial_evaluations(self) -> int:
+        return self.population_size
+
     def reserved_evaluations(self) -> int:
         return 0
+
+    def candidate_acceptance_mask(self, old_search: np.ndarray, candidate_search: np.ndarray) -> np.ndarray:
+        return candidate_search < old_search
 
     def step(self, population: np.ndarray, fitness: np.ndarray, best: np.ndarray, worst: np.ndarray, iteration: int) -> np.ndarray:
         noise = self.rng.normal(0.0, 0.05, size=population.shape)
@@ -114,6 +120,12 @@ class MetaheuristicOptimizer:
         )
 
     def optimize(self) -> OptimizerResult:
+        minimum = self.minimum_initial_evaluations()
+        if self.max_evaluations is not None and self.max_evaluations < minimum:
+            raise ValueError(
+                f"max_evaluations={self.max_evaluations} is insufficient for initialization; "
+                f"at least {minimum} evaluations are required"
+            )
         population = self.initialize_population()
         initial_penalty = self.penalty_scale(0)
         initial_metrics = self.evaluate_population_metrics(population, initial_penalty)
@@ -141,7 +153,12 @@ class MetaheuristicOptimizer:
             candidate_metrics = self.evaluate_population_metrics(candidate, current_penalty)
             candidate_search = np.asarray([metric.search_fitness for metric in candidate_metrics], dtype=float)
 
-            accepted = candidate_search < old_search
+            for idx, metrics in enumerate(candidate_metrics):
+                if metrics.reported_fitness < best_metrics.reported_fitness:
+                    best = np.array(candidate[idx], copy=True)
+                    best_metrics = metrics
+
+            accepted = self.candidate_acceptance_mask(old_search, candidate_search)
             merged_population = np.array(population, copy=True)
             merged_metrics = list(old_metrics)
             for idx, accept in enumerate(accepted):
@@ -174,20 +191,40 @@ def greedy_seed_solution(
     weights: FitnessWeights | None = None,
     budget: EvaluationBudget | None = None,
 ) -> np.ndarray:
+    solution, _ = greedy_seed_solution_with_metrics(system, weights=weights, budget=budget)
+    return solution
+
+
+def greedy_seed_solution_with_metrics(
+    system: SystemModel,
+    weights: FitnessWeights | None = None,
+    budget: EvaluationBudget | None = None,
+) -> tuple[np.ndarray, Metrics]:
+    if budget is not None and not budget.can_consume():
+        raise ValueError("max_evaluations is insufficient for initialization; at least one evaluation is required")
     solution = np.zeros((len(system.tasks), 2), dtype=float)
     solution[:, 0] = 1.0
     solution[:, 1] = 0.70
     candidates = [(0, 0.55), (0, 0.85), (1, 0.45), (1, 0.70), (1, 0.95), (2, 0.55), (2, 0.80), (2, 1.00)]
+    latest_metrics = evaluate_solution(system, solution, weights=weights, budget=budget)
     for idx in range(len(system.tasks)):
         best_pair = solution[idx].copy()
-        best_fit = evaluate_solution(system, solution, weights=weights, budget=budget).reported_fitness
+        if idx > 0:
+            if budget is not None and not budget.can_consume():
+                return solution, latest_metrics
+            latest_metrics = evaluate_solution(system, solution, weights=weights, budget=budget)
+        best_metrics = latest_metrics
         for mode, resource in candidates:
+            if budget is not None and not budget.can_consume():
+                solution[idx] = best_pair
+                return solution, best_metrics
             trial = np.array(solution, copy=True)
             trial[idx, 0] = mode
             trial[idx, 1] = resource
-            fit = evaluate_solution(system, trial, weights=weights, budget=budget).reported_fitness
-            if fit < best_fit:
-                best_fit = fit
+            metrics = evaluate_solution(system, trial, weights=weights, budget=budget)
+            if metrics.reported_fitness < best_metrics.reported_fitness:
                 best_pair = trial[idx].copy()
+                best_metrics = metrics
         solution[idx] = best_pair
-    return solution
+        latest_metrics = best_metrics
+    return solution, latest_metrics

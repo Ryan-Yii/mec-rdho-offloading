@@ -10,7 +10,9 @@ import pandas as pd
 from experiments.analyze_results import generate_sensitivity_figures
 from experiments.experiment_core import (
     copy_artifact,
+    capture_git_state,
     ensure_fresh_run,
+    ensure_legacy_snapshot,
     load_config,
     parse_force_flag,
     run_algorithm_suite,
@@ -104,6 +106,8 @@ def run_penalty_sensitivity(config: dict) -> None:
 
 def main() -> None:
     force = parse_force_flag()
+    git_state = capture_git_state()
+    ensure_legacy_snapshot()
     outputs = [
         WEIGHT_RAW,
         WEIGHT_SUMMARY,
@@ -142,6 +146,7 @@ def main() -> None:
         command=[sys.executable, "-m", "experiments.run_sensitivity", *sys.argv[1:]],
         master_seed=int(experiment.get("master_seed", experiment["seed_start"])),
         max_evaluations=int(experiment["max_evaluations"]),
+        git_state=git_state,
         started_at=started_at,
         ended_at=datetime.now(timezone.utc).isoformat(),
     )

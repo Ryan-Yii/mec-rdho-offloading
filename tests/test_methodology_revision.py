@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
@@ -10,7 +11,9 @@ sys.path.insert(0, str(ROOT))
 
 from experiments.experiment_core import (
     backup_legacy_results,
+    capture_git_state,
     ensure_fresh_run,
+    ensure_legacy_snapshot,
     make_optimizer,
     parse_force_flag,
     run_algorithm_suite,
@@ -20,6 +23,7 @@ from experiments.experiment_core import (
 )
 from experiments.analyze_results import ALGO_ORDER, COLORS, plot_ablation, plot_scalability
 from src.metrics import evaluate_solution
+from src.algorithms.base import MetaheuristicOptimizer
 from src.task_generator import generate_system
 
 
@@ -53,6 +57,9 @@ def test_objective_decomposition_and_reported_fitness_alias():
     assert low_penalty.delay_norm > 0
     assert low_penalty.aoi_norm > 0
 
+    with pytest.raises(ValueError, match="report_penalty_scale must remain fixed"):
+        evaluate_solution(system, solution, report_penalty_scale=0.5)
+
 
 def test_dynamic_penalty_revaluates_old_and_candidate_with_same_scale():
     system = _system()
@@ -75,6 +82,38 @@ def test_dynamic_penalty_revaluates_old_and_candidate_with_same_scale():
         assert record["reported_best"] == pytest.approx(record["history_value"])
 
 
+def test_reported_global_best_includes_search_rejected_candidates():
+    class OpposedObjectivesOptimizer(MetaheuristicOptimizer):
+        def initialize_population(self):
+            return np.zeros((1, len(self.system.tasks), 2), dtype=float)
+
+        def step(self, population, fitness, best, worst, iteration):
+            candidate = np.ones_like(population)
+            candidate[:, :, 1] = 0.5
+            return candidate
+
+        def evaluate_metrics(self, solution, penalty_scale=None):
+            self.evaluation_budget.consume()
+            is_candidate = solution[0, 0] > 0.5
+            return SimpleNamespace(
+                reported_fitness=5.0 if is_candidate else 10.0,
+                search_fitness=2.0 if is_candidate else 1.0,
+            )
+
+    optimizer = OpposedObjectivesOptimizer(
+        system=_system(),
+        max_iter=1,
+        population_size=1,
+        seed=1,
+        max_evaluations=3,
+    )
+
+    result = optimizer.optimize()
+
+    assert result.reported_fitness == pytest.approx(5.0)
+    assert result.solution[0, 0] == pytest.approx(1.0)
+
+
 def test_nfe_budget_is_counted_and_reported():
     system = _system()
     row = run_single_algorithm(
@@ -92,6 +131,33 @@ def test_nfe_budget_is_counted_and_reported():
     assert row["fitness"] == pytest.approx(row["reported_fitness"])
     assert "base_fitness" in row
     assert "search_fitness" in row
+
+
+def test_initialization_handles_tiny_nfe_budgets_explicitly():
+    system = _system()
+    greedy = make_optimizer(
+        algorithm_name="Greedy-ED",
+        system=system,
+        seed=1,
+        max_iter=1,
+        population_size=4,
+        max_evaluations=1,
+    )
+    result = greedy.optimize()
+    assert result.nfe_used == 1
+    assert result.metrics is not None
+
+    for algorithm_name in ("RDHO", "RIME"):
+        optimizer = make_optimizer(
+            algorithm_name=algorithm_name,
+            system=system,
+            seed=1,
+            max_iter=1,
+            population_size=4,
+            max_evaluations=1,
+        )
+        with pytest.raises(ValueError, match="insufficient for initialization"):
+            optimizer.optimize()
 
 
 def test_local_refinement_is_explicit_and_ablation_variants_are_separate():
@@ -186,6 +252,17 @@ def test_pso_uses_personal_best_state():
     assert optimizer.personal_best_fitness.shape == (6,)
 
 
+def test_pso_advances_particles_without_greedy_position_rollback():
+    system = _system()
+    pso = make_optimizer("PSO", system, seed=1, max_iter=1, population_size=2, max_evaluations=20)
+    rime = make_optimizer("RIME", system, seed=1, max_iter=1, population_size=2, max_evaluations=20)
+    old = np.asarray([1.0, 1.0])
+    candidate = np.asarray([2.0, 0.5])
+
+    assert pso.candidate_acceptance_mask(old, candidate).tolist() == [True, True]
+    assert rime.candidate_acceptance_mask(old, candidate).tolist() == [False, True]
+
+
 def test_local_refinement_uses_final_search_penalty_scale():
     optimizer = make_optimizer(
         algorithm_name="RDHO-full",
@@ -230,6 +307,20 @@ def test_standard_baselines_have_distinct_figure_styles():
         assert algorithm in ALGO_ORDER
         assert algorithm in COLORS
     assert len({COLORS[algorithm] for algorithm in ("GA", "PSO", "DE")}) == 3
+
+
+def test_de_binomial_crossover_forces_a_donor_coordinate():
+    optimizer = make_optimizer(
+        "DE",
+        _system(),
+        seed=5,
+        max_iter=1,
+        population_size=4,
+        max_evaluations=20,
+    )
+
+    for _ in range(20):
+        assert optimizer.binomial_crossover_mask(0.0).any()
 
 
 def test_ablation_and_scalability_figures_are_reproducible(tmp_path):
@@ -278,13 +369,38 @@ def test_legacy_backup_and_manifest(tmp_path):
         command=["python", "-m", "experiments.run_main_30", "--force"],
         master_seed=20260710,
         max_evaluations=120,
+        git_state={"commit": "clean-start", "branch": "test-branch", "dirty": False},
     )
 
     assert manifest_path.exists()
     assert manifest["config_hash"]
-    assert manifest["git"]["commit"]
+    assert manifest["git"] == {"commit": "clean-start", "branch": "test-branch", "dirty": False}
     assert manifest["max_evaluations"] == 120
     assert manifest["output_paths"] == ["results/raw/main_30_raw_results.csv"]
+
+    actual_git_state = capture_git_state()
+    assert {"commit", "branch", "dirty"} <= set(actual_git_state)
+
+
+def test_legacy_snapshot_preflight_is_idempotent_and_hash_verified(tmp_path):
+    results_root = tmp_path / "results"
+    old_file = results_root / "raw" / "old.csv"
+    old_file.parent.mkdir(parents=True)
+    old_file.write_text("legacy\n", encoding="utf-8")
+
+    backup_root = ensure_legacy_snapshot(results_root)
+    copied = backup_root / "raw" / "old.csv"
+    snapshot_manifest = backup_root / "legacy_snapshot_manifest.json"
+    assert copied.read_text(encoding="utf-8") == "legacy\n"
+    assert snapshot_manifest.exists()
+
+    old_file.write_text("revised\n", encoding="utf-8")
+    assert ensure_legacy_snapshot(results_root) == backup_root
+    assert copied.read_text(encoding="utf-8") == "legacy\n"
+
+    copied.write_text("tampered\n", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="hash mismatch"):
+        ensure_legacy_snapshot(results_root)
 
 
 def test_force_flag_is_explicit_and_disables_reuse():
@@ -328,3 +444,10 @@ def test_wilcoxon_pairs_by_scenario_and_replicate(tmp_path):
 
     comparison = result.loc[result["comparison"] == "RDHO vs RIME"].iloc[0]
     assert comparison["n_pairs"] == 4
+    assert comparison["adjusted_p_value"] >= comparison["raw_p_value"]
+    assert comparison["better_algorithm"] == "RDHO"
+    assert comparison["median_difference"] < 0
+    assert "rank_biserial" in comparison
+
+    with pytest.raises(ValueError, match="duplicate paired result"):
+        write_wilcoxon_results([*rows, rows[0]], tmp_path / "duplicates.csv")

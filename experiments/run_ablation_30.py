@@ -8,7 +8,9 @@ import pandas as pd
 from experiments.analyze_results import plot_ablation
 from experiments.experiment_core import (
     copy_artifact,
+    capture_git_state,
     ensure_fresh_run,
+    ensure_legacy_snapshot,
     load_config,
     parse_force_flag,
     run_algorithm_suite,
@@ -19,6 +21,8 @@ from experiments.experiment_core import (
 
 def main() -> None:
     force = parse_force_flag()
+    git_state = capture_git_state()
+    ensure_legacy_snapshot()
     outputs = [
         "results/raw/ablation_30_raw_results.csv",
         "results/summary/ablation_30_summary_mean_std.csv",
@@ -44,6 +48,7 @@ def main() -> None:
         command=[sys.executable, "-m", "experiments.run_ablation_30", *sys.argv[1:]],
         master_seed=int(experiment.get("master_seed", experiment["seed_start"])),
         max_evaluations=int(experiment["max_evaluations"]),
+        git_state=git_state,
         started_at=started_at,
         ended_at=datetime.now(timezone.utc).isoformat(),
     )

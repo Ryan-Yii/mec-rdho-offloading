@@ -28,6 +28,9 @@ class GeneticAlgorithm(MetaheuristicOptimizer):
 
 
 class ParticleSwarmOptimizer(MetaheuristicOptimizer):
+    def candidate_acceptance_mask(self, old_search: np.ndarray, candidate_search: np.ndarray) -> np.ndarray:
+        return np.ones_like(candidate_search, dtype=bool)
+
     def initialize_population(self) -> np.ndarray:
         population = super().initialize_population()
         self.velocity = self.rng.normal(0.0, 0.08, size=population.shape)
@@ -51,6 +54,12 @@ class ParticleSwarmOptimizer(MetaheuristicOptimizer):
 
 
 class DifferentialEvolution(MetaheuristicOptimizer):
+    def binomial_crossover_mask(self, crossover_rate: float) -> np.ndarray:
+        mask = self.rng.random(size=self.dim) < crossover_rate
+        forced = int(self.rng.integers(0, mask.size))
+        mask.flat[forced] = True
+        return mask
+
     def step(self, population: np.ndarray, fitness: np.ndarray, best: np.ndarray, worst: np.ndarray, iteration: int) -> np.ndarray:
         candidate = np.array(population, copy=True)
         scale = 0.55
@@ -62,6 +71,6 @@ class DifferentialEvolution(MetaheuristicOptimizer):
                 continue
             r1, r2, r3 = self.rng.choice(choices, size=3, replace=False)
             mutant = population[int(r1)] + scale * (population[int(r2)] - population[int(r3)])
-            mask = self.rng.random(size=self.dim) < crossover_rate
+            mask = self.binomial_crossover_mask(crossover_rate)
             candidate[idx] = np.where(mask, mutant, population[idx])
         return self.clip_population(candidate)

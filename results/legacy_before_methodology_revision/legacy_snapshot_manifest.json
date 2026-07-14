@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-07-14T17:31:56.473592+00:00",
+  "files": [
+    {
+      "path": "figures/ablation_study_multicolor.png",
+      "size": 123662,
+      "sha256": "f75a88a8b4ada30a1c2b1b8f2884cad59f678453872802340e263420f8f4ca20"
+    },
+    {
+      "path": "figures/aoi_comparison.png",
+      "size": 102099,
+      "sha256": "2a90dfb8e2dfe0bea60a0a1f1aadd20dfdd68b83edfa81de8d12f3e1eb5255f4"
+    },
+    {
+      "path": "figures/convergence_curve.png",
+      "size": 155179,
+      "sha256": "2ad41fcc840b0a729e15cfd490471e2aaf9f9c83efcd0322069f6471ad813ebe"
+    },
+    {
+      "path": "figures/csr_comparison.png",
+      "size": 106662,
+      "sha256": "fe99ad97a58cfa60f61ec0aa4b1b56a193deedef4e70957e047fa9b67e6931bc"
+    },
+    {
+      "path": "figures/delay_comparison.png",
+      "size": 103442,
+      "sha256": "a9afe8efc67f71e9b8ecd8a60b43b9d4feb998ce86e9257a1be9337aaee6d2ab"
+    },
+    {
+      "path": "figures/energy_comparison.png",
+      "size": 105299,
+      "sha256": "cb851f50004f2595573e703b723f716610b63e036026e7350474d456dcaeba6f"
+    },
+    {
+      "path": "figures/qoe_fairness_comparison.png",
+      "size": 100204,
+      "sha256": "0d221323cd20760402d75b57d7edd8b28c99143093b79197d91ec210696aa5ac"
+    },
+    {
+      "path": "figures/radar_chart.png",
+      "size": 465051,
+      "sha256": "f0820c59975f59d157d0062d9590369076d29d52e599f73773446ee39b04fcff"
+    },
+    {
+      "path": "figures/scalability.png",
+      "size": 156633,
+      "sha256": "c72684927fc2f34f84d2dd2e9df96cc2f9ce87c3838d2fca5870f7f11fe6c61a"
+    },
+    {
+      "path": "raw/ablation_30_raw_results.csv",
+      "size": 27695,
+      "sha256": "0958f1a6dec9c3725079297a37b1024f5895456c30daa3274abdbe5464d252fe"
+    },
+    {
+      "path": "raw/main_30_convergence.csv",
+      "size": 924677,
+      "sha256": "c3c588c0930aa6eb5af480783a3edf4ee10ac22c327671d48234cd400111f38f"
+    },
+    {
+      "path": "raw/main_30_raw_results.csv",
+      "size": 29724,
+      "sha256": "3bd45a67adaa8dd5efc68dca33dc48bff8defec54ba97def22fef3830a4e738f"
+    },
+    {
+      "path": "raw/scalability_raw_results.csv",
+      "size": 3461,
+      "sha256": "b6d8db8d88b0ee3120dbf28d9b45b82282c25c0566b3accfc1d198b0eae20fc7"
+    },
+    {
+      "path": "raw/task_generation_ranges.csv",
+      "size": 461,
+      "sha256": "b06999ffbaf5ddacc9678db7fed53a29a5f5b88ba1d395ca52dcd6fb7fbf7f3c"
+    },
+    {
+      "path": "raw/task_parameters.csv",
+      "size": 3949,
+      "sha256": "f4e6cced7368cff558ed7fbffaa7ca5a68962a212aa46ee296cd28f503fde95d"
+    },
+    {
+      "path": "sensitivity/figures/penalty_sensitivity_heatmaps.png",
+      "size": 155231,
+      "sha256": "489732d52b55fa249f6a28b8913a8196f46bf939340b235b830e6e7c40177d1d"
+    },
+    {
+      "path": "sensitivity/figures/weight_sensitivity_fitness.png",
+      "size": 44711,
+      "sha256": "849af81696c480356ffdc391f10896bf9b45cc582f8a67d098b52427402da721"
+    },
+    {
+      "path": "sensitivity/figures/weight_sensitivity_qoe_fairness_csr.png",
+      "size": 58155,
+      "sha256": "a3b0f0af0d5dea2513a5a8545daa86d862095e18f8265ac519e2db0d37c350ef"
+    },
+    {
+      "path": "sensitivity/raw/dynamic_penalty_sensitivity_raw_results.csv",
+      "size": 50664,
+      "sha256": "0de6c737b4bca53685c39e72b27f5222f6b24618e73ddb07517fb34bf003d87e"
+    },
+    {
+      "path": "sensitivity/raw/weight_sensitivity_raw_results.csv",
+      "size": 39818,
+      "sha256": "8bc7ec7ca3bc6ccbc52c7f9fb212fa8fdfb0d2af74c98d0e477fcdd0e811d55f"
+    },
+    {
+      "path": "sensitivity/summary/dynamic_penalty_sensitivity_summary_mean_std.csv",
+      "size": 4690,
+      "sha256": "8cca4f5034208b2bcfaf9fdcf0f084f0b827b321fcc408057a0fa832bce7c848"
+    },
+    {
+      "path": "sensitivity/summary/weight_sensitivity_summary_mean_std.csv",
+      "size": 3160,
+      "sha256": "33ff5e7875cf5ea47fec728423eee0cc504a90e95c189a33bb19f337a1d9d8c9"
+    },
+    {
+      "path": "summary/ablation_30_summary_mean_std.csv",
+      "size": 2793,
+      "sha256": "684097b0fd567142b1ab76fd66019f1004d29410236c0efb12668304207f5d35"
+    },
+    {
+      "path": "summary/main_30_summary_mean_std.csv",
+      "size": 3193,
+      "sha256": "56aabe56988c719db9d030dae3fedfd383faca1e7169ca9a8ece4c9525b9b317"
+    },
+    {
+      "path": "summary/scalability_summary_mean_std.csv",
+      "size": 1029,
+      "sha256": "10dae828d026a8c179472713b9bb5a392cd2dd91a5efa510a3ec508c5d0a8f61"
+    },
+    {
+      "path": "summary/wilcoxon_fitness_results.csv",
+      "size": 197,
+      "sha256": "4dee8506bb306fa1861a7b737719e722638627cb2970e4d2c1ebafb7aef4a018"
+    }
+  ]
+}

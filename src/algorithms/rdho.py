@@ -40,6 +40,10 @@ class RDHO(MetaheuristicOptimizer):
             return 0
         return 1 + 15 * len(self.system.tasks)
 
+    def minimum_initial_evaluations(self) -> int:
+        greedy_evaluations = 9 * len(self.system.tasks) if self.dual_source_initialization else 0
+        return greedy_evaluations + self.population_size
+
     def initialize_population(self) -> np.ndarray:
         if not self.dual_source_initialization:
             return self.random_population("uniform")
