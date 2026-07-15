@@ -1,7 +1,8 @@
 {
   "schema_version": 1,
-  "started_at": "2026-07-15T03:20:26.920359+00:00",
-  "ended_at": "2026-07-15T03:48:50.518080+00:00",
+  "hash_mode": "sha256-canonical-lf-v1",
+  "started_at": "2026-07-15T18:46:25.931169+00:00",
+  "ended_at": "2026-07-15T19:13:43.736017+00:00",
   "command": [
     "D:\\Users\\19097\\anaconda3\\python.exe",
     "-m",
@@ -9,7 +10,7 @@
     "--force"
   ],
   "config_path": "configs/ablation.yaml",
-  "config_hash": "380df3167ef9d28ca7f3f2a17a366431bf05b5619611df5b5304518de720c8f4",
+  "config_hash": "d637273345b604b7cdb8be27ff22fdc9af7a002ac8f012aae0336eb0543ef3ce",
   "master_seed": 20260701,
   "seed_policy": {
     "scenario_seed": "derive_seed(master_seed, 'scenario', scenario_id, replicate_id)",
@@ -19,14 +20,91 @@
   "output_paths": [
     "results/raw/ablation_30_raw_results.csv",
     "results/summary/ablation_30_summary_mean_std.csv",
+    "results/summary/ablation_wilcoxon_results.csv",
+    "results/statistics/ablation_friedman.csv",
+    "results/statistics/ablation_pairwise.csv",
+    "results/statistics/ablation_ranks.csv",
     "results/figures/ablation_study_multicolor.png",
     "paper_tables/ablation_30_summary_mean_std.md",
+    "paper_tables/ablation_wilcoxon_results.md",
+    "paper_tables/ablation_friedman.md",
+    "paper_tables/ablation_pairwise.md",
+    "paper_tables/ablation_ranks.md",
     "figures/fig07_ablation_study.png"
   ],
+  "output_artifacts": [
+    {
+      "path": "figures/fig07_ablation_study.png",
+      "size_bytes": 125919,
+      "sha256": "889b7e1d6474a92b8b16de4d309803afa7cf1645c0682792381d9387e457e32b"
+    },
+    {
+      "path": "paper_tables/ablation_30_summary_mean_std.md",
+      "size_bytes": 4274,
+      "sha256": "6d2f738360037a21b9aa32ab082c10fe083c59a8bb724751393331f98d2c50a9"
+    },
+    {
+      "path": "paper_tables/ablation_friedman.md",
+      "size_bytes": 1040,
+      "sha256": "770cfd1e509c1e6ff5d889b781c31be44e8b3f922af2ebfff764b3a546980c11"
+    },
+    {
+      "path": "paper_tables/ablation_pairwise.md",
+      "size_bytes": 4143,
+      "sha256": "a197f2d55f1d28b5d59259d62f9d1ce80b08db77dee91c049ec5f7fa380e3932"
+    },
+    {
+      "path": "paper_tables/ablation_ranks.md",
+      "size_bytes": 1232,
+      "sha256": "d49e07db1792609fd9d46c426d947c7899510a1daddbb7ca0cfd143dea637a12"
+    },
+    {
+      "path": "paper_tables/ablation_wilcoxon_results.md",
+      "size_bytes": 4143,
+      "sha256": "a197f2d55f1d28b5d59259d62f9d1ce80b08db77dee91c049ec5f7fa380e3932"
+    },
+    {
+      "path": "results/figures/ablation_study_multicolor.png",
+      "size_bytes": 125919,
+      "sha256": "889b7e1d6474a92b8b16de4d309803afa7cf1645c0682792381d9387e457e32b"
+    },
+    {
+      "path": "results/raw/ablation_30_raw_results.csv",
+      "size_bytes": 82161,
+      "sha256": "280dd21baf13320a30bf981765a61ad9fde213a3463093dc38505658b6a1f3c1"
+    },
+    {
+      "path": "results/statistics/ablation_friedman.csv",
+      "size_bytes": 397,
+      "sha256": "4f2220e647597634855224b007589e87aac08edcb4bde465128a9a4f2cfb318e"
+    },
+    {
+      "path": "results/statistics/ablation_pairwise.csv",
+      "size_bytes": 2448,
+      "sha256": "73070c53b3075436bdccb6e691ae8e6f42c821295b0ad3b1a34892810e39bb90"
+    },
+    {
+      "path": "results/statistics/ablation_ranks.csv",
+      "size_bytes": 641,
+      "sha256": "f7e9dac2861ed1c948b14ced014c419248b2a2d7441c269ec2aae96dcf6517ed"
+    },
+    {
+      "path": "results/summary/ablation_30_summary_mean_std.csv",
+      "size_bytes": 3843,
+      "sha256": "83d96dac4a0cd23fa318d757b831e1b08a07f5bc11f7ff7455f6273a6eb75c50"
+    },
+    {
+      "path": "results/summary/ablation_wilcoxon_results.csv",
+      "size_bytes": 2448,
+      "sha256": "73070c53b3075436bdccb6e691ae8e6f42c821295b0ad3b1a34892810e39bb90"
+    }
+  ],
   "git": {
-    "commit": "96bac6f5c99be5c6e9ec57962262d80d2b717181",
+    "commit": "3eb22e87b71ca1d9dcb171495d1bc569df78ae79",
     "branch": "sci-experiment-methodology-revision",
-    "dirty": true
+    "dirty": false,
+    "code_dirty": false,
+    "dirty_paths": []
   },
   "environment": {
     "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
@@ -38,6 +116,5 @@
       "matplotlib": "3.9.2",
       "PyYAML": "6.0.1"
     }
-  },
-  "hash_mode": "sha256-canonical-lf-v1"
+  }
 }
