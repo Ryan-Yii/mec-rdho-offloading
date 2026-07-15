@@ -244,3 +244,120 @@ The likely terminology changes are:
 These manuscript notes do not change the code contract above; they prevent the
 paper from overclaiming beyond the implemented model.
 
+## 11. Pre-Submission Extension Contract
+
+This section records the approved pre-submission extension to the methodology
+revision. It supplements, and does not replace, Sections 1--10.
+
+### 11.1 Core Hybrid-Mechanism Ablation
+
+The formal ablation must contain exactly these seven variants:
+
+- `RDHO-core`;
+- `RDHO-core w/o hybrid RIME-DBO fusion`;
+- `RDHO-core w/o dual-source initialization`;
+- `RDHO-core w/o adaptive role allocation`;
+- `RDHO-core w/o elite preservation`;
+- `RDHO-core w/o dynamic penalty`;
+- `RDHO-full`.
+
+The hybrid-fusion ablation must set the existing `hybrid_update` option to
+`False`. It therefore uses RDHO's predefined non-hybrid update path and must
+not introduce an intentionally weak substitute operator. Every `RDHO-core`
+variant, including the four other component removals, must use
+`local_refinement=False`; only `RDHO-full` enables local refinement.
+
+All variants must use identical scenario seeds, the same algorithm-seed rule,
+the same maximum NFE, and the same `F_report` definition. The formal outputs
+must include raw rows, mean and standard-deviation summaries, a Friedman
+omnibus test, Holm-corrected paired Wilcoxon comparisons against `RDHO-core`,
+rank-biserial effects, wins/ties/losses, paired-difference bootstrap confidence
+intervals, a paper table, a figure, and provenance manifests.
+
+### 11.2 Cross-Algorithm Weight Sensitivity
+
+Each weight setting `S1`--`S5` must run these eight stochastic population
+algorithms:
+
+- `RDHO`, `RIME`, `DBO`, `TLBO-HHO`, `CWTSSA`, `GA`, `PSO`, and `DE`.
+
+Within a setting, all algorithms must share scenarios, maximum NFE, pairing
+rules, and `F_report`. Results must report mean plus or minus standard
+deviation, within-setting ranks, a Friedman omnibus test, and Holm-corrected
+paired comparisons of RDHO with the seven stochastic baselines. The ranking
+figure must show the `weight setting x algorithm` relationship. Absolute
+fitness values must not be interpreted across different weight settings
+because each setting defines a different scalar objective.
+
+`Greedy-ED` is excluded from the weight-sensitivity omnibus and ranking study.
+
+### 11.3 Two-Level Inferential Statistics
+
+The approved primary equal-budget inference includes only the eight stochastic
+algorithms listed in Section 11.2. It must provide:
+
+- a Friedman omnibus test;
+- RDHO-versus-baseline paired Wilcoxon tests;
+- Holm correction across the seven primary pairwise tests;
+- rank-biserial effect sizes;
+- wins, ties, and losses using an explicitly documented numerical tolerance;
+- deterministic paired-difference 95% bootstrap confidence intervals.
+
+Every omnibus and paired test must use the composite key
+`scenario_id + replicate_id`. Row order must never define a pair.
+
+`Greedy-ED` remains in the main raw data, descriptive tables, figures, and
+runtime comparison. An RDHO-versus-Greedy paired Wilcoxon test may be reported
+only as a supplementary effectiveness-versus-cost comparison. Its output and
+manuscript interpretation must state that the scenarios and `F_report` are
+shared but the computational budgets differ. It must not be mixed into the
+equal-NFE family of significance claims or its Holm correction.
+
+### 11.4 Main-Result Audit
+
+The claim that RDHO outperforms every baseline in all 30 scenarios must be
+audited directly from the raw main results. The audit must verify:
+
+- uniqueness of `scenario_id + replicate_id + algorithm`;
+- complete and identical paired scenario keys across algorithms;
+- one common `scenario_seed` per paired scenario;
+- distinct algorithm seeds for stochastic algorithms within a scenario;
+- the expected algorithm counts and row counts;
+- `fitness == reported_fitness`;
+- recomputation of `base_fitness`, `report_penalty`, and `reported_fitness`
+  from their decomposed columns;
+- the actual per-baseline wins, ties, and losses without changing seeds.
+
+The human-readable audit must be committed as `docs/main_result_audit.md`.
+
+### 11.5 Checkpointed Formal Execution
+
+The weight-sensitivity extension is long-running and must support safe
+checkpoint/resume execution. A fresh formal run uses `--force`, creates a run
+contract containing the config hash, code identity, seed policy, algorithms,
+and output schema, and writes completed rows atomically. A resumed run may
+reuse a row only when that contract matches exactly and its composite
+experiment key is unique. A mismatch must fail closed instead of silently
+mixing experiments.
+
+Checkpointing must not alter experiment seeds, optimization behavior, or the
+final result order. Finalized artifacts and their hashes are recorded in the
+formal manifest.
+
+### 11.6 Continuous Integration and Artifact Validation
+
+The repository must provide `.github/workflows/ci.yml` for `push` and
+`pull_request`. CI installs `requirements.txt`, runs `pytest`, compiles
+`src`, `experiments`, and `tests`, runs `git diff --check`, and executes a fast
+artifact validator. CI must validate committed artifacts and metadata without
+rerunning the formal experiments.
+
+### 11.7 Manuscript Revision Package
+
+`docs/manuscript_revision_package.md` must be generated only after the formal
+results are finalized. It must state the equations implemented by the code,
+the model boundaries in Section 1, paper-ready English descriptions, exact
+replacement tables and figures, and conservative conclusions supported by the
+new statistics. It must explicitly remove unsupported claims about component
+significance, device-level fairness, final dynamic-penalized fitness, and the
+obsolete sigmoid/piecewise/completion QoE construction.

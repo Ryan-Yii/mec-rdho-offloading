@@ -212,3 +212,112 @@ After implementation and verification:
 - create an unmerged PR against `main`;
 - summarize test evidence and any result changes honestly in the PR body.
 
+## Phase 10: Hybrid-Fusion Ablation Extension
+
+Write failing tests first for:
+
+- the factory recognizes all seven approved ablation names;
+- `RDHO-core w/o hybrid RIME-DBO fusion` sets `hybrid_update=False`;
+- the no-hybrid variant follows the existing non-hybrid update path;
+- every core variant has `local_refinement=False`;
+- removing one component does not change any unrelated component flag;
+- ablation configuration and analysis reject missing or duplicate variants.
+
+Then implement the registry/configuration changes and run a small ablation
+smoke test. Do not run the formal 30-scenario experiment until the tests pass.
+
+## Phase 11: Statistical Analysis Extension
+
+Write failing tests first for:
+
+- Friedman input is aligned by `scenario_id + replicate_id` rather than row
+  order;
+- duplicate or incomplete pairing fails explicitly;
+- the primary algorithm set excludes `Greedy-ED`;
+- Holm correction is applied only within the seven primary comparisons;
+- rank-biserial effects use the signed paired differences;
+- wins/ties/losses honor the documented tolerance;
+- paired bootstrap confidence intervals are deterministic under a dedicated
+  statistics seed and bracket the observed mean paired difference;
+- the supplementary Greedy comparison is labelled as unequal-budget and is
+  stored separately from primary inference.
+
+Then implement a reusable statistics module and generate independent main,
+ablation, and weight-sensitivity statistical tables.
+
+## Phase 12: Checkpointed Weight-Sensitivity Extension
+
+Write failing tests first for:
+
+- all five weight settings run the approved eight stochastic algorithms;
+- Greedy is absent from the weight-sensitivity population ranking;
+- scenarios and `scenario_seed` values are identical across algorithms within
+  each setting;
+- algorithm seeds are independent and deterministically derived;
+- checkpoint rows are written atomically and uniquely keyed;
+- resume skips only complete matching rows;
+- resume rejects config, code-contract, seed-policy, algorithm-list, or schema
+  mismatches;
+- within-setting ranks are computed independently for every setting;
+- no analysis aggregates absolute fitness across different weight settings.
+
+Then implement the runner, checkpoint contract, summary, ranks, tests, paper
+table, and rank figure. The official run starts with `--force`; interruption
+recovery uses `--resume` with the unchanged contract.
+
+## Phase 13: Main-Result Audit and Artifact Validator
+
+Write failing tests first for:
+
+- duplicate main-result keys are detected;
+- incomplete scenario sets are detected;
+- scenario-seed mismatch and stochastic algorithm-seed collisions are
+  detected;
+- `fitness`, `reported_fitness`, `base_fitness`, and report penalty are
+  numerically recomputed and verified;
+- the audit reports the exact observed wins/ties/losses for every baseline;
+- the fast validator checks required files, CSV schemas, row uniqueness,
+  manifest hashes, and primary statistical separation without launching an
+  optimizer.
+
+Then implement `docs/main_result_audit.md` generation and
+`python -m experiments.validate_artifacts`.
+
+## Phase 14: Continuous Integration
+
+Add `.github/workflows/ci.yml` only after validator tests pass. Test the same
+commands locally that CI will run:
+
+```text
+python -m pytest -q
+python -m compileall -q src experiments tests
+python -m experiments.validate_artifacts
+git diff --check
+```
+
+CI must not invoke any formal experiment runner.
+
+## Phase 15: Formal Runs and Manuscript Package
+
+After all implementation tests pass:
+
+- run the seven-variant ablation with `--force`;
+- run S1--S5 for the eight stochastic algorithms with `--force`, using
+  contract-verified `--resume` only after a genuine interruption;
+- generate raw, summary, ranking, inferential, paper-table, figure, and
+  manifest artifacts;
+- regenerate the main statistical tables and main-result audit;
+- inspect hybrid-fusion significance and RDHO rank under every weight setting
+  before drafting any conclusion;
+- load the academic-writing source manifest required by the writing workflow;
+- create `docs/manuscript_revision_package.md` from the finalized artifacts.
+
+No seed, setting, row, or algorithm may be removed or changed in response to
+the observed ranking.
+
+## Phase 16: Final Verification and Draft PR Update
+
+Run the four required final commands from Phase 14, inspect generated tables
+and figures, commit coherent changes, and push the existing branch. Confirm
+GitHub Actions checks pass on Draft PR #4. Do not merge the PR and do not mark
+it ready for review.
