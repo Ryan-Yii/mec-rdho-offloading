@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "started_at": "2026-07-14T17:37:16.159634+00:00",
+  "ended_at": "2026-07-14T18:15:26.709445+00:00",
+  "command": [
+    "D:\\Users\\19097\\anaconda3\\python.exe",
+    "-m",
+    "experiments.run_main_30",
+    "--force"
+  ],
+  "config_path": "configs/main_40tasks.yaml",
+  "config_hash": "39fd2d1d10a00fd9d776f419704f360d3376baffcb0816622f596561f3a5acb4",
+  "master_seed": 20260701,
+  "seed_policy": {
+    "scenario_seed": "derive_seed(master_seed, 'scenario', scenario_id, replicate_id)",
+    "algorithm_seed": "derive_seed(master_seed, 'algorithm', algorithm_name, scenario_id, replicate_id)"
+  },
+  "max_evaluations": 15050,
+  "output_paths": [
+    "results/raw/main_30_raw_results.csv",
+    "results/raw/main_30_convergence.csv",
+    "results/summary/main_30_summary_mean_std.csv",
+    "results/summary/wilcoxon_fitness_results.csv",
+    "results/raw/task_parameters.csv",
+    "results/raw/task_generation_ranges.csv",
+    "results/figures",
+    "paper_tables/main_30_summary_mean_std.md",
+    "paper_tables/wilcoxon_fitness_results.md",
+    "paper_tables/task_parameters.md",
+    "paper_tables/task_generation_ranges.md",
+    "figures/fig01_convergence_curve.png",
+    "figures/fig02_energy_comparison.png",
+    "figures/fig03_delay_comparison.png",
+    "figures/fig04_aoi_comparison.png",
+    "figures/fig05_qoe_fairness_comparison.png",
+    "figures/fig06_soft_csr_comparison.png",
+    "figures/fig11_normalized_multi_metric_radar.png"
+  ],
+  "git": {
+    "commit": "96bac6f5c99be5c6e9ec57962262d80d2b717181",
+    "branch": "sci-experiment-methodology-revision",
+    "dirty": false
+  },
+  "environment": {
+    "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "dependencies": {
+      "numpy": "1.26.4",
+      "pandas": "2.2.2",
+      "scipy": "1.13.1",
+      "matplotlib": "3.9.2",
+      "PyYAML": "6.0.1"
+    }
+  }
+}

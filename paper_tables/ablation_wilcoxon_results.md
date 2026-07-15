@@ -1,0 +1,7 @@
+| comparison                                       |   n_pairs |   statistic |   raw_p_value |   median_difference |   rank_biserial | better_algorithm            |   adjusted_p_value |     p_value | significant   |
+|:-------------------------------------------------|----------:|------------:|--------------:|--------------------:|----------------:|:----------------------------|-------------------:|------------:|:--------------|
+| RDHO-core vs RDHO-full                           |        30 |           1 |   3.72529e-09 |         0.015185    |       0.995699  | RDHO-full                   |        1.49012e-08 | 1.49012e-08 | Yes           |
+| RDHO-core vs RDHO-w/o dual-source initialization |        30 |           0 |   1.86265e-09 |        -0.103274    |      -1         | RDHO-core                   |        9.31323e-09 | 9.31323e-09 | Yes           |
+| RDHO-core vs RDHO-w/o adaptive role allocation   |        30 |         133 |   0.0404897   |        -0.00254324  |      -0.427957  | RDHO-core                   |        0.121469    | 0.121469    | No            |
+| RDHO-core vs RDHO-w/o elite preservation         |        30 |         162 |   0.151887    |         0.00307649  |       0.303226  | RDHO-w/o elite preservation |        0.303774    | 0.303774    | No            |
+| RDHO-core vs RDHO-w/o dynamic penalty            |        30 |         228 |   0.935399    |        -9.30929e-05 |       0.0193548 | RDHO-core                   |        0.935399    | 0.935399    | No            |

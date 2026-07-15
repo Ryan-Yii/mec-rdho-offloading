@@ -1,0 +1,321 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-07-15T17:35:45.868412+00:00",
+  "command": [
+    "D:\\Users\\19097\\anaconda3\\python.exe",
+    "-m",
+    "experiments.regenerate_analysis",
+    "--force"
+  ],
+  "analysis_git": {
+    "commit": "7c4b59b97ecaef43d3c2a7f493c62221a6fac03b",
+    "branch": "sci-experiment-methodology-revision",
+    "dirty": true,
+    "code_dirty": false,
+    "dirty_paths": [
+      "figures/fig01_convergence_curve.png",
+      "figures/fig02_energy_comparison.png",
+      "figures/fig03_delay_comparison.png",
+      "figures/fig04_aoi_comparison.png",
+      "figures/fig05_qoe_fairness_comparison.png",
+      "figures/fig06_soft_csr_comparison.png",
+      "figures/fig07_ablation_study.png",
+      "figures/fig08_scalability.png",
+      "figures/fig09_weight_sensitivity_qoe_fairness_csr.png",
+      "figures/fig10_penalty_sensitivity_heatmaps.png",
+      "figures/fig11_normalized_multi_metric_radar.png",
+      "figures/supp_weight_sensitivity_fitness.png",
+      "paper_tables/ablation_30_summary_mean_std.md",
+      "paper_tables/ablation_wilcoxon_results.md",
+      "paper_tables/dynamic_penalty_sensitivity_summary.md",
+      "paper_tables/main_30_summary_mean_std.md",
+      "paper_tables/scalability_summary_mean_std.md",
+      "paper_tables/task_parameters.md",
+      "paper_tables/weight_sensitivity_summary.md",
+      "paper_tables/wilcoxon_fitness_results.md",
+      "results/figures/ablation_study_multicolor.png",
+      "results/figures/aoi_comparison.png",
+      "results/figures/convergence_curve.png",
+      "results/figures/csr_comparison.png",
+      "results/figures/delay_comparison.png",
+      "results/figures/energy_comparison.png",
+      "results/figures/qoe_fairness_comparison.png",
+      "results/figures/radar_chart.png",
+      "results/figures/scalability.png",
+      "results/manifests/",
+      "results/raw/ablation_30_raw_results.csv",
+      "results/raw/main_30_convergence.csv",
+      "results/raw/main_30_raw_results.csv",
+      "results/raw/scalability_raw_results.csv",
+      "results/raw/task_parameters.csv",
+      "results/sensitivity/audit/",
+      "results/sensitivity/figures/penalty_sensitivity_heatmaps.png",
+      "results/sensitivity/figures/weight_sensitivity_fitness.png",
+      "results/sensitivity/figures/weight_sensitivity_qoe_fairness_csr.png",
+      "results/sensitivity/raw/dynamic_penalty_sensitivity_raw_results.csv",
+      "results/sensitivity/raw/weight_sensitivity_raw_results.csv",
+      "results/sensitivity/summary/dynamic_penalty_sensitivity_summary_mean_std.csv",
+      "results/sensitivity/summary/weight_sensitivity_summary_mean_std.csv",
+      "results/summary/ablation_30_summary_mean_std.csv",
+      "results/summary/ablation_wilcoxon_results.csv",
+      "results/summary/main_30_summary_mean_std.csv",
+      "results/summary/scalability_summary_mean_std.csv",
+      "results/summary/wilcoxon_fitness_results.csv"
+    ]
+  },
+  "inputs": [
+    {
+      "path": "configs/main_40tasks.yaml",
+      "size_bytes": 491,
+      "sha256": "39fd2d1d10a00fd9d776f419704f360d3376baffcb0816622f596561f3a5acb4"
+    },
+    {
+      "path": "configs/ablation.yaml",
+      "size_bytes": 539,
+      "sha256": "380df3167ef9d28ca7f3f2a17a366431bf05b5619611df5b5304518de720c8f4"
+    },
+    {
+      "path": "configs/sensitivity.yaml",
+      "size_bytes": 1297,
+      "sha256": "5ac75920350ef1896c051e4c2c31ea515ad7789374ac1948ecf1cd100e14f24c"
+    },
+    {
+      "path": "configs/scalability.yaml",
+      "size_bytes": 435,
+      "sha256": "5426dcb3f052f2c16326786661302a260fd91988bae16e6a8215a31de3a44908"
+    },
+    {
+      "path": "results/raw/main_30_raw_results.csv",
+      "size_bytes": 96272,
+      "sha256": "1b221823c1ff94205f7a50fbf212e015b967dbcee7a907a94b788e49999d0a1a"
+    },
+    {
+      "path": "results/raw/main_30_convergence.csv",
+      "size_bytes": 2427880,
+      "sha256": "c40dfa1a3d0e660f6fca4737cc4087110a97d3416a16dd059ba7df59e4bd372d"
+    },
+    {
+      "path": "results/raw/ablation_30_raw_results.csv",
+      "size_bytes": 69139,
+      "sha256": "a29f71fd9d005af109ffb6e38e2da3e374ddfcfa46bc9305124a98f33e201576"
+    },
+    {
+      "path": "results/sensitivity/raw/weight_sensitivity_raw_results.csv",
+      "size_bytes": 68302,
+      "sha256": "64ee29dbe26d0a77701682582d1bbed3eed64ad4593b4ab2da8886709bf0f8c4"
+    },
+    {
+      "path": "results/sensitivity/raw/dynamic_penalty_sensitivity_raw_results.csv",
+      "size_bytes": 101163,
+      "sha256": "bd896d82f234089b95051b2395cc0440893b671b202a157f9116813b8549385e"
+    },
+    {
+      "path": "results/raw/scalability_raw_results.csv",
+      "size_bytes": 18094,
+      "sha256": "b9cf71f018d8b7d05b41a2a2763e69aa16198bf7b1d4b5b166d4d1376e2ab8f1"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "results/summary/main_30_summary_mean_std.csv",
+      "size_bytes": 4648,
+      "sha256": "9bfb2a2ea8d0b50ea20a6b3646f0d934b6f11f491ab8c1bb3cdbaffcaf0040f5"
+    },
+    {
+      "path": "results/summary/wilcoxon_fitness_results.csv",
+      "size_bytes": 1124,
+      "sha256": "57c5d13c806f542f8695174f26676f8ff666d72f9e2404fdc0af614a3b674a86"
+    },
+    {
+      "path": "paper_tables/main_30_summary_mean_std.md",
+      "size_bytes": 4916,
+      "sha256": "6e23954fff662eead5410b1e8c3b4fe6e9645f56cec8d473c95ff349d29b1f29"
+    },
+    {
+      "path": "paper_tables/wilcoxon_fitness_results.md",
+      "size_bytes": 1759,
+      "sha256": "4fb115552997af539219b184600620dae35db91e8c9fa493863cb30b1428b3a7"
+    },
+    {
+      "path": "results/figures/convergence_curve.png",
+      "size_bytes": 210692,
+      "sha256": "393cc5cf06d5e2db9c8fa497cfd15c5326cbb0b27f4150450983c68798f87199"
+    },
+    {
+      "path": "results/figures/energy_comparison.png",
+      "size_bytes": 114076,
+      "sha256": "bf9e3f05443b49539f0404682afd13c34cc6ac6742e9d66f424bcfb6406ae6f1"
+    },
+    {
+      "path": "results/figures/delay_comparison.png",
+      "size_bytes": 111574,
+      "sha256": "bbd1ffbdee4819611a981e77ea227f9948fc4a6bac0884ed237cff55bb0547e5"
+    },
+    {
+      "path": "results/figures/aoi_comparison.png",
+      "size_bytes": 106165,
+      "sha256": "b71ee5924a9be36a20dc13856e0ae822cc307c54d833796489475cf7ccf535f4"
+    },
+    {
+      "path": "results/figures/qoe_fairness_comparison.png",
+      "size_bytes": 113486,
+      "sha256": "84335310cf866e43b3f9d1c1bdcf3050707758c44a6ffc5758e3b997d9c9cf13"
+    },
+    {
+      "path": "results/figures/csr_comparison.png",
+      "size_bytes": 115612,
+      "sha256": "54b38134cb4ebfdd2b84fb5c52eb5198123612124b90d48e3c2b06f87406eb66"
+    },
+    {
+      "path": "results/figures/radar_chart.png",
+      "size_bytes": 547472,
+      "sha256": "71079693a98bd24581f03f142baa0f65f0f3b8a30c735fc8d83a6b02a857e789"
+    },
+    {
+      "path": "figures/fig01_convergence_curve.png",
+      "size_bytes": 210692,
+      "sha256": "393cc5cf06d5e2db9c8fa497cfd15c5326cbb0b27f4150450983c68798f87199"
+    },
+    {
+      "path": "figures/fig02_energy_comparison.png",
+      "size_bytes": 114076,
+      "sha256": "bf9e3f05443b49539f0404682afd13c34cc6ac6742e9d66f424bcfb6406ae6f1"
+    },
+    {
+      "path": "figures/fig03_delay_comparison.png",
+      "size_bytes": 111574,
+      "sha256": "bbd1ffbdee4819611a981e77ea227f9948fc4a6bac0884ed237cff55bb0547e5"
+    },
+    {
+      "path": "figures/fig04_aoi_comparison.png",
+      "size_bytes": 106165,
+      "sha256": "b71ee5924a9be36a20dc13856e0ae822cc307c54d833796489475cf7ccf535f4"
+    },
+    {
+      "path": "figures/fig05_qoe_fairness_comparison.png",
+      "size_bytes": 113486,
+      "sha256": "84335310cf866e43b3f9d1c1bdcf3050707758c44a6ffc5758e3b997d9c9cf13"
+    },
+    {
+      "path": "figures/fig06_soft_csr_comparison.png",
+      "size_bytes": 115612,
+      "sha256": "54b38134cb4ebfdd2b84fb5c52eb5198123612124b90d48e3c2b06f87406eb66"
+    },
+    {
+      "path": "figures/fig11_normalized_multi_metric_radar.png",
+      "size_bytes": 547472,
+      "sha256": "71079693a98bd24581f03f142baa0f65f0f3b8a30c735fc8d83a6b02a857e789"
+    },
+    {
+      "path": "results/summary/ablation_30_summary_mean_std.csv",
+      "size_bytes": 3291,
+      "sha256": "cdce9d6b8fb32865b1c500b1ec34030d5bc0b0fc350a6170b24c722449c927d8"
+    },
+    {
+      "path": "results/summary/ablation_wilcoxon_results.csv",
+      "size_bytes": 957,
+      "sha256": "e752a4ad7174d77ce7078b198b9f3e6157dfb35dfe7e95af9cd23ed99a417f46"
+    },
+    {
+      "path": "paper_tables/ablation_30_summary_mean_std.md",
+      "size_bytes": 3759,
+      "sha256": "39a9948b06351f1fda62a784e906d5b56a47580071df2221cd0ca0dbe87be20e"
+    },
+    {
+      "path": "paper_tables/ablation_wilcoxon_results.md",
+      "size_bytes": 1511,
+      "sha256": "d789f934c461382562d8f47fccf5dcaf67ec43646605cf25749801e8b8979b65"
+    },
+    {
+      "path": "results/figures/ablation_study_multicolor.png",
+      "size_bytes": 102533,
+      "sha256": "b7288025314bf72ea69194c8dcdd6419231e27a1e98bb0f8bca13f91874b0b27"
+    },
+    {
+      "path": "figures/fig07_ablation_study.png",
+      "size_bytes": 102533,
+      "sha256": "b7288025314bf72ea69194c8dcdd6419231e27a1e98bb0f8bca13f91874b0b27"
+    },
+    {
+      "path": "results/sensitivity/summary/weight_sensitivity_summary_mean_std.csv",
+      "size_bytes": 3152,
+      "sha256": "6895130b263f73f52937ef72c904007549cc71cc30f431bb6990332bd71dd2ce"
+    },
+    {
+      "path": "results/sensitivity/summary/dynamic_penalty_sensitivity_summary_mean_std.csv",
+      "size_bytes": 4695,
+      "sha256": "fc237f7cc63768fc6e3f893bd1d7bf31e4869e6f5ad875a04d31e43245926136"
+    },
+    {
+      "path": "paper_tables/weight_sensitivity_summary.md",
+      "size_bytes": 3975,
+      "sha256": "9bdffb761dd4785f012e985edb3ef6b93c2f56ef7d5d33e05625fc3c89c80cce"
+    },
+    {
+      "path": "paper_tables/dynamic_penalty_sensitivity_summary.md",
+      "size_bytes": 5004,
+      "sha256": "88eb84d5a812c628216e8fba92b59b642a44cf2f48c9090ad01aca1e545c48be"
+    },
+    {
+      "path": "results/sensitivity/figures/weight_sensitivity_fitness.png",
+      "size_bytes": 51197,
+      "sha256": "0b1c3f7fac592b0c6137d47238df01d9f67c0250fcf6170ff22067cfe18612b1"
+    },
+    {
+      "path": "results/sensitivity/figures/weight_sensitivity_qoe_fairness_csr.png",
+      "size_bytes": 64336,
+      "sha256": "f28566a6f975a79f4dc208898d1a438fa480a389ef5e0e1e49df907f8a62cd1d"
+    },
+    {
+      "path": "results/sensitivity/figures/penalty_sensitivity_heatmaps.png",
+      "size_bytes": 192261,
+      "sha256": "0e234b939540af555b4a4675fc8b16d22f35d30d0f02e3b3e199721ca2e12427"
+    },
+    {
+      "path": "figures/supp_weight_sensitivity_fitness.png",
+      "size_bytes": 51197,
+      "sha256": "0b1c3f7fac592b0c6137d47238df01d9f67c0250fcf6170ff22067cfe18612b1"
+    },
+    {
+      "path": "figures/fig09_weight_sensitivity_qoe_fairness_csr.png",
+      "size_bytes": 64336,
+      "sha256": "f28566a6f975a79f4dc208898d1a438fa480a389ef5e0e1e49df907f8a62cd1d"
+    },
+    {
+      "path": "figures/fig10_penalty_sensitivity_heatmaps.png",
+      "size_bytes": 192261,
+      "sha256": "0e234b939540af555b4a4675fc8b16d22f35d30d0f02e3b3e199721ca2e12427"
+    },
+    {
+      "path": "results/summary/scalability_summary_mean_std.csv",
+      "size_bytes": 2651,
+      "sha256": "fb9269874a5b565c5a105b73ee9bb7206c15180f19c87da65f3a222859254a90"
+    },
+    {
+      "path": "paper_tables/scalability_summary_mean_std.md",
+      "size_bytes": 3156,
+      "sha256": "9a83d0dc57e0b514117145ebf8eb2da032b6693b76e04c7ef1c1686045a120ac"
+    },
+    {
+      "path": "results/figures/scalability.png",
+      "size_bytes": 192575,
+      "sha256": "f898364afcfe9a8779f658b512d25a9dd1718d9e353e8eb0215ea190b9bc2c36"
+    },
+    {
+      "path": "figures/fig08_scalability.png",
+      "size_bytes": 192575,
+      "sha256": "f898364afcfe9a8779f658b512d25a9dd1718d9e353e8eb0215ea190b9bc2c36"
+    }
+  ],
+  "environment": {
+    "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "dependencies": {
+      "numpy": "1.26.4",
+      "pandas": "2.2.2",
+      "scipy": "1.13.1",
+      "matplotlib": "3.9.2",
+      "PyYAML": "6.0.1"
+    }
+  }
+}

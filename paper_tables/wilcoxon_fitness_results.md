@@ -1,6 +1,10 @@
-| comparison       |     p_value | significant   |
-|:-----------------|------------:|:--------------|
-| RDHO vs RIME     | 9.31323e-10 | Yes           |
-| RDHO vs DBO      | 9.31323e-10 | Yes           |
-| RDHO vs TLBO-HHO | 9.31323e-10 | Yes           |
-| RDHO vs CWTSSA   | 9.31323e-10 | Yes           |
+| comparison        |   n_pairs |   statistic |   raw_p_value |   median_difference |   rank_biserial | better_algorithm   |   adjusted_p_value |     p_value | significant   |
+|:------------------|----------:|------------:|--------------:|--------------------:|----------------:|:-------------------|-------------------:|------------:|:--------------|
+| RDHO vs RIME      |        30 |           0 |   1.86265e-09 |          -0.450953  |              -1 | RDHO               |        1.49012e-08 | 1.49012e-08 | Yes           |
+| RDHO vs DBO       |        30 |           0 |   1.86265e-09 |          -0.0600515 |              -1 | RDHO               |        1.49012e-08 | 1.49012e-08 | Yes           |
+| RDHO vs TLBO-HHO  |        30 |           0 |   1.86265e-09 |          -0.0971911 |              -1 | RDHO               |        1.49012e-08 | 1.49012e-08 | Yes           |
+| RDHO vs CWTSSA    |        30 |           0 |   1.86265e-09 |          -0.0682721 |              -1 | RDHO               |        1.49012e-08 | 1.49012e-08 | Yes           |
+| RDHO vs GA        |        30 |           0 |   1.86265e-09 |          -0.0682209 |              -1 | RDHO               |        1.49012e-08 | 1.49012e-08 | Yes           |
+| RDHO vs PSO       |        30 |           0 |   1.86265e-09 |          -0.457196  |              -1 | RDHO               |        1.49012e-08 | 1.49012e-08 | Yes           |
+| RDHO vs DE        |        30 |           0 |   1.86265e-09 |          -0.0353004 |              -1 | RDHO               |        1.49012e-08 | 1.49012e-08 | Yes           |
+| RDHO vs Greedy-ED |        30 |           0 |   1.86265e-09 |          -0.0849251 |              -1 | RDHO               |        1.49012e-08 | 1.49012e-08 | Yes           |
