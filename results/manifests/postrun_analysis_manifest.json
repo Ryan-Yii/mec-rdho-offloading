@@ -1,6 +1,7 @@
 {
   "schema_version": 1,
-  "created_at": "2026-07-15T17:35:45.868412+00:00",
+  "hash_mode": "sha256-canonical-lf-v1",
+  "created_at": "2026-07-15T17:48:18.691870+00:00",
   "command": [
     "D:\\Users\\19097\\anaconda3\\python.exe",
     "-m",
@@ -8,59 +9,20 @@
     "--force"
   ],
   "analysis_git": {
-    "commit": "7c4b59b97ecaef43d3c2a7f493c62221a6fac03b",
+    "commit": "d060a19a2ce71b44efb1b1c2c6f2ca0cdd4f77e9",
     "branch": "sci-experiment-methodology-revision",
     "dirty": true,
     "code_dirty": false,
     "dirty_paths": [
-      "figures/fig01_convergence_curve.png",
-      "figures/fig02_energy_comparison.png",
-      "figures/fig03_delay_comparison.png",
-      "figures/fig04_aoi_comparison.png",
-      "figures/fig05_qoe_fairness_comparison.png",
-      "figures/fig06_soft_csr_comparison.png",
-      "figures/fig07_ablation_study.png",
-      "figures/fig08_scalability.png",
-      "figures/fig09_weight_sensitivity_qoe_fairness_csr.png",
-      "figures/fig10_penalty_sensitivity_heatmaps.png",
-      "figures/fig11_normalized_multi_metric_radar.png",
-      "figures/supp_weight_sensitivity_fitness.png",
-      "paper_tables/ablation_30_summary_mean_std.md",
-      "paper_tables/ablation_wilcoxon_results.md",
       "paper_tables/dynamic_penalty_sensitivity_summary.md",
-      "paper_tables/main_30_summary_mean_std.md",
-      "paper_tables/scalability_summary_mean_std.md",
-      "paper_tables/task_parameters.md",
-      "paper_tables/weight_sensitivity_summary.md",
-      "paper_tables/wilcoxon_fitness_results.md",
-      "results/figures/ablation_study_multicolor.png",
-      "results/figures/aoi_comparison.png",
-      "results/figures/convergence_curve.png",
-      "results/figures/csr_comparison.png",
-      "results/figures/delay_comparison.png",
-      "results/figures/energy_comparison.png",
-      "results/figures/qoe_fairness_comparison.png",
-      "results/figures/radar_chart.png",
-      "results/figures/scalability.png",
-      "results/manifests/",
-      "results/raw/ablation_30_raw_results.csv",
-      "results/raw/main_30_convergence.csv",
-      "results/raw/main_30_raw_results.csv",
-      "results/raw/scalability_raw_results.csv",
-      "results/raw/task_parameters.csv",
-      "results/sensitivity/audit/",
-      "results/sensitivity/figures/penalty_sensitivity_heatmaps.png",
-      "results/sensitivity/figures/weight_sensitivity_fitness.png",
-      "results/sensitivity/figures/weight_sensitivity_qoe_fairness_csr.png",
+      "results/legacy_before_methodology_revision/legacy_snapshot_manifest.json",
+      "results/manifests/ablation_30_manifest.json",
+      "results/manifests/main_30_manifest.json",
+      "results/manifests/scalability_manifest.json",
+      "results/manifests/sensitivity_manifest.json",
+      "results/manifests/sensitivity_runtime_repair.json",
       "results/sensitivity/raw/dynamic_penalty_sensitivity_raw_results.csv",
-      "results/sensitivity/raw/weight_sensitivity_raw_results.csv",
-      "results/sensitivity/summary/dynamic_penalty_sensitivity_summary_mean_std.csv",
-      "results/sensitivity/summary/weight_sensitivity_summary_mean_std.csv",
-      "results/summary/ablation_30_summary_mean_std.csv",
-      "results/summary/ablation_wilcoxon_results.csv",
-      "results/summary/main_30_summary_mean_std.csv",
-      "results/summary/scalability_summary_mean_std.csv",
-      "results/summary/wilcoxon_fitness_results.csv"
+      "results/sensitivity/summary/dynamic_penalty_sensitivity_summary_mean_std.csv"
     ]
   },
   "inputs": [
@@ -77,7 +39,7 @@
     {
       "path": "configs/sensitivity.yaml",
       "size_bytes": 1297,
-      "sha256": "5ac75920350ef1896c051e4c2c31ea515ad7789374ac1948ecf1cd100e14f24c"
+      "sha256": "de0b7ed25d349c610164ab94673aba3d557f5b9ce80c12bece5e0c7ca429736a"
     },
     {
       "path": "configs/scalability.yaml",
@@ -87,44 +49,44 @@
     {
       "path": "results/raw/main_30_raw_results.csv",
       "size_bytes": 96272,
-      "sha256": "1b221823c1ff94205f7a50fbf212e015b967dbcee7a907a94b788e49999d0a1a"
+      "sha256": "91da05696c3be8bdb4f084d881c3c6a0851da4a2a28023840435b585f72b86b2"
     },
     {
       "path": "results/raw/main_30_convergence.csv",
       "size_bytes": 2427880,
-      "sha256": "c40dfa1a3d0e660f6fca4737cc4087110a97d3416a16dd059ba7df59e4bd372d"
+      "sha256": "9a9871e4386ef89c91fffde6892521e37af13f0ba381176af2124500554c5214"
     },
     {
       "path": "results/raw/ablation_30_raw_results.csv",
       "size_bytes": 69139,
-      "sha256": "a29f71fd9d005af109ffb6e38e2da3e374ddfcfa46bc9305124a98f33e201576"
+      "sha256": "0947a2beb4280ba17eeeaf7297751b8cd9ccbc694c787507344826269c56328b"
     },
     {
       "path": "results/sensitivity/raw/weight_sensitivity_raw_results.csv",
       "size_bytes": 68302,
-      "sha256": "64ee29dbe26d0a77701682582d1bbed3eed64ad4593b4ab2da8886709bf0f8c4"
+      "sha256": "fde46bf44fa71f1eb087a078396109a5eeb7d50a7814779a8e5fa09f08ef8f8b"
     },
     {
       "path": "results/sensitivity/raw/dynamic_penalty_sensitivity_raw_results.csv",
-      "size_bytes": 101163,
-      "sha256": "bd896d82f234089b95051b2395cc0440893b671b202a157f9116813b8549385e"
+      "size_bytes": 101162,
+      "sha256": "3b5cd61a914cbfc23095b5a475ce575b52c10835fbce0ecc5e332a2b3123e8e6"
     },
     {
       "path": "results/raw/scalability_raw_results.csv",
       "size_bytes": 18094,
-      "sha256": "b9cf71f018d8b7d05b41a2a2763e69aa16198bf7b1d4b5b166d4d1376e2ab8f1"
+      "sha256": "ed4f85d82f1b6aad69e1d5609f001135427d83adfd81b9683156609691a2eae9"
     }
   ],
   "outputs": [
     {
       "path": "results/summary/main_30_summary_mean_std.csv",
       "size_bytes": 4648,
-      "sha256": "9bfb2a2ea8d0b50ea20a6b3646f0d934b6f11f491ab8c1bb3cdbaffcaf0040f5"
+      "sha256": "ad61b894b39f979be0b279ab6bce65efdbf58a401b9e540f1d49eb282963e94b"
     },
     {
       "path": "results/summary/wilcoxon_fitness_results.csv",
       "size_bytes": 1124,
-      "sha256": "57c5d13c806f542f8695174f26676f8ff666d72f9e2404fdc0af614a3b674a86"
+      "sha256": "37668c6c414cd52794226f50c4b4b8cfcc6b26604bcaf9a91989078cb24cf50d"
     },
     {
       "path": "paper_tables/main_30_summary_mean_std.md",
@@ -209,12 +171,12 @@
     {
       "path": "results/summary/ablation_30_summary_mean_std.csv",
       "size_bytes": 3291,
-      "sha256": "cdce9d6b8fb32865b1c500b1ec34030d5bc0b0fc350a6170b24c722449c927d8"
+      "sha256": "436b3dcc51db9f22f988aa6ec39aa62bcbb9a65204c13538970e1b56f8517e76"
     },
     {
       "path": "results/summary/ablation_wilcoxon_results.csv",
       "size_bytes": 957,
-      "sha256": "e752a4ad7174d77ce7078b198b9f3e6157dfb35dfe7e95af9cd23ed99a417f46"
+      "sha256": "aa8169fc781763b5ce7740bde8bf24204a97b43f215b884966740be8fd43f886"
     },
     {
       "path": "paper_tables/ablation_30_summary_mean_std.md",
@@ -239,12 +201,12 @@
     {
       "path": "results/sensitivity/summary/weight_sensitivity_summary_mean_std.csv",
       "size_bytes": 3152,
-      "sha256": "6895130b263f73f52937ef72c904007549cc71cc30f431bb6990332bd71dd2ce"
+      "sha256": "bf3c2e6db699e6f9c3fa84c2fd19a6f50f119ac10d666455f0d229d157216ed6"
     },
     {
       "path": "results/sensitivity/summary/dynamic_penalty_sensitivity_summary_mean_std.csv",
-      "size_bytes": 4695,
-      "sha256": "fc237f7cc63768fc6e3f893bd1d7bf31e4869e6f5ad875a04d31e43245926136"
+      "size_bytes": 4696,
+      "sha256": "05080afdd4e6d4b77ac95c62c328cd1915bae60206f487dc1968cc152856ab37"
     },
     {
       "path": "paper_tables/weight_sensitivity_summary.md",
@@ -254,7 +216,7 @@
     {
       "path": "paper_tables/dynamic_penalty_sensitivity_summary.md",
       "size_bytes": 5004,
-      "sha256": "88eb84d5a812c628216e8fba92b59b642a44cf2f48c9090ad01aca1e545c48be"
+      "sha256": "f532ffa299a3a3d6b159f18230827dcbc61fbea61b69768fc828b9b3ffb1ba21"
     },
     {
       "path": "results/sensitivity/figures/weight_sensitivity_fitness.png",
@@ -289,7 +251,7 @@
     {
       "path": "results/summary/scalability_summary_mean_std.csv",
       "size_bytes": 2651,
-      "sha256": "fb9269874a5b565c5a105b73ee9bb7206c15180f19c87da65f3a222859254a90"
+      "sha256": "ff8bacbcdc3c4f3ff16dab116379ae69472d4dabdbd984c60010851c2b67200f"
     },
     {
       "path": "paper_tables/scalability_summary_mean_std.md",

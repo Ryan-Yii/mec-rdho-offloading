@@ -49,5 +49,6 @@
       "matplotlib": "3.9.2",
       "PyYAML": "6.0.1"
     }
-  }
+  },
+  "hash_mode": "sha256-canonical-lf-v1"
 }
