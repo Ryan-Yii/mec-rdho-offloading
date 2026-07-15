@@ -599,3 +599,32 @@ def test_git_state_preserves_the_first_porcelain_status_path(monkeypatch):
 
     assert state["dirty_paths"] == ["experiments/analysis.py", "results/output.csv"]
     assert state["code_dirty"] is True
+
+
+def test_wilcoxon_labels_all_near_zero_differences_as_a_tie(tmp_path):
+    rows = []
+    for scenario_id, difference in enumerate((1.0e-13, 2.0e-13, 3.0e-13), start=1):
+        rows.extend(
+            [
+                {
+                    "scenario_id": scenario_id,
+                    "replicate_id": 1,
+                    "algorithm": "RDHO",
+                    "fitness": 1.0 + difference,
+                },
+                {
+                    "scenario_id": scenario_id,
+                    "replicate_id": 1,
+                    "algorithm": "RIME",
+                    "fitness": 1.0,
+                },
+            ]
+        )
+
+    result = write_wilcoxon_results(rows, tmp_path / "all_near_zero.csv")
+
+    comparison = result.iloc[0]
+    assert comparison["raw_p_value"] == pytest.approx(1.0)
+    assert comparison["rank_biserial"] == pytest.approx(0.0)
+    assert comparison["median_difference"] == pytest.approx(0.0)
+    assert comparison["better_algorithm"] == "Tie"

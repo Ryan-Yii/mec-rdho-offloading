@@ -378,7 +378,9 @@ def write_wilcoxon_results(
             continue
         differences = paired[left].to_numpy(dtype=float) - paired[right].to_numpy(dtype=float)
         zero_tolerance = 1.0e-12
-        nonzero = differences[np.abs(differences) > zero_tolerance]
+        normalized_differences = differences.copy()
+        normalized_differences[np.abs(normalized_differences) <= zero_tolerance] = 0.0
+        nonzero = normalized_differences[normalized_differences != 0.0]
         if nonzero.size == 0:
             statistic = 0.0
             raw_p_value = 1.0
@@ -391,7 +393,7 @@ def write_wilcoxon_results(
             positive = float(ranks[nonzero > 0].sum())
             negative = float(ranks[nonzero < 0].sum())
             rank_biserial = (positive - negative) / float(ranks.sum())
-        median_difference = float(np.median(differences))
+        median_difference = float(np.median(normalized_differences))
         better_algorithm = left if median_difference < 0 else right if median_difference > 0 else "Tie"
         records.append(
             {
