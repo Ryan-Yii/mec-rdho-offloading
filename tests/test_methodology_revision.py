@@ -576,3 +576,26 @@ def test_analysis_manifest_hashes_inputs_and_outputs(tmp_path):
     assert manifest["analysis_git"]["commit"] == "analysis-commit"
     assert manifest["inputs"][0]["sha256"]
     assert manifest["outputs"][0]["sha256"]
+
+
+def test_git_state_preserves_the_first_porcelain_status_path(monkeypatch):
+    import experiments.experiment_core as experiment_core
+
+    def fake_run(command, **kwargs):
+        arguments = command[1:]
+        if arguments == ["status", "--porcelain"]:
+            stdout = " M experiments/analysis.py\n?? results/output.csv\n"
+        elif arguments == ["rev-parse", "HEAD"]:
+            stdout = "abc123\n"
+        elif arguments == ["branch", "--show-current"]:
+            stdout = "test-branch\n"
+        else:
+            raise AssertionError(arguments)
+        return SimpleNamespace(returncode=0, stdout=stdout)
+
+    monkeypatch.setattr(experiment_core.subprocess, "run", fake_run)
+
+    state = capture_git_state()
+
+    assert state["dirty_paths"] == ["experiments/analysis.py", "results/output.csv"]
+    assert state["code_dirty"] is True

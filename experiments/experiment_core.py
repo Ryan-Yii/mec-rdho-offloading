@@ -530,7 +530,7 @@ def _git_value(*args: str) -> str:
         encoding="utf-8",
         errors="replace",
     )
-    return result.stdout.strip() if result.returncode == 0 else "unavailable"
+    return result.stdout.rstrip() if result.returncode == 0 else "unavailable"
 
 
 def capture_git_state() -> dict[str, object]:
