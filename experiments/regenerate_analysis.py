@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import importlib.metadata
 import json
 import platform
@@ -22,6 +21,7 @@ from experiments.experiment_core import (
     copy_artifact,
     ensure_fresh_run,
     ensure_legacy_snapshot,
+    file_sha256,
     parse_force_flag,
     summarize_mean_std,
     write_wilcoxon_results,
@@ -83,14 +83,6 @@ OUTPUT_PATHS = [
 ]
 
 
-def file_sha256(path: str | Path) -> str:
-    digest = hashlib.sha256()
-    with Path(path).open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def _artifact_records(paths: Iterable[str | Path]) -> list[dict[str, object]]:
     records = []
     for value in paths:
@@ -131,6 +123,7 @@ def write_analysis_manifest(
 ) -> dict[str, object]:
     manifest = {
         "schema_version": 1,
+        "hash_mode": "sha256-canonical-lf-v1",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "command": list(command),
         "analysis_git": dict(git_state or capture_git_state()),

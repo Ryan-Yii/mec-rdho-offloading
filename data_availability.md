@@ -52,6 +52,8 @@ SHA-256 hash, source commit and branch, dirty-worktree state, timestamps,
 environment versions, seed policy, NFE cap, and declared outputs. The separate
 `postrun_analysis_manifest.json` records the committed analysis revision and
 SHA-256 hashes for every source CSV/configuration and generated table/figure.
+The `sha256-canonical-lf-v1` mode normalizes text line endings before hashing;
+binary artifacts remain byte-exact.
 
 The complete pre-revision result set is preserved under
 `results/legacy_before_methodology_revision/` and protected by

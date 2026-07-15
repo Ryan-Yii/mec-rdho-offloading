@@ -15,6 +15,7 @@ from experiments.experiment_core import (
     capture_git_state,
     ensure_fresh_run,
     ensure_legacy_snapshot,
+    file_sha256,
     load_config,
     parse_force_flag,
     run_optimizer,
@@ -24,7 +25,6 @@ from experiments.regenerate_analysis import (
     _artifact_records,
     _environment_record,
     _regenerate_sensitivity,
-    file_sha256,
 )
 
 
@@ -172,6 +172,7 @@ def main() -> None:
     output_paths = [OUTPUT_PATH, *DOWNSTREAM_OUTPUTS]
     audit = {
         "schema_version": 2,
+        "hash_mode": "sha256-canonical-lf-v1",
         "started_at": started_at,
         "ended_at": ended_at,
         "command": [sys.executable, "-m", "experiments.repair_sensitivity_runtime", *sys.argv[1:]],

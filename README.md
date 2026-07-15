@@ -113,6 +113,8 @@ python -m experiments.regenerate_analysis --force
 
 `results/manifests/postrun_analysis_manifest.json` binds that analysis to the
 committed analysis code and SHA-256 hashes of every input and output artifact.
+Text hashes use canonical LF line endings so verification is identical on
+Windows, Linux, and macOS; binary figures are hashed byte-for-byte.
 
 ## Experimental Protocol
 

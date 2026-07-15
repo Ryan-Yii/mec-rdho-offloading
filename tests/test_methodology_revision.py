@@ -628,3 +628,14 @@ def test_wilcoxon_labels_all_near_zero_differences_as_a_tie(tmp_path):
     assert comparison["rank_biserial"] == pytest.approx(0.0)
     assert comparison["median_difference"] == pytest.approx(0.0)
     assert comparison["better_algorithm"] == "Tie"
+
+
+def test_artifact_hash_normalizes_text_line_endings(tmp_path):
+    from experiments.experiment_core import file_sha256
+
+    lf = tmp_path / "lf.csv"
+    crlf = tmp_path / "crlf.csv"
+    lf.write_bytes(b"algorithm,fitness\nRDHO,1.0\n")
+    crlf.write_bytes(b"algorithm,fitness\r\nRDHO,1.0\r\n")
+
+    assert file_sha256(lf) == file_sha256(crlf)

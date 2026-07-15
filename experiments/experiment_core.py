@@ -474,12 +474,15 @@ def backup_legacy_results(results_root: str | Path = "results") -> Path:
     return backup_root
 
 
-def _sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
+TEXT_HASH_SUFFIXES = {".cff", ".csv", ".json", ".md", ".py", ".txt", ".yaml", ".yml"}
+
+
+def file_sha256(path: str | Path) -> str:
+    file_path = Path(path)
+    payload = file_path.read_bytes()
+    if file_path.suffix.lower() in TEXT_HASH_SUFFIXES:
+        payload = payload.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(payload).hexdigest()
 
 
 def ensure_legacy_snapshot(results_root: str | Path = "results") -> Path:
@@ -499,7 +502,7 @@ def ensure_legacy_snapshot(results_root: str | Path = "results") -> Path:
             snapshot_file = backup_root / record["path"]
             if not snapshot_file.exists():
                 raise RuntimeError(f"legacy snapshot file missing: {record['path']}")
-            if _sha256_file(snapshot_file) != record["sha256"]:
+            if file_sha256(snapshot_file) != record["sha256"]:
                 raise RuntimeError(f"legacy snapshot hash mismatch: {record['path']}")
         recorded = {record["path"] for record in manifest.get("files", [])}
         actual = {path.relative_to(backup_root).as_posix() for path in snapshot_files}
@@ -509,12 +512,13 @@ def ensure_legacy_snapshot(results_root: str | Path = "results") -> Path:
 
     manifest = {
         "schema_version": 1,
+        "hash_mode": "sha256-canonical-lf-v1",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "files": [
             {
                 "path": path.relative_to(backup_root).as_posix(),
                 "size": path.stat().st_size,
-                "sha256": _sha256_file(path),
+                "sha256": file_sha256(path),
             }
             for path in snapshot_files
         ],
@@ -568,14 +572,15 @@ def write_run_manifest(
     command: Iterable[str],
     master_seed: int,
     max_evaluations: int | None,
-    git_state: dict[str, str | bool] | None = None,
+    git_state: dict[str, object] | None = None,
     started_at: str | None = None,
     ended_at: str | None = None,
 ) -> dict:
     config_file = Path(config_path)
-    config_hash = hashlib.sha256(config_file.read_bytes()).hexdigest()
+    config_hash = file_sha256(config_file)
     manifest = {
         "schema_version": 1,
+        "hash_mode": "sha256-canonical-lf-v1",
         "started_at": started_at or datetime.now(timezone.utc).isoformat(),
         "ended_at": ended_at or datetime.now(timezone.utc).isoformat(),
         "command": list(command),
