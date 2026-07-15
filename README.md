@@ -28,6 +28,43 @@ It uses dual-source initialisation, adaptive producer/follower/scout roles,
 elite preservation, greedy selection, repair-based hard-constraint handling,
 and dynamic penalties for soft QoS-satisfaction conditions.
 
+## My Contributions
+
+I took primary responsibility for extending the initial experimental framework
+into the current reproducible research implementation. My work included:
+
+- redesigning and restructuring the experimental codebase into a clean,
+  configuration-driven research repository, while substantially revising and
+  extending the RDHO implementation and its evaluation pipeline;
+- separating the base objective, dynamic search fitness, and fixed reporting
+  fitness, correcting inconsistent dynamic-penalty comparisons, and maintaining
+  comparable search and reporting histories;
+- redesigning the RDHO-core and RDHO-full evaluation to isolate local-refinement
+  effects and support fair component ablations under consistent evaluation
+  conditions;
+- establishing NFE-matched computational budgets and a two-level
+  scenario-and-algorithm seed design for thirty paired runs, ensuring that all
+  compared algorithms use consistent MEC task sets and network scenarios;
+- expanding the comparison to RDHO-full, RDHO-core, RIME, DBO, TLBO-HHO,
+  CWTSSA, GA, PSO, DE, and Greedy-ED under a unified reporting objective;
+- revising the implemented system model, task generation, metric calculations,
+  objective evaluation, and constraint-satisfaction analysis, while clarifying
+  the model's actual mode-and-resource-ratio optimization scope;
+- designing and conducting main, component-ablation, local-refinement,
+  scalability, multi-algorithm objective-weight, and dynamic-penalty sensitivity
+  experiments;
+- expanding the statistical analysis to include Friedman tests, paired Wilcoxon
+  signed-rank tests with Holm correction, rank-biserial effect sizes,
+  wins-ties-losses comparisons, and bootstrap confidence intervals;
+- implementing evaluation-budget tracking, reproducible run manifests, safe
+  result resumption, automated tests, artifact validation, and preservation of
+  legacy experimental outputs;
+- organizing raw outputs, convergence records, summary statistics,
+  task-generation parameters, reproducible configurations, tables,
+  publication-oriented figures, and reproduction documentation; and
+- leading manuscript writing, experimental interpretation, editing, revision,
+  submission preparation, and submission coordination.
+
 ## Repository Layout
 
 ```text
