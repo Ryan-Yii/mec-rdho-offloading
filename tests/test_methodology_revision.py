@@ -164,7 +164,7 @@ def test_local_refinement_is_explicit_and_ablation_variants_are_separate():
     system = _system()
 
     ablated_with_refine = make_optimizer(
-        algorithm_name="RDHO-w/o dynamic penalty",
+        algorithm_name="RDHO-core w/o dynamic penalty",
         system=system,
         seed=3,
         max_iter=1,

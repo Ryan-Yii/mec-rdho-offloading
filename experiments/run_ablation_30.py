@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 import pandas as pd
 
@@ -16,8 +17,8 @@ from experiments.experiment_core import (
     run_algorithm_suite,
     write_raw_and_summary,
     write_run_manifest,
-    write_wilcoxon_results,
 )
+from experiments.statistical_analysis import average_ranks, friedman_tests, pairwise_tests
 
 
 def main() -> None:
@@ -28,9 +29,15 @@ def main() -> None:
         "results/raw/ablation_30_raw_results.csv",
         "results/summary/ablation_30_summary_mean_std.csv",
         "results/summary/ablation_wilcoxon_results.csv",
+        "results/statistics/ablation_friedman.csv",
+        "results/statistics/ablation_pairwise.csv",
+        "results/statistics/ablation_ranks.csv",
         "results/figures/ablation_study_multicolor.png",
         "paper_tables/ablation_30_summary_mean_std.md",
         "paper_tables/ablation_wilcoxon_results.md",
+        "paper_tables/ablation_friedman.md",
+        "paper_tables/ablation_pairwise.md",
+        "paper_tables/ablation_ranks.md",
         "figures/fig07_ablation_study.png",
     ]
     ensure_fresh_run(outputs, force=force)
@@ -40,14 +47,29 @@ def main() -> None:
     n_runs = int(config["experiment"]["independent_runs"])
     rows, _ = run_algorithm_suite(config, variants, n_runs=n_runs)
     summary = write_raw_and_summary("results/raw/ablation_30_raw_results.csv", "results/summary/ablation_30_summary_mean_std.csv", rows)
-    tests = write_wilcoxon_results(
-        rows,
-        "results/summary/ablation_wilcoxon_results.csv",
+    frame = pd.DataFrame(rows)
+    omnibus = friedman_tests(frame, variants)
+    tests = pairwise_tests(
+        frame,
         reference_algorithm="RDHO-core",
+        comparison_algorithms=variants[1:],
+        inference_tier="component_ablation_equal_budget",
     )
-    plot_ablation(pd.DataFrame(rows), "results/figures/ablation_study_multicolor.png")
+    ranks = average_ranks(frame, variants)
+    for table, path in (
+        (omnibus, "results/statistics/ablation_friedman.csv"),
+        (tests, "results/statistics/ablation_pairwise.csv"),
+        (ranks, "results/statistics/ablation_ranks.csv"),
+    ):
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        table.to_csv(path, index=False)
+    tests.to_csv("results/summary/ablation_wilcoxon_results.csv", index=False)
+    plot_ablation(frame, "results/figures/ablation_study_multicolor.png")
     summary.to_markdown("paper_tables/ablation_30_summary_mean_std.md", index=False)
     tests.to_markdown("paper_tables/ablation_wilcoxon_results.md", index=False)
+    omnibus.to_markdown("paper_tables/ablation_friedman.md", index=False)
+    tests.to_markdown("paper_tables/ablation_pairwise.md", index=False)
+    ranks.to_markdown("paper_tables/ablation_ranks.md", index=False)
     copy_artifact("results/figures/ablation_study_multicolor.png", "figures/fig07_ablation_study.png")
     experiment = config["experiment"]
     write_run_manifest(

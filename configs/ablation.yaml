@@ -13,11 +13,12 @@ experiment:
   max_evaluations: 15050
   variants:
     - RDHO-core
+    - RDHO-core w/o hybrid RIME-DBO fusion
+    - RDHO-core w/o dual-source initialization
+    - RDHO-core w/o adaptive role allocation
+    - RDHO-core w/o elite preservation
+    - RDHO-core w/o dynamic penalty
     - RDHO-full
-    - RDHO-w/o dual-source initialization
-    - RDHO-w/o adaptive role allocation
-    - RDHO-w/o elite preservation
-    - RDHO-w/o dynamic penalty
 
 weights:
   energy: 0.15

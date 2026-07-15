@@ -78,11 +78,12 @@ ALGORITHM_CLASSES = {
 
 RDHO_VARIANTS = {
     "RDHO-core": {"local_refinement": False},
+    "RDHO-core w/o hybrid RIME-DBO fusion": {"hybrid_update": False, "local_refinement": False},
+    "RDHO-core w/o dual-source initialization": {"dual_source_initialization": False, "local_refinement": False},
+    "RDHO-core w/o adaptive role allocation": {"adaptive_roles": False, "local_refinement": False},
+    "RDHO-core w/o elite preservation": {"elite_preservation": False, "local_refinement": False},
+    "RDHO-core w/o dynamic penalty": {"dynamic_penalty": False, "local_refinement": False},
     "RDHO-full": {"local_refinement": True},
-    "RDHO-w/o dual-source initialization": {"dual_source_initialization": False, "local_refinement": False},
-    "RDHO-w/o adaptive role allocation": {"adaptive_roles": False, "local_refinement": False},
-    "RDHO-w/o elite preservation": {"elite_preservation": False, "local_refinement": False},
-    "RDHO-w/o dynamic penalty": {"dynamic_penalty": False, "local_refinement": False},
 }
 
 
@@ -578,6 +579,15 @@ def write_run_manifest(
 ) -> dict:
     config_file = Path(config_path)
     config_hash = file_sha256(config_file)
+    output_path_values = [str(path) for path in output_paths]
+    artifact_files = []
+    for value in output_path_values:
+        candidate = Path(value)
+        if candidate.is_file():
+            artifact_files.append(candidate)
+        elif candidate.is_dir():
+            artifact_files.extend(sorted(path for path in candidate.rglob("*") if path.is_file()))
+    unique_artifacts = sorted(set(artifact_files), key=lambda path: path.as_posix())
     manifest = {
         "schema_version": 1,
         "hash_mode": "sha256-canonical-lf-v1",
@@ -592,7 +602,15 @@ def write_run_manifest(
             "algorithm_seed": "derive_seed(master_seed, 'algorithm', algorithm_name, scenario_id, replicate_id)",
         },
         "max_evaluations": max_evaluations,
-        "output_paths": [str(path) for path in output_paths],
+        "output_paths": output_path_values,
+        "output_artifacts": [
+            {
+                "path": path.as_posix(),
+                "size_bytes": path.stat().st_size,
+                "sha256": file_sha256(path),
+            }
+            for path in unique_artifacts
+        ],
         "git": dict(git_state or capture_git_state()),
         "environment": {
             "python": sys.version,

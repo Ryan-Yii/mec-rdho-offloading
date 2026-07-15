@@ -12,10 +12,12 @@ import pandas as pd
 
 from experiments.analyze_results import (
     generate_main_figures,
-    generate_sensitivity_figures,
     plot_ablation,
+    plot_penalty_sensitivity,
     plot_scalability,
+    plot_weight_ranks,
 )
+from experiments.audit_results import audit_main_frame
 from experiments.experiment_core import (
     capture_git_state,
     copy_artifact,
@@ -24,8 +26,8 @@ from experiments.experiment_core import (
     file_sha256,
     parse_force_flag,
     summarize_mean_std,
-    write_wilcoxon_results,
 )
+from experiments.statistical_analysis import PRIMARY_ALGORITHMS, average_ranks, friedman_tests, pairwise_tests
 
 
 INPUT_PATHS = [
@@ -44,8 +46,17 @@ INPUT_PATHS = [
 OUTPUT_PATHS = [
     "results/summary/main_30_summary_mean_std.csv",
     "results/summary/wilcoxon_fitness_results.csv",
+    "results/statistics/main_friedman_equal_budget.csv",
+    "results/statistics/main_pairwise_equal_budget.csv",
+    "results/statistics/main_greedy_supplementary.csv",
+    "results/statistics/main_ranks_equal_budget.csv",
+    "docs/main_result_audit.md",
     "paper_tables/main_30_summary_mean_std.md",
     "paper_tables/wilcoxon_fitness_results.md",
+    "paper_tables/main_friedman_equal_budget.md",
+    "paper_tables/main_pairwise_equal_budget.md",
+    "paper_tables/main_greedy_supplementary.md",
+    "paper_tables/main_ranks_equal_budget.md",
     "results/figures/convergence_curve.png",
     "results/figures/energy_comparison.png",
     "results/figures/delay_comparison.png",
@@ -62,19 +73,29 @@ OUTPUT_PATHS = [
     "figures/fig11_normalized_multi_metric_radar.png",
     "results/summary/ablation_30_summary_mean_std.csv",
     "results/summary/ablation_wilcoxon_results.csv",
+    "results/statistics/ablation_friedman.csv",
+    "results/statistics/ablation_pairwise.csv",
+    "results/statistics/ablation_ranks.csv",
     "paper_tables/ablation_30_summary_mean_std.md",
     "paper_tables/ablation_wilcoxon_results.md",
+    "paper_tables/ablation_friedman.md",
+    "paper_tables/ablation_pairwise.md",
+    "paper_tables/ablation_ranks.md",
     "results/figures/ablation_study_multicolor.png",
     "figures/fig07_ablation_study.png",
     "results/sensitivity/summary/weight_sensitivity_summary_mean_std.csv",
+    "results/sensitivity/statistics/weight_sensitivity_ranks.csv",
+    "results/sensitivity/statistics/weight_sensitivity_friedman.csv",
+    "results/sensitivity/statistics/weight_sensitivity_pairwise_equal_budget.csv",
     "results/sensitivity/summary/dynamic_penalty_sensitivity_summary_mean_std.csv",
     "paper_tables/weight_sensitivity_summary.md",
+    "paper_tables/weight_sensitivity_ranks.md",
+    "paper_tables/weight_sensitivity_friedman.md",
+    "paper_tables/weight_sensitivity_pairwise_equal_budget.md",
     "paper_tables/dynamic_penalty_sensitivity_summary.md",
-    "results/sensitivity/figures/weight_sensitivity_fitness.png",
-    "results/sensitivity/figures/weight_sensitivity_qoe_fairness_csr.png",
+    "results/sensitivity/figures/weight_sensitivity_algorithm_ranks.png",
     "results/sensitivity/figures/penalty_sensitivity_heatmaps.png",
-    "figures/supp_weight_sensitivity_fitness.png",
-    "figures/fig09_weight_sensitivity_qoe_fairness_csr.png",
+    "figures/fig09_weight_sensitivity_algorithm_ranks.png",
     "figures/fig10_penalty_sensitivity_heatmaps.png",
     "results/summary/scalability_summary_mean_std.csv",
     "paper_tables/scalability_summary_mean_std.md",
@@ -159,8 +180,33 @@ def _regenerate_main() -> None:
         "paper_tables/main_30_summary_mean_std.md",
         ["algorithm"],
     )
-    tests = write_wilcoxon_results(frame.to_dict("records"), "results/summary/wilcoxon_fitness_results.csv")
+    omnibus = friedman_tests(frame, PRIMARY_ALGORITHMS)
+    tests = pairwise_tests(
+        frame,
+        reference_algorithm="RDHO",
+        comparison_algorithms=PRIMARY_ALGORITHMS[1:],
+    )
+    greedy = pairwise_tests(
+        frame,
+        reference_algorithm="RDHO",
+        comparison_algorithms=["Greedy-ED"],
+        inference_tier="supplementary_effectiveness_vs_cost",
+        equal_budget=False,
+    )
+    ranks = average_ranks(frame, PRIMARY_ALGORITHMS)
+    tables = (
+        (omnibus, "results/statistics/main_friedman_equal_budget.csv", "paper_tables/main_friedman_equal_budget.md"),
+        (tests, "results/statistics/main_pairwise_equal_budget.csv", "paper_tables/main_pairwise_equal_budget.md"),
+        (greedy, "results/statistics/main_greedy_supplementary.csv", "paper_tables/main_greedy_supplementary.md"),
+        (ranks, "results/statistics/main_ranks_equal_budget.csv", "paper_tables/main_ranks_equal_budget.md"),
+    )
+    for table, csv_path, markdown_path in tables:
+        Path(csv_path).parent.mkdir(parents=True, exist_ok=True)
+        table.to_csv(csv_path, index=False)
+        table.to_markdown(markdown_path, index=False)
+    tests.to_csv("results/summary/wilcoxon_fitness_results.csv", index=False)
     tests.to_markdown("paper_tables/wilcoxon_fitness_results.md", index=False)
+    audit_main_frame(frame, output_path="docs/main_result_audit.md")
     generate_main_figures(raw_path, "results/raw/main_30_convergence.csv", "results/figures")
     mapping = {
         "convergence_curve.png": "fig01_convergence_curve.png",
@@ -183,11 +229,25 @@ def _regenerate_ablation() -> None:
         "paper_tables/ablation_30_summary_mean_std.md",
         ["algorithm"],
     )
-    tests = write_wilcoxon_results(
-        frame.to_dict("records"),
-        "results/summary/ablation_wilcoxon_results.csv",
+    variants = list(dict.fromkeys(frame["algorithm"].tolist()))
+    omnibus = friedman_tests(frame, variants)
+    tests = pairwise_tests(
+        frame,
         reference_algorithm="RDHO-core",
+        comparison_algorithms=variants[1:],
+        inference_tier="component_ablation_equal_budget",
     )
+    ranks = average_ranks(frame, variants)
+    tables = (
+        (omnibus, "results/statistics/ablation_friedman.csv", "paper_tables/ablation_friedman.md"),
+        (tests, "results/statistics/ablation_pairwise.csv", "paper_tables/ablation_pairwise.md"),
+        (ranks, "results/statistics/ablation_ranks.csv", "paper_tables/ablation_ranks.md"),
+    )
+    for table, csv_path, markdown_path in tables:
+        Path(csv_path).parent.mkdir(parents=True, exist_ok=True)
+        table.to_csv(csv_path, index=False)
+        table.to_markdown(markdown_path, index=False)
+    tests.to_csv("results/summary/ablation_wilcoxon_results.csv", index=False)
     tests.to_markdown("paper_tables/ablation_wilcoxon_results.md", index=False)
     plot_ablation(frame, "results/figures/ablation_study_multicolor.png")
     copy_artifact("results/figures/ablation_study_multicolor.png", "figures/fig07_ablation_study.png")
@@ -207,6 +267,7 @@ def _regenerate_sensitivity() -> None:
         "w_aoi",
         "w_qoe",
         "w_fairness",
+        "algorithm",
     ]
     _write_summary(
         weight,
@@ -220,14 +281,28 @@ def _regenerate_sensitivity() -> None:
         "paper_tables/dynamic_penalty_sensitivity_summary.md",
         ["lambda0", "alpha"],
     )
-    generate_sensitivity_figures(weight_raw, penalty_raw, "results/sensitivity/figures")
-    copy_artifact(
-        "results/sensitivity/figures/weight_sensitivity_fitness.png",
-        "figures/supp_weight_sensitivity_fitness.png",
+    ranks = average_ranks(weight, PRIMARY_ALGORITHMS, group_cols=["setting"])
+    omnibus = friedman_tests(weight, PRIMARY_ALGORITHMS, group_cols=["setting"])
+    pairwise = pairwise_tests(
+        weight,
+        reference_algorithm="RDHO",
+        comparison_algorithms=PRIMARY_ALGORITHMS[1:],
+        group_cols=["setting"],
     )
+    tables = (
+        (ranks, "results/sensitivity/statistics/weight_sensitivity_ranks.csv", "paper_tables/weight_sensitivity_ranks.md"),
+        (omnibus, "results/sensitivity/statistics/weight_sensitivity_friedman.csv", "paper_tables/weight_sensitivity_friedman.md"),
+        (pairwise, "results/sensitivity/statistics/weight_sensitivity_pairwise_equal_budget.csv", "paper_tables/weight_sensitivity_pairwise_equal_budget.md"),
+    )
+    for table, csv_path, markdown_path in tables:
+        Path(csv_path).parent.mkdir(parents=True, exist_ok=True)
+        table.to_csv(csv_path, index=False)
+        table.to_markdown(markdown_path, index=False)
+    plot_weight_ranks(ranks, "results/sensitivity/figures/weight_sensitivity_algorithm_ranks.png")
+    plot_penalty_sensitivity(penalty_raw, "results/sensitivity/figures")
     copy_artifact(
-        "results/sensitivity/figures/weight_sensitivity_qoe_fairness_csr.png",
-        "figures/fig09_weight_sensitivity_qoe_fairness_csr.png",
+        "results/sensitivity/figures/weight_sensitivity_algorithm_ranks.png",
+        "figures/fig09_weight_sensitivity_algorithm_ranks.png",
     )
     copy_artifact(
         "results/sensitivity/figures/penalty_sensitivity_heatmaps.png",

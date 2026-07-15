@@ -223,6 +223,36 @@ def plot_weight_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> None
     plt.close(fig)
 
 
+def plot_weight_ranks(rank_data: pd.DataFrame | str | Path, output_path: str | Path) -> None:
+    ranks = pd.read_csv(rank_data) if isinstance(rank_data, (str, Path)) else rank_data.copy()
+    settings = list(dict.fromkeys(ranks["setting"].tolist()))
+    algorithms = [algorithm for algorithm in ALGO_ORDER if algorithm in set(ranks["algorithm"])]
+    fig, ax = plt.subplots(figsize=(9.2, 5.4))
+    x = np.arange(len(settings))
+    for algorithm in algorithms:
+        subset = ranks[ranks["algorithm"] == algorithm].set_index("setting").reindex(settings)
+        ax.plot(
+            x,
+            subset["mean_rank"].to_numpy(dtype=float),
+            marker="o",
+            linewidth=1.8,
+            label=algorithm,
+            color=COLORS.get(algorithm, "#666666"),
+        )
+    ax.set_xticks(x)
+    ax.set_xticklabels(settings)
+    ax.set_yticks(np.arange(1, len(algorithms) + 1))
+    ax.set_ylim(len(algorithms) + 0.25, 0.75)
+    ax.set_xlabel("Objective-weight setting")
+    ax.set_ylabel("Mean paired rank (lower is better)")
+    ax.grid(alpha=0.25)
+    ax.legend(ncol=2, frameon=False)
+    fig.tight_layout()
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output, dpi=300)
+    plt.close(fig)
+
 def _heatmap_table(df: pd.DataFrame, metric: str) -> tuple[list[float], list[float], np.ndarray]:
     lambdas = sorted(float(value) for value in df["lambda0"].unique())
     alphas = sorted(float(value) for value in df["alpha"].unique())
