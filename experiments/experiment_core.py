@@ -349,9 +349,19 @@ def write_raw_and_summary(raw_path: str | Path, summary_path: str | Path, rows: 
     return summary
 
 
-def write_wilcoxon_results(raw_rows: List[Dict], output_path: str | Path) -> pd.DataFrame:
+def write_wilcoxon_results(
+    raw_rows: List[Dict],
+    output_path: str | Path,
+    reference_algorithm: str = "RDHO",
+) -> pd.DataFrame:
     df = pd.DataFrame(raw_rows)
-    comparisons = [("RDHO", algorithm) for algorithm in df["algorithm"].unique() if algorithm != "RDHO"]
+    if reference_algorithm not in set(df["algorithm"]):
+        raise ValueError(f"reference algorithm is absent from results: {reference_algorithm}")
+    comparisons = [
+        (reference_algorithm, algorithm)
+        for algorithm in df["algorithm"].unique()
+        if algorithm != reference_algorithm
+    ]
     records = []
     pair_cols = ["scenario_id", "replicate_id"] if {"scenario_id", "replicate_id"} <= set(df.columns) else ["run_id"]
     key_cols = [*pair_cols, "algorithm"]
@@ -367,13 +377,14 @@ def write_wilcoxon_results(raw_rows: List[Dict], output_path: str | Path) -> pd.
         if paired.empty:
             continue
         differences = paired[left].to_numpy(dtype=float) - paired[right].to_numpy(dtype=float)
-        nonzero = differences[~np.isclose(differences, 0.0)]
+        zero_tolerance = 1.0e-12
+        nonzero = differences[np.abs(differences) > zero_tolerance]
         if nonzero.size == 0:
             statistic = 0.0
             raw_p_value = 1.0
             rank_biserial = 0.0
         else:
-            stat = wilcoxon(paired[left], paired[right], alternative="two-sided", zero_method="wilcox")
+            stat = wilcoxon(nonzero, alternative="two-sided", zero_method="wilcox")
             statistic = float(stat.statistic)
             raw_p_value = float(stat.pvalue)
             ranks = rankdata(np.abs(nonzero))
@@ -522,12 +533,18 @@ def _git_value(*args: str) -> str:
     return result.stdout.strip() if result.returncode == 0 else "unavailable"
 
 
-def capture_git_state() -> dict[str, str | bool]:
+def capture_git_state() -> dict[str, object]:
     status = _git_value("status", "--porcelain")
+    dirty_paths = []
+    if status and status != "unavailable":
+        dirty_paths = sorted(line[3:].strip().replace("\\", "/") for line in status.splitlines() if len(line) > 3)
+    code_prefixes = ("configs/", "experiments/", "src/", "tests/")
     return {
         "commit": _git_value("rev-parse", "HEAD"),
         "branch": _git_value("branch", "--show-current"),
         "dirty": bool(status and status != "unavailable"),
+        "code_dirty": any(path.startswith(code_prefixes) for path in dirty_paths),
+        "dirty_paths": dirty_paths,
     }
 
 

@@ -56,8 +56,8 @@ def plot_qoe_fairness(df: pd.DataFrame, output_path: str | Path) -> None:
     x = np.arange(len(algos))
     width = 0.36
     fig, ax = plt.subplots(figsize=(9, 5.2))
-    ax.bar(x - width / 2, qoe_means, width, yerr=qoe_stds, capsize=3, label="QoE", color="#4472c4", edgecolor="black")
-    ax.bar(x + width / 2, fair_means, width, yerr=fair_stds, capsize=3, label="Fairness", color="#70ad47", edgecolor="black")
+    ax.bar(x - width / 2, qoe_means, width, yerr=qoe_stds, capsize=3, label="QoE proxy", color="#4472c4", edgecolor="black")
+    ax.bar(x + width / 2, fair_means, width, yerr=fair_stds, capsize=3, label="Task fairness", color="#70ad47", edgecolor="black")
     ax.axhline(0.8, color="#c00000", linestyle="--", linewidth=1.2)
     ax.set_ylim(0, 1.05)
     ax.set_ylabel("Score")
@@ -109,7 +109,7 @@ def plot_convergence(convergence_csv: str | Path, output_path: str | Path) -> No
         mean_curve = subset.groupby("iteration")["fitness"].mean()
         ax.plot(mean_curve.index, mean_curve.values, label=algo, color=COLORS.get(algo, "#666666"), linewidth=2)
     ax.set_xlabel("Iteration")
-    ax.set_ylabel("Fitness")
+    ax.set_ylabel("Reported fitness")
     ax.grid(alpha=0.25)
     ax.legend()
     fig.tight_layout()
@@ -124,7 +124,7 @@ def generate_main_figures(raw_csv: str | Path, convergence_csv: str | Path, outp
     plot_convergence(convergence_csv, output / "convergence_curve.png")
     plot_bar(df, "energy", "Total energy consumption (J)", output / "energy_comparison.png")
     plot_bar(df, "delay", "Average delay (s)", output / "delay_comparison.png")
-    plot_bar(df, "aoi", "Average AoI (s)", output / "aoi_comparison.png")
+    plot_bar(df, "aoi", "Average freshness proxy (s)", output / "aoi_comparison.png")
     plot_qoe_fairness(df, output / "qoe_fairness_comparison.png")
     plot_bar(df, "csr", "Constraint satisfaction rate", output / "csr_comparison.png", higher_is_better=True)
     plot_radar(df, output / "radar_chart.png")
@@ -199,13 +199,13 @@ def plot_weight_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> None
     ax.bar(x, means, yerr=np.nan_to_num(stds), capsize=4, color="#4472c4", edgecolor="black")
     ax.set_xticks(x)
     ax.set_xticklabels(settings)
-    ax.set_ylabel("Fitness")
+    ax.set_ylabel("Reported fitness")
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()
     fig.savefig(output / "weight_sensitivity_fitness.png", dpi=300)
     plt.close(fig)
 
-    metrics = [("qoe", "QoE", "#4472c4"), ("fairness", "Fairness", "#70ad47"), ("csr", "CSR", "#ed7d31")]
+    metrics = [("qoe", "QoE proxy", "#4472c4"), ("fairness", "Task fairness", "#70ad47"), ("csr", "CSR", "#ed7d31")]
     width = 0.24
     fig, ax = plt.subplots(figsize=(9.2, 5.2))
     for offset, (metric, label, color) in zip((-width, 0.0, width), metrics):
@@ -239,7 +239,7 @@ def plot_penalty_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> Non
     output.mkdir(parents=True, exist_ok=True)
     df = pd.read_csv(raw_csv)
     fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.8))
-    for ax, metric, title, cmap in zip(axes, ("csr", "fitness"), ("CSR", "Fitness"), ("YlGnBu", "YlOrRd")):
+    for ax, metric, title, cmap in zip(axes, ("csr", "fitness"), ("CSR", "Reported fitness"), ("YlGnBu", "YlOrRd")):
         lambdas, alphas, values = _heatmap_table(df, metric)
         im = ax.imshow(values, cmap=cmap, aspect="auto")
         ax.set_xticks(np.arange(len(alphas)))

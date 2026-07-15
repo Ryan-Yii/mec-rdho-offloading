@@ -451,3 +451,128 @@ def test_wilcoxon_pairs_by_scenario_and_replicate(tmp_path):
 
     with pytest.raises(ValueError, match="duplicate paired result"):
         write_wilcoxon_results([*rows, rows[0]], tmp_path / "duplicates.csv")
+
+
+def test_wilcoxon_supports_an_explicit_ablation_reference(tmp_path):
+    rows = []
+    for scenario_id in range(1, 7):
+        rows.extend(
+            [
+                {
+                    "scenario_id": scenario_id,
+                    "replicate_id": 1,
+                    "algorithm": "RDHO-core",
+                    "fitness": 1.0,
+                },
+                {
+                    "scenario_id": scenario_id,
+                    "replicate_id": 1,
+                    "algorithm": "RDHO-full",
+                    "fitness": 0.9,
+                },
+                {
+                    "scenario_id": scenario_id,
+                    "replicate_id": 1,
+                    "algorithm": "RDHO-w/o dual-source initialization",
+                    "fitness": 1.2,
+                },
+            ]
+        )
+
+    result = write_wilcoxon_results(
+        rows,
+        tmp_path / "ablation_wilcoxon.csv",
+        reference_algorithm="RDHO-core",
+    )
+
+    assert set(result["comparison"]) == {
+        "RDHO-core vs RDHO-full",
+        "RDHO-core vs RDHO-w/o dual-source initialization",
+    }
+    full = result.loc[result["comparison"] == "RDHO-core vs RDHO-full"].iloc[0]
+    assert full["better_algorithm"] == "RDHO-full"
+    assert full["median_difference"] > 0
+
+
+def test_wilcoxon_filters_near_zero_differences_consistently(monkeypatch, tmp_path):
+    import experiments.experiment_core as experiment_core
+
+    captured = {}
+
+    def fake_wilcoxon(values, **kwargs):
+        captured["values"] = np.asarray(values, dtype=float)
+        return SimpleNamespace(statistic=0.0, pvalue=0.5)
+
+    monkeypatch.setattr(experiment_core, "wilcoxon", fake_wilcoxon)
+    rows = []
+    differences = (1.0e-13, -1.0e-13, -0.2)
+    for scenario_id, difference in enumerate(differences, start=1):
+        rows.extend(
+            [
+                {
+                    "scenario_id": scenario_id,
+                    "replicate_id": 1,
+                    "algorithm": "RDHO",
+                    "fitness": 1.0 + difference,
+                },
+                {
+                    "scenario_id": scenario_id,
+                    "replicate_id": 1,
+                    "algorithm": "RIME",
+                    "fitness": 1.0,
+                },
+            ]
+        )
+
+    result = write_wilcoxon_results(rows, tmp_path / "near_zero.csv")
+
+    assert captured["values"] == pytest.approx([-0.2])
+    assert result.iloc[0]["rank_biserial"] == pytest.approx(-1.0)
+
+
+def test_suspended_runtime_selection_and_nonruntime_verification():
+    from experiments.repair_sensitivity_runtime import (
+        compare_nonruntime_fields,
+        select_suspended_runtime_rows,
+    )
+
+    frame = pd.DataFrame(
+        {
+            "scenario_id": [1, 2, 3, 4],
+            "runtime": [8.0, 9.0, 10.0, 100.0],
+            "fitness": [0.9, 1.0, 1.1, 1.2],
+        }
+    )
+    selected, rule = select_suspended_runtime_rows(frame)
+
+    assert selected["scenario_id"].tolist() == [4]
+    assert rule["effective_threshold_seconds"] == pytest.approx(95.0)
+
+    original = {"scenario_id": 4, "runtime": 100.0, "fitness": 1.2, "csr": 0.7}
+    rerun = {"scenario_id": 4, "runtime": 8.5, "fitness": 1.2, "csr": 0.7}
+    assert compare_nonruntime_fields(original, rerun) == {}
+
+    rerun["fitness"] = 1.3
+    assert "fitness" in compare_nonruntime_fields(original, rerun)
+
+
+def test_analysis_manifest_hashes_inputs_and_outputs(tmp_path):
+    from experiments.regenerate_analysis import write_analysis_manifest
+
+    source = tmp_path / "source.csv"
+    output = tmp_path / "summary.csv"
+    manifest_path = tmp_path / "analysis_manifest.json"
+    source.write_text("fitness\n1.0\n", encoding="utf-8")
+    output.write_text("fitness_mean\n1.0\n", encoding="utf-8")
+
+    manifest = write_analysis_manifest(
+        manifest_path,
+        input_paths=[source],
+        output_paths=[output],
+        command=["python", "-m", "experiments.regenerate_analysis", "--force"],
+        git_state={"commit": "analysis-commit", "branch": "test", "dirty": True},
+    )
+
+    assert manifest["analysis_git"]["commit"] == "analysis-commit"
+    assert manifest["inputs"][0]["sha256"]
+    assert manifest["outputs"][0]["sha256"]

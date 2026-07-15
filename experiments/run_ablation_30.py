@@ -16,6 +16,7 @@ from experiments.experiment_core import (
     run_algorithm_suite,
     write_raw_and_summary,
     write_run_manifest,
+    write_wilcoxon_results,
 )
 
 
@@ -26,8 +27,10 @@ def main() -> None:
     outputs = [
         "results/raw/ablation_30_raw_results.csv",
         "results/summary/ablation_30_summary_mean_std.csv",
+        "results/summary/ablation_wilcoxon_results.csv",
         "results/figures/ablation_study_multicolor.png",
         "paper_tables/ablation_30_summary_mean_std.md",
+        "paper_tables/ablation_wilcoxon_results.md",
         "figures/fig07_ablation_study.png",
     ]
     ensure_fresh_run(outputs, force=force)
@@ -37,8 +40,14 @@ def main() -> None:
     n_runs = int(config["experiment"]["independent_runs"])
     rows, _ = run_algorithm_suite(config, variants, n_runs=n_runs)
     summary = write_raw_and_summary("results/raw/ablation_30_raw_results.csv", "results/summary/ablation_30_summary_mean_std.csv", rows)
+    tests = write_wilcoxon_results(
+        rows,
+        "results/summary/ablation_wilcoxon_results.csv",
+        reference_algorithm="RDHO-core",
+    )
     plot_ablation(pd.DataFrame(rows), "results/figures/ablation_study_multicolor.png")
     summary.to_markdown("paper_tables/ablation_30_summary_mean_std.md", index=False)
+    tests.to_markdown("paper_tables/ablation_wilcoxon_results.md", index=False)
     copy_artifact("results/figures/ablation_study_multicolor.png", "figures/fig07_ablation_study.png")
     experiment = config["experiment"]
     write_run_manifest(

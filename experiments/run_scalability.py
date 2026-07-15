@@ -27,7 +27,7 @@ def main() -> None:
         "results/raw/scalability_raw_results.csv",
         "results/summary/scalability_summary_mean_std.csv",
         "results/figures/scalability.png",
-        "paper_tables/scalability_summary.md",
+        "paper_tables/scalability_summary_mean_std.md",
         "figures/fig08_scalability.png",
     ]
     ensure_fresh_run(outputs, force=force)
@@ -47,7 +47,7 @@ def main() -> None:
     )
 
     df = pd.read_csv("results/summary/scalability_summary_mean_std.csv")
-    df.to_markdown("paper_tables/scalability_summary.md", index=False)
+    df.to_markdown("paper_tables/scalability_summary_mean_std.md", index=False)
     plot_scalability(pd.DataFrame(all_rows), "results/figures/scalability.png")
     copy_artifact("results/figures/scalability.png", "figures/fig08_scalability.png")
     experiment = config["experiment"]
