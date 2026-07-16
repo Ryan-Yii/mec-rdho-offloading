@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "hash_mode": "sha256-canonical-lf-v1",
+  "started_at": "2026-07-15T19:14:41.846718+00:00",
+  "ended_at": "2026-07-15T21:53:13.943361+00:00",
+  "command": [
+    "D:\\Users\\19097\\anaconda3\\python.exe",
+    "-m",
+    "experiments.run_sensitivity",
+    "--force",
+    "--weight-only"
+  ],
+  "config_path": "configs/sensitivity.yaml",
+  "config_hash": "de0b7ed25d349c610164ab94673aba3d557f5b9ce80c12bece5e0c7ca429736a",
+  "master_seed": 20260701,
+  "seed_policy": {
+    "scenario_seed": "derive_seed(master_seed, 'scenario', scenario_id, replicate_id)",
+    "algorithm_seed": "derive_seed(master_seed, 'algorithm', algorithm_name, scenario_id, replicate_id)"
+  },
+  "max_evaluations": 15050,
+  "output_paths": [
+    "results/sensitivity/raw/weight_sensitivity_raw_results.csv",
+    "results/sensitivity/summary/weight_sensitivity_summary_mean_std.csv",
+    "results/sensitivity/statistics/weight_sensitivity_ranks.csv",
+    "results/sensitivity/statistics/weight_sensitivity_friedman.csv",
+    "results/sensitivity/statistics/weight_sensitivity_pairwise_equal_budget.csv",
+    "results/sensitivity/checkpoints/weight_sensitivity_contract.json",
+    "results/sensitivity/figures/weight_sensitivity_algorithm_ranks.png",
+    "paper_tables/weight_sensitivity_summary.md",
+    "paper_tables/weight_sensitivity_ranks.md",
+    "paper_tables/weight_sensitivity_friedman.md",
+    "paper_tables/weight_sensitivity_pairwise_equal_budget.md",
+    "figures/fig09_weight_sensitivity_algorithm_ranks.png"
+  ],
+  "output_artifacts": [
+    {
+      "path": "figures/fig09_weight_sensitivity_algorithm_ranks.png",
+      "size_bytes": 171415,
+      "sha256": "c95d0b6820cbb86e838754fe330fdb9ccb3248b29e2cbc852bd17831c16b6cb0"
+    },
+    {
+      "path": "paper_tables/weight_sensitivity_friedman.md",
+      "size_bytes": 1399,
+      "sha256": "e5f02d120b4f08b121cbc23b81c06482b56b5cbdb17664857e0b967e68844d9d"
+    },
+    {
+      "path": "paper_tables/weight_sensitivity_pairwise_equal_budget.md",
+      "size_bytes": 16501,
+      "sha256": "1efa4ed0a92517ac675c1f4489e8b4d1c2cf5646ce1b1ddbc10a942d374c26ca"
+    },
+    {
+      "path": "paper_tables/weight_sensitivity_ranks.md",
+      "size_bytes": 5039,
+      "sha256": "0386a0f1e85b298d44cefdc4d20e0c5a7d2c0fc6b4df7b4d02aab6e67b32700b"
+    },
+    {
+      "path": "paper_tables/weight_sensitivity_summary.md",
+      "size_bytes": 24443,
+      "sha256": "150bdf6ab59a4154e2828027bfcc079b8bcb4a7bd7d5de802af465e3536b33e9"
+    },
+    {
+      "path": "results/sensitivity/checkpoints/weight_sensitivity_contract.json",
+      "size_bytes": 919,
+      "sha256": "dffccf7f41a0bde349db43ee8f9b2e023e1655b2ed2bab00cd03effa36cde1ac"
+    },
+    {
+      "path": "results/sensitivity/figures/weight_sensitivity_algorithm_ranks.png",
+      "size_bytes": 171415,
+      "sha256": "c95d0b6820cbb86e838754fe330fdb9ccb3248b29e2cbc852bd17831c16b6cb0"
+    },
+    {
+      "path": "results/sensitivity/raw/weight_sensitivity_raw_results.csv",
+      "size_bytes": 548838,
+      "sha256": "f3a4cc00068a72142765a5d1e2d455509e1847e0a4a509304f89819928747a13"
+    },
+    {
+      "path": "results/sensitivity/statistics/weight_sensitivity_friedman.csv",
+      "size_bytes": 803,
+      "sha256": "75f705ad19fbd2916241c3325916d1f65dc53e97a83fed9be98a27a17b2a0ca6"
+    },
+    {
+      "path": "results/sensitivity/statistics/weight_sensitivity_pairwise_equal_budget.csv",
+      "size_bytes": 9108,
+      "sha256": "bca31e91c75074d82820637e92bbfbc82c4ddfdfcf2677378cebaa046cd0862d"
+    },
+    {
+      "path": "results/sensitivity/statistics/weight_sensitivity_ranks.csv",
+      "size_bytes": 2551,
+      "sha256": "42a152c0f44152b84d70923def9a95afb7f55e7a32bfa76062ef2c88653c56f5"
+    },
+    {
+      "path": "results/sensitivity/summary/weight_sensitivity_summary_mean_std.csv",
+      "size_bytes": 23332,
+      "sha256": "2ce0eb2295f17b15e847ee2beac28de36b85f81e31749cff460e8a9ffc104ead"
+    }
+  ],
+  "git": {
+    "commit": "1c2b09bd34a9c4075770fe04851712cbb4199e27",
+    "branch": "sci-experiment-methodology-revision",
+    "dirty": false,
+    "code_dirty": false,
+    "dirty_paths": []
+  },
+  "environment": {
+    "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "dependencies": {
+      "numpy": "1.26.4",
+      "pandas": "2.2.2",
+      "scipy": "1.13.1",
+      "matplotlib": "3.9.2",
+      "PyYAML": "6.0.1"
+    }
+  }
+}

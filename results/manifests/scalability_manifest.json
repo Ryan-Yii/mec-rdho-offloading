@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "started_at": "2026-07-15T16:54:17.600349+00:00",
+  "ended_at": "2026-07-15T17:04:07.673878+00:00",
+  "command": [
+    "D:\\Users\\19097\\anaconda3\\python.exe",
+    "-m",
+    "experiments.run_scalability",
+    "--force"
+  ],
+  "config_path": "configs/scalability.yaml",
+  "config_hash": "5426dcb3f052f2c16326786661302a260fd91988bae16e6a8215a31de3a44908",
+  "master_seed": 20260701,
+  "seed_policy": {
+    "scenario_seed": "derive_seed(master_seed, 'scenario', scenario_id, replicate_id)",
+    "algorithm_seed": "derive_seed(master_seed, 'algorithm', algorithm_name, scenario_id, replicate_id)"
+  },
+  "max_evaluations": 15050,
+  "run_output_paths": [
+    "results/raw/scalability_raw_results.csv",
+    "results/summary/scalability_summary_mean_std.csv",
+    "results/figures/scalability.png",
+    "paper_tables/scalability_summary.md",
+    "figures/fig08_scalability.png"
+  ],
+  "output_paths": [
+    "results/raw/scalability_raw_results.csv",
+    "results/summary/scalability_summary_mean_std.csv",
+    "results/figures/scalability.png",
+    "paper_tables/scalability_summary_mean_std.md",
+    "figures/fig08_scalability.png"
+  ],
+  "git": {
+    "commit": "96bac6f5c99be5c6e9ec57962262d80d2b717181",
+    "branch": "sci-experiment-methodology-revision",
+    "dirty": true
+  },
+  "post_run_path_canonicalization": {
+    "record": "results/manifests/postrun_analysis_manifest.json",
+    "note": "The paper table was regenerated under the repository's canonical mean/std filename."
+  },
+  "environment": {
+    "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "dependencies": {
+      "numpy": "1.26.4",
+      "pandas": "2.2.2",
+      "scipy": "1.13.1",
+      "matplotlib": "3.9.2",
+      "PyYAML": "6.0.1"
+    }
+  },
+  "hash_mode": "sha256-canonical-lf-v1"
+}

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from ..metrics import evaluate_solution
+from ..metrics import Metrics
 from .base import MetaheuristicOptimizer, OptimizerResult, greedy_seed_solution
 
 
@@ -16,6 +16,7 @@ class RDHO(MetaheuristicOptimizer):
         dynamic_penalty: bool = True,
         dynamic_penalty_alpha: float = 2.0,
         hybrid_update: bool = True,
+        local_refinement: bool = False,
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
@@ -25,12 +26,23 @@ class RDHO(MetaheuristicOptimizer):
         self.dynamic_penalty = dynamic_penalty
         self.dynamic_penalty_alpha = dynamic_penalty_alpha
         self.hybrid_update = hybrid_update
+        self.local_refinement = local_refinement
+        self.local_refinement_audit: list[float] = []
 
     def penalty_scale(self, iteration: int) -> float:
         if not self.dynamic_penalty:
             return self.penalty_base
         progress = iteration / max(self.max_iter, 1)
         return self.penalty_base * ((1.0 + 2.0 * progress) ** self.dynamic_penalty_alpha)
+
+    def reserved_evaluations(self) -> int:
+        if not self.local_refinement:
+            return 0
+        return 1 + 15 * len(self.system.tasks)
+
+    def minimum_initial_evaluations(self) -> int:
+        greedy_evaluations = 9 * len(self.system.tasks) if self.dual_source_initialization else 0
+        return greedy_evaluations + self.population_size
 
     def initialize_population(self) -> np.ndarray:
         if not self.dual_source_initialization:
@@ -41,7 +53,7 @@ class RDHO(MetaheuristicOptimizer):
         uniform = self.random_population("uniform")[: self.population_size - half]
         population = np.concatenate([normal, uniform], axis=0)
 
-        seed_solution = greedy_seed_solution(self.system, self.weights)
+        seed_solution = greedy_seed_solution(self.system, self.weights, budget=self.evaluation_budget)
         population[0] = seed_solution
         for idx in range(1, min(4, self.population_size)):
             population[idx] = seed_solution + self.rng.normal(0.0, 0.08, size=self.dim)
@@ -137,39 +149,56 @@ class RDHO(MetaheuristicOptimizer):
 
     def optimize(self) -> OptimizerResult:
         result = super().optimize()
-        solution, fitness = self._local_refine(result.solution, result.fitness)
+        if not self.local_refinement:
+            return result
+
+        solution, metrics = self._local_refine(result.solution, result.metrics)
         history = list(result.history)
-        if fitness < result.fitness:
-            history[-1] = fitness
-        return OptimizerResult(solution=solution, fitness=fitness, history=history)
-
-    def _local_refine(self, solution: np.ndarray, current_fitness: float) -> tuple[np.ndarray, float]:
-        full_rdho = (
-            self.dual_source_initialization
-            and self.adaptive_roles
-            and self.elite_preservation
-            and self.dynamic_penalty
-            and self.hybrid_update
+        if metrics.reported_fitness < result.reported_fitness:
+            history[-1] = metrics.reported_fitness
+        return OptimizerResult(
+            solution=solution,
+            fitness=metrics.reported_fitness,
+            reported_fitness=metrics.reported_fitness,
+            search_fitness=metrics.search_fitness,
+            history=history,
+            nfe_used=self.evaluation_budget.used,
+            max_evaluations=self.max_evaluations,
+            metrics=metrics,
         )
-        if not full_rdho:
-            return solution, current_fitness
 
-        best_solution = np.array(solution, copy=True)
-        best_fitness = evaluate_solution(self.system, best_solution, weights=self.weights, penalty_scale=1.0).fitness
+    def _local_refine(self, solution: np.ndarray, current_metrics: Metrics | None) -> tuple[np.ndarray, Metrics]:
+        final_penalty = self.penalty_scale(self.max_iter)
+        if self.evaluation_budget.remaining is not None and self.evaluation_budget.remaining <= 0:
+            if current_metrics is None:
+                raise RuntimeError("local refinement requires at least one evaluated solution")
+            return self.clip(solution), current_metrics
+
+        current_solution = np.array(solution, copy=True)
+        search_metrics = self.evaluate_metrics(current_solution, penalty_scale=final_penalty)
+        self.local_refinement_audit.append(float(final_penalty))
+        best_solution = np.array(current_solution, copy=True)
+        best_metrics = search_metrics
         resource_candidates = (0.25, 0.40, 0.60, 0.80, 1.00)
-        for _ in range(2):
+        for _ in range(1):
             improved = False
             for task_idx in self.rng.permutation(len(self.system.tasks)):
                 for mode in (0.0, 1.0, 2.0):
                     for resource in resource_candidates:
-                        trial = np.array(best_solution, copy=True)
+                        if self.evaluation_budget.remaining is not None and self.evaluation_budget.remaining <= 0:
+                            return self.clip(best_solution), best_metrics
+                        trial = np.array(current_solution, copy=True)
                         trial[task_idx, 0] = mode
                         trial[task_idx, 1] = resource
-                        fit = evaluate_solution(self.system, trial, weights=self.weights, penalty_scale=1.0).fitness
-                        if fit < best_fitness:
-                            best_solution = trial
-                            best_fitness = fit
+                        metrics = self.evaluate_metrics(trial, penalty_scale=final_penalty)
+                        self.local_refinement_audit.append(float(final_penalty))
+                        if metrics.search_fitness < search_metrics.search_fitness:
+                            current_solution = trial
+                            search_metrics = metrics
                             improved = True
+                        if metrics.reported_fitness < best_metrics.reported_fitness:
+                            best_solution = np.array(trial, copy=True)
+                            best_metrics = metrics
             if not improved:
                 break
-        return self.clip(best_solution), float(best_fitness)
+        return self.clip(best_solution), best_metrics

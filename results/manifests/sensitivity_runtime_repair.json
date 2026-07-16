@@ -1,0 +1,155 @@
+{
+  "schema_version": 2,
+  "hash_mode": "sha256-canonical-lf-v1",
+  "started_at": "2026-07-15T17:47:37.011326+00:00",
+  "ended_at": "2026-07-15T17:48:01.913279+00:00",
+  "command": [
+    "D:\\Users\\19097\\anaconda3\\python.exe",
+    "-m",
+    "experiments.repair_sensitivity_runtime",
+    "--force"
+  ],
+  "repair_git": {
+    "commit": "d060a19a2ce71b44efb1b1c2c6f2ca0cdd4f77e9",
+    "branch": "sci-experiment-methodology-revision",
+    "dirty": true,
+    "code_dirty": false,
+    "dirty_paths": [
+      "results/legacy_before_methodology_revision/legacy_snapshot_manifest.json",
+      "results/manifests/ablation_30_manifest.json",
+      "results/manifests/main_30_manifest.json",
+      "results/manifests/scalability_manifest.json",
+      "results/manifests/sensitivity_manifest.json"
+    ]
+  },
+  "config": {
+    "path": "configs/sensitivity.yaml",
+    "sha256": "de0b7ed25d349c610164ab94673aba3d557f5b9ce80c12bece5e0c7ca429736a"
+  },
+  "reason": "A post-run audit identified wall-clock values that crossed confirmed Windows suspend intervals. Rows above max(60 seconds, 10 times the suite median) were rerun with identical seeds and settings.",
+  "selection_rule": {
+    "suite_median_seconds": 9.39481835020706,
+    "absolute_floor_seconds": 60.0,
+    "median_multiplier": 10.0,
+    "effective_threshold_seconds": 93.9481835020706,
+    "affected_rows": 3
+  },
+  "verification": {
+    "excluded_fields": [
+      "runtime"
+    ],
+    "numeric_tolerance": 1e-12,
+    "nonruntime_differences": 0,
+    "result": "All deterministic non-runtime fields reproduced within tolerance."
+  },
+  "inputs": [
+    {
+      "path": "results/sensitivity/audit/dynamic_penalty_sensitivity_raw_before_runtime_repair.csv",
+      "size_bytes": 102286,
+      "sha256": "30c26c9bb1654f92ec57596e330c47351e619cff353a368492474252e201bfbd"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "results/sensitivity/raw/dynamic_penalty_sensitivity_raw_results.csv",
+      "size_bytes": 101162,
+      "sha256": "3b5cd61a914cbfc23095b5a475ce575b52c10835fbce0ecc5e332a2b3123e8e6"
+    },
+    {
+      "path": "results/sensitivity/summary/weight_sensitivity_summary_mean_std.csv",
+      "size_bytes": 3152,
+      "sha256": "bf3c2e6db699e6f9c3fa84c2fd19a6f50f119ac10d666455f0d229d157216ed6"
+    },
+    {
+      "path": "results/sensitivity/summary/dynamic_penalty_sensitivity_summary_mean_std.csv",
+      "size_bytes": 4696,
+      "sha256": "05080afdd4e6d4b77ac95c62c328cd1915bae60206f487dc1968cc152856ab37"
+    },
+    {
+      "path": "paper_tables/weight_sensitivity_summary.md",
+      "size_bytes": 3975,
+      "sha256": "9bdffb761dd4785f012e985edb3ef6b93c2f56ef7d5d33e05625fc3c89c80cce"
+    },
+    {
+      "path": "paper_tables/dynamic_penalty_sensitivity_summary.md",
+      "size_bytes": 5004,
+      "sha256": "f532ffa299a3a3d6b159f18230827dcbc61fbea61b69768fc828b9b3ffb1ba21"
+    },
+    {
+      "path": "results/sensitivity/figures/weight_sensitivity_fitness.png",
+      "size_bytes": 51197,
+      "sha256": "0b1c3f7fac592b0c6137d47238df01d9f67c0250fcf6170ff22067cfe18612b1"
+    },
+    {
+      "path": "results/sensitivity/figures/weight_sensitivity_qoe_fairness_csr.png",
+      "size_bytes": 64336,
+      "sha256": "f28566a6f975a79f4dc208898d1a438fa480a389ef5e0e1e49df907f8a62cd1d"
+    },
+    {
+      "path": "results/sensitivity/figures/penalty_sensitivity_heatmaps.png",
+      "size_bytes": 192261,
+      "sha256": "0e234b939540af555b4a4675fc8b16d22f35d30d0f02e3b3e199721ca2e12427"
+    },
+    {
+      "path": "figures/supp_weight_sensitivity_fitness.png",
+      "size_bytes": 51197,
+      "sha256": "0b1c3f7fac592b0c6137d47238df01d9f67c0250fcf6170ff22067cfe18612b1"
+    },
+    {
+      "path": "figures/fig09_weight_sensitivity_qoe_fairness_csr.png",
+      "size_bytes": 64336,
+      "sha256": "f28566a6f975a79f4dc208898d1a438fa480a389ef5e0e1e49df907f8a62cd1d"
+    },
+    {
+      "path": "figures/fig10_penalty_sensitivity_heatmaps.png",
+      "size_bytes": 192261,
+      "sha256": "0e234b939540af555b4a4675fc8b16d22f35d30d0f02e3b3e199721ca2e12427"
+    }
+  ],
+  "repairs": [
+    {
+      "scenario_id": 10,
+      "replicate_id": 1,
+      "scenario_seed": 3782276182,
+      "algorithm_seed": 2742404085,
+      "lambda0": 2.0,
+      "alpha": 1.0,
+      "original_runtime_seconds": 10818.04155829968,
+      "rerun_runtime_seconds": 7.836811800021678,
+      "nonruntime_differences": {}
+    },
+    {
+      "scenario_id": 11,
+      "replicate_id": 1,
+      "scenario_seed": 3784524273,
+      "algorithm_seed": 2744652176,
+      "lambda0": 2.0,
+      "alpha": 1.0,
+      "original_runtime_seconds": 14125.01332399994,
+      "rerun_runtime_seconds": 7.992618000134826,
+      "nonruntime_differences": {}
+    },
+    {
+      "scenario_id": 5,
+      "replicate_id": 1,
+      "scenario_seed": 693057068,
+      "algorithm_seed": 1930987489,
+      "lambda0": 2.0,
+      "alpha": 3.0,
+      "original_runtime_seconds": 808.9374614004046,
+      "rerun_runtime_seconds": 7.96955019980669,
+      "nonruntime_differences": {}
+    }
+  ],
+  "environment": {
+    "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "dependencies": {
+      "numpy": "1.26.4",
+      "pandas": "2.2.2",
+      "scipy": "1.13.1",
+      "matplotlib": "3.9.2",
+      "PyYAML": "6.0.1"
+    }
+  }
+}

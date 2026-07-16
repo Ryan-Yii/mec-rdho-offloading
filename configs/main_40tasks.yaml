@@ -5,16 +5,22 @@ system:
   tasks: 40
 
 experiment:
+  master_seed: 20260701
   seed_start: 20260701
   independent_runs: 30
   population_size: 50
   max_iterations: 150
+  max_evaluations: 15050
+  local_refinement: true
   algorithms:
     - RDHO
     - RIME
     - DBO
     - TLBO-HHO
     - CWTSSA
+    - GA
+    - PSO
+    - DE
     - Greedy-ED
 
 weights:
@@ -23,3 +29,7 @@ weights:
   aoi: 0.20
   qoe: 0.25
   fairness: 0.25
+
+penalty:
+  lambda0: 1.0
+  alpha: 2.0

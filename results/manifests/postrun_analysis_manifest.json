@@ -1,0 +1,368 @@
+{
+  "schema_version": 1,
+  "hash_mode": "sha256-canonical-lf-v1",
+  "created_at": "2026-07-16T04:41:13.434859+00:00",
+  "command": [
+    "D:\\Users\\19097\\anaconda3\\python.exe",
+    "-m",
+    "experiments.regenerate_analysis",
+    "--force"
+  ],
+  "analysis_git": {
+    "commit": "287996ad4261de07898a8e930a748108b0d0d87d",
+    "branch": "sci-experiment-methodology-revision",
+    "dirty": false,
+    "code_dirty": false,
+    "dirty_paths": []
+  },
+  "inputs": [
+    {
+      "path": "configs/main_40tasks.yaml",
+      "size_bytes": 491,
+      "sha256": "39fd2d1d10a00fd9d776f419704f360d3376baffcb0816622f596561f3a5acb4"
+    },
+    {
+      "path": "configs/ablation.yaml",
+      "size_bytes": 602,
+      "sha256": "d637273345b604b7cdb8be27ff22fdc9af7a002ac8f012aae0336eb0543ef3ce"
+    },
+    {
+      "path": "configs/sensitivity.yaml",
+      "size_bytes": 1297,
+      "sha256": "de0b7ed25d349c610164ab94673aba3d557f5b9ce80c12bece5e0c7ca429736a"
+    },
+    {
+      "path": "configs/scalability.yaml",
+      "size_bytes": 435,
+      "sha256": "5426dcb3f052f2c16326786661302a260fd91988bae16e6a8215a31de3a44908"
+    },
+    {
+      "path": "results/raw/main_30_raw_results.csv",
+      "size_bytes": 96272,
+      "sha256": "91da05696c3be8bdb4f084d881c3c6a0851da4a2a28023840435b585f72b86b2"
+    },
+    {
+      "path": "results/raw/main_30_convergence.csv",
+      "size_bytes": 2427880,
+      "sha256": "9a9871e4386ef89c91fffde6892521e37af13f0ba381176af2124500554c5214"
+    },
+    {
+      "path": "results/raw/ablation_30_raw_results.csv",
+      "size_bytes": 82161,
+      "sha256": "280dd21baf13320a30bf981765a61ad9fde213a3463093dc38505658b6a1f3c1"
+    },
+    {
+      "path": "results/sensitivity/raw/weight_sensitivity_raw_results.csv",
+      "size_bytes": 548838,
+      "sha256": "f3a4cc00068a72142765a5d1e2d455509e1847e0a4a509304f89819928747a13"
+    },
+    {
+      "path": "results/sensitivity/raw/dynamic_penalty_sensitivity_raw_results.csv",
+      "size_bytes": 101162,
+      "sha256": "3b5cd61a914cbfc23095b5a475ce575b52c10835fbce0ecc5e332a2b3123e8e6"
+    },
+    {
+      "path": "results/raw/scalability_raw_results.csv",
+      "size_bytes": 18094,
+      "sha256": "ed4f85d82f1b6aad69e1d5609f001135427d83adfd81b9683156609691a2eae9"
+    }
+  ],
+  "outputs": [
+    {
+      "path": "results/summary/main_30_summary_mean_std.csv",
+      "size_bytes": 4648,
+      "sha256": "ad61b894b39f979be0b279ab6bce65efdbf58a401b9e540f1d49eb282963e94b"
+    },
+    {
+      "path": "results/summary/wilcoxon_fitness_results.csv",
+      "size_bytes": 2052,
+      "sha256": "3374ae5fef0d711abf2db7d7080cb905a4ff019e5458d0fb0c84a7bb747dcd3f"
+    },
+    {
+      "path": "results/statistics/main_friedman_equal_budget.csv",
+      "size_bytes": 237,
+      "sha256": "fc920878040344c4a2c80da5a3b2ce18f190ec82e2490c7a55520ade6e0b62a4"
+    },
+    {
+      "path": "results/statistics/main_pairwise_equal_budget.csv",
+      "size_bytes": 2052,
+      "sha256": "3374ae5fef0d711abf2db7d7080cb905a4ff019e5458d0fb0c84a7bb747dcd3f"
+    },
+    {
+      "path": "results/statistics/main_greedy_supplementary.csv",
+      "size_bytes": 595,
+      "sha256": "d6b22d6764edf0fc8eea9891d5a7f4de3cb4a85d14744b321933fc9af6665f29"
+    },
+    {
+      "path": "results/statistics/main_ranks_equal_budget.csv",
+      "size_bytes": 497,
+      "sha256": "5c4573aacfe90ce9e2071a37c1085ec8ccc33047071e6909965349e658bc797e"
+    },
+    {
+      "path": "docs/main_result_audit.md",
+      "size_bytes": 1122,
+      "sha256": "68466a99ac53cf5e8cd32fbc0e4e7898e892ee363565389562fab4ff2ec5f5a0"
+    },
+    {
+      "path": "paper_tables/main_30_summary_mean_std.md",
+      "size_bytes": 4916,
+      "sha256": "6e23954fff662eead5410b1e8c3b4fe6e9645f56cec8d473c95ff349d29b1f29"
+    },
+    {
+      "path": "paper_tables/wilcoxon_fitness_results.md",
+      "size_bytes": 3905,
+      "sha256": "e4b59d0d311700afa490290cd9b7bd14f83055264daea9fae76ea00c2d724bae"
+    },
+    {
+      "path": "paper_tables/main_friedman_equal_budget.md",
+      "size_bytes": 563,
+      "sha256": "7e23ed399c5ae3e9a7d08996f68390a36c96486eec22a5c5b68635944d121329"
+    },
+    {
+      "path": "paper_tables/main_pairwise_equal_budget.md",
+      "size_bytes": 3905,
+      "sha256": "e4b59d0d311700afa490290cd9b7bd14f83055264daea9fae76ea00c2d724bae"
+    },
+    {
+      "path": "paper_tables/main_greedy_supplementary.md",
+      "size_bytes": 1349,
+      "sha256": "ddb4b086a6d4973164d21db7791af8412b1831dcba954ad5f58e8ed9f197e6e0"
+    },
+    {
+      "path": "paper_tables/main_ranks_equal_budget.md",
+      "size_bytes": 1079,
+      "sha256": "80255a6a413f403ee1778c6d69a40462e77aa209ec3a9cf8f5f708cf9b89216d"
+    },
+    {
+      "path": "results/figures/convergence_curve.png",
+      "size_bytes": 210692,
+      "sha256": "393cc5cf06d5e2db9c8fa497cfd15c5326cbb0b27f4150450983c68798f87199"
+    },
+    {
+      "path": "results/figures/energy_comparison.png",
+      "size_bytes": 114076,
+      "sha256": "bf9e3f05443b49539f0404682afd13c34cc6ac6742e9d66f424bcfb6406ae6f1"
+    },
+    {
+      "path": "results/figures/delay_comparison.png",
+      "size_bytes": 111574,
+      "sha256": "bbd1ffbdee4819611a981e77ea227f9948fc4a6bac0884ed237cff55bb0547e5"
+    },
+    {
+      "path": "results/figures/aoi_comparison.png",
+      "size_bytes": 106165,
+      "sha256": "b71ee5924a9be36a20dc13856e0ae822cc307c54d833796489475cf7ccf535f4"
+    },
+    {
+      "path": "results/figures/qoe_fairness_comparison.png",
+      "size_bytes": 113486,
+      "sha256": "84335310cf866e43b3f9d1c1bdcf3050707758c44a6ffc5758e3b997d9c9cf13"
+    },
+    {
+      "path": "results/figures/csr_comparison.png",
+      "size_bytes": 115612,
+      "sha256": "54b38134cb4ebfdd2b84fb5c52eb5198123612124b90d48e3c2b06f87406eb66"
+    },
+    {
+      "path": "results/figures/radar_chart.png",
+      "size_bytes": 547472,
+      "sha256": "71079693a98bd24581f03f142baa0f65f0f3b8a30c735fc8d83a6b02a857e789"
+    },
+    {
+      "path": "figures/fig01_convergence_curve.png",
+      "size_bytes": 210692,
+      "sha256": "393cc5cf06d5e2db9c8fa497cfd15c5326cbb0b27f4150450983c68798f87199"
+    },
+    {
+      "path": "figures/fig02_energy_comparison.png",
+      "size_bytes": 114076,
+      "sha256": "bf9e3f05443b49539f0404682afd13c34cc6ac6742e9d66f424bcfb6406ae6f1"
+    },
+    {
+      "path": "figures/fig03_delay_comparison.png",
+      "size_bytes": 111574,
+      "sha256": "bbd1ffbdee4819611a981e77ea227f9948fc4a6bac0884ed237cff55bb0547e5"
+    },
+    {
+      "path": "figures/fig04_aoi_comparison.png",
+      "size_bytes": 106165,
+      "sha256": "b71ee5924a9be36a20dc13856e0ae822cc307c54d833796489475cf7ccf535f4"
+    },
+    {
+      "path": "figures/fig05_qoe_fairness_comparison.png",
+      "size_bytes": 113486,
+      "sha256": "84335310cf866e43b3f9d1c1bdcf3050707758c44a6ffc5758e3b997d9c9cf13"
+    },
+    {
+      "path": "figures/fig06_soft_csr_comparison.png",
+      "size_bytes": 115612,
+      "sha256": "54b38134cb4ebfdd2b84fb5c52eb5198123612124b90d48e3c2b06f87406eb66"
+    },
+    {
+      "path": "figures/fig11_normalized_multi_metric_radar.png",
+      "size_bytes": 547472,
+      "sha256": "71079693a98bd24581f03f142baa0f65f0f3b8a30c735fc8d83a6b02a857e789"
+    },
+    {
+      "path": "results/summary/ablation_30_summary_mean_std.csv",
+      "size_bytes": 3847,
+      "sha256": "56885513fbd3d74828ae98307e977c43a0ebe8e4f513f4c51a52c987169cf1e3"
+    },
+    {
+      "path": "results/summary/ablation_wilcoxon_results.csv",
+      "size_bytes": 2449,
+      "sha256": "7897240ab4953b2a3c7b0c18d3e1fb94f9721313ffc7fc86164467262cf03f8d"
+    },
+    {
+      "path": "results/statistics/ablation_friedman.csv",
+      "size_bytes": 397,
+      "sha256": "4f2220e647597634855224b007589e87aac08edcb4bde465128a9a4f2cfb318e"
+    },
+    {
+      "path": "results/statistics/ablation_pairwise.csv",
+      "size_bytes": 2449,
+      "sha256": "7897240ab4953b2a3c7b0c18d3e1fb94f9721313ffc7fc86164467262cf03f8d"
+    },
+    {
+      "path": "results/statistics/ablation_ranks.csv",
+      "size_bytes": 641,
+      "sha256": "f7e9dac2861ed1c948b14ced014c419248b2a2d7441c269ec2aae96dcf6517ed"
+    },
+    {
+      "path": "paper_tables/ablation_30_summary_mean_std.md",
+      "size_bytes": 4274,
+      "sha256": "6d2f738360037a21b9aa32ab082c10fe083c59a8bb724751393331f98d2c50a9"
+    },
+    {
+      "path": "paper_tables/ablation_wilcoxon_results.md",
+      "size_bytes": 4143,
+      "sha256": "a197f2d55f1d28b5d59259d62f9d1ce80b08db77dee91c049ec5f7fa380e3932"
+    },
+    {
+      "path": "paper_tables/ablation_friedman.md",
+      "size_bytes": 1040,
+      "sha256": "770cfd1e509c1e6ff5d889b781c31be44e8b3f922af2ebfff764b3a546980c11"
+    },
+    {
+      "path": "paper_tables/ablation_pairwise.md",
+      "size_bytes": 4143,
+      "sha256": "a197f2d55f1d28b5d59259d62f9d1ce80b08db77dee91c049ec5f7fa380e3932"
+    },
+    {
+      "path": "paper_tables/ablation_ranks.md",
+      "size_bytes": 1232,
+      "sha256": "d49e07db1792609fd9d46c426d947c7899510a1daddbb7ca0cfd143dea637a12"
+    },
+    {
+      "path": "results/figures/ablation_study_multicolor.png",
+      "size_bytes": 125919,
+      "sha256": "889b7e1d6474a92b8b16de4d309803afa7cf1645c0682792381d9387e457e32b"
+    },
+    {
+      "path": "figures/fig07_ablation_study.png",
+      "size_bytes": 125919,
+      "sha256": "889b7e1d6474a92b8b16de4d309803afa7cf1645c0682792381d9387e457e32b"
+    },
+    {
+      "path": "results/sensitivity/summary/weight_sensitivity_summary_mean_std.csv",
+      "size_bytes": 23320,
+      "sha256": "c6bab240c85bcfff96d59f7fa3706469666b926ef8a2f54a3727e9fb9943e6e3"
+    },
+    {
+      "path": "results/sensitivity/statistics/weight_sensitivity_ranks.csv",
+      "size_bytes": 2551,
+      "sha256": "42a152c0f44152b84d70923def9a95afb7f55e7a32bfa76062ef2c88653c56f5"
+    },
+    {
+      "path": "results/sensitivity/statistics/weight_sensitivity_friedman.csv",
+      "size_bytes": 803,
+      "sha256": "75f705ad19fbd2916241c3325916d1f65dc53e97a83fed9be98a27a17b2a0ca6"
+    },
+    {
+      "path": "results/sensitivity/statistics/weight_sensitivity_pairwise_equal_budget.csv",
+      "size_bytes": 9107,
+      "sha256": "c2d01171ea1d0c7e73aedd09bf0cac15d14192e57716c0117b0c3428be553ab2"
+    },
+    {
+      "path": "results/sensitivity/summary/dynamic_penalty_sensitivity_summary_mean_std.csv",
+      "size_bytes": 4696,
+      "sha256": "05080afdd4e6d4b77ac95c62c328cd1915bae60206f487dc1968cc152856ab37"
+    },
+    {
+      "path": "paper_tables/weight_sensitivity_summary.md",
+      "size_bytes": 24443,
+      "sha256": "150bdf6ab59a4154e2828027bfcc079b8bcb4a7bd7d5de802af465e3536b33e9"
+    },
+    {
+      "path": "paper_tables/weight_sensitivity_ranks.md",
+      "size_bytes": 5039,
+      "sha256": "0386a0f1e85b298d44cefdc4d20e0c5a7d2c0fc6b4df7b4d02aab6e67b32700b"
+    },
+    {
+      "path": "paper_tables/weight_sensitivity_friedman.md",
+      "size_bytes": 1399,
+      "sha256": "e5f02d120b4f08b121cbc23b81c06482b56b5cbdb17664857e0b967e68844d9d"
+    },
+    {
+      "path": "paper_tables/weight_sensitivity_pairwise_equal_budget.md",
+      "size_bytes": 16501,
+      "sha256": "1efa4ed0a92517ac675c1f4489e8b4d1c2cf5646ce1b1ddbc10a942d374c26ca"
+    },
+    {
+      "path": "paper_tables/dynamic_penalty_sensitivity_summary.md",
+      "size_bytes": 5004,
+      "sha256": "f532ffa299a3a3d6b159f18230827dcbc61fbea61b69768fc828b9b3ffb1ba21"
+    },
+    {
+      "path": "results/sensitivity/figures/weight_sensitivity_algorithm_ranks.png",
+      "size_bytes": 171415,
+      "sha256": "c95d0b6820cbb86e838754fe330fdb9ccb3248b29e2cbc852bd17831c16b6cb0"
+    },
+    {
+      "path": "results/sensitivity/figures/penalty_sensitivity_heatmaps.png",
+      "size_bytes": 192261,
+      "sha256": "0e234b939540af555b4a4675fc8b16d22f35d30d0f02e3b3e199721ca2e12427"
+    },
+    {
+      "path": "figures/fig09_weight_sensitivity_algorithm_ranks.png",
+      "size_bytes": 171415,
+      "sha256": "c95d0b6820cbb86e838754fe330fdb9ccb3248b29e2cbc852bd17831c16b6cb0"
+    },
+    {
+      "path": "figures/fig10_penalty_sensitivity_heatmaps.png",
+      "size_bytes": 192261,
+      "sha256": "0e234b939540af555b4a4675fc8b16d22f35d30d0f02e3b3e199721ca2e12427"
+    },
+    {
+      "path": "results/summary/scalability_summary_mean_std.csv",
+      "size_bytes": 2651,
+      "sha256": "ff8bacbcdc3c4f3ff16dab116379ae69472d4dabdbd984c60010851c2b67200f"
+    },
+    {
+      "path": "paper_tables/scalability_summary_mean_std.md",
+      "size_bytes": 3156,
+      "sha256": "9a83d0dc57e0b514117145ebf8eb2da032b6693b76e04c7ef1c1686045a120ac"
+    },
+    {
+      "path": "results/figures/scalability.png",
+      "size_bytes": 192575,
+      "sha256": "f898364afcfe9a8779f658b512d25a9dd1718d9e353e8eb0215ea190b9bc2c36"
+    },
+    {
+      "path": "figures/fig08_scalability.png",
+      "size_bytes": 192575,
+      "sha256": "f898364afcfe9a8779f658b512d25a9dd1718d9e353e8eb0215ea190b9bc2c36"
+    }
+  ],
+  "environment": {
+    "python": "3.12.7 | packaged by Anaconda, Inc. | (main, Oct  4 2024, 13:17:27) [MSC v.1929 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "dependencies": {
+      "numpy": "1.26.4",
+      "pandas": "2.2.2",
+      "scipy": "1.13.1",
+      "matplotlib": "3.9.2",
+      "PyYAML": "6.0.1"
+    }
+  }
+}

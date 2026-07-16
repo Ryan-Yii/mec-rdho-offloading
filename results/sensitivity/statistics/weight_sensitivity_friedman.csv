@@ -1,0 +1,6 @@
+setting,metric,paired_key,n_blocks,n_algorithms,algorithms,statistic,degrees_of_freedom,p_value,significant
+S1,fitness,scenario_id + replicate_id,30,8,RDHO; RIME; DBO; TLBO-HHO; CWTSSA; GA; PSO; DE,180.87777777777785,7,1.271272000910826e-35,True
+S2,fitness,scenario_id + replicate_id,30,8,RDHO; RIME; DBO; TLBO-HHO; CWTSSA; GA; PSO; DE,177.4666666666667,7,6.675945108638241e-35,True
+S3,fitness,scenario_id + replicate_id,30,8,RDHO; RIME; DBO; TLBO-HHO; CWTSSA; GA; PSO; DE,182.47777777777776,7,5.837931735662984e-36,True
+S4,fitness,scenario_id + replicate_id,30,8,RDHO; RIME; DBO; TLBO-HHO; CWTSSA; GA; PSO; DE,180.03333333333342,7,1.9168279735360775e-35,True
+S5,fitness,scenario_id + replicate_id,30,8,RDHO; RIME; DBO; TLBO-HHO; CWTSSA; GA; PSO; DE,177.9333333333334,7,5.321038777372438e-35,True

@@ -1,32 +1,52 @@
 # MEC RDHO Offloading Research Repository
 
-This repository contains the reproducible code, configuration files, raw
-outputs, summary tables, and manuscript figures for the paper:
+This repository contains the reproducible research artefact for the paper:
 
 **Hybrid RIME-DBO Optimisation for QoE- and Fairness-Aware Task Offloading in
 Mobile Edge Computing**
 
-The repository is organised as a formal research artefact for the RDHO mobile
-edge computing (MEC) task-offloading study. It includes the implementation of
-the proposed Hybrid RIME-DBO Optimisation (RDHO) algorithm, baseline methods,
-experiment scripts, generated results, and paper-ready figures.
+It includes the implemented MEC model, RDHO and baseline algorithms, formal
+experiment configurations, tests, raw outputs, statistical results, run
+manifests, and manuscript-facing figures.
 
-## Overview
+## Implemented Model
 
-RDHO is a hybrid metaheuristic scheduler for joint task offloading and resource
-allocation in a cloud-edge-device MEC system. The optimisation objective
-combines five metrics:
+Each task uses the decision vector `X_i = [m_i, r_i]`:
 
-- mobile-device energy consumption;
-- processing delay;
-- Age of Information (AoI);
-- Quality of Experience (QoE);
-- QoE-based Jain fairness.
+- `m_i` selects local, edge, or cloud execution;
+- `r_i` is a continuous resource ratio clipped to `[0.2, 1.0]`;
+- edge and cloud destinations follow the fixed nearest-edge and nearest-cloud
+  mappings in `src/system_model.py`.
 
-RDHO combines RIME-style exploration with DBO-style role-adaptive exploitation.
-It uses dual-source initialisation, adaptive producer/follower/scout roles,
-elite preservation, greedy selection, repair-based hard-constraint handling,
-and dynamic penalties for soft QoS-satisfaction conditions.
+The implementation does not contain a server-index decision variable or a CPU
+hard-capacity repair operator. Energy, delay, and freshness are evaluated with
+the normalization rules in `src/metrics.py`. The reported QoE quantity is a
+QoE-inspired utility proxy, fairness is the task-level Jain index of that
+utility, and AoI is a single-epoch freshness proxy.
+
+## Objective Contract
+
+The revised methodology distinguishes three objective values:
+
+```text
+F0(X) = w_E E_norm + w_D D_norm + w_A A_norm
+        + w_Q (1 - QoE) + w_F (1 - Fairness)
+
+F_search(X, t) = F0(X) + lambda(t) (1 - CSR(X))
+
+F_report(X) = F0(X) + 1.0 (1 - CSR(X))
+```
+
+For RDHO, `lambda(t) = lambda0 * (1 + 2t/Tmax)^alpha`. `F_search` is used only
+for search decisions at the current iteration. Old and candidate populations
+are re-evaluated at the same current scale. `F_report` is used for global-best
+tracking, convergence curves, final tables, statistical tests, and
+cross-experiment comparisons. The legacy CSV field `fitness` is always an
+alias of `reported_fitness`.
+
+Every raw result row records `base_fitness`, `search_fitness`,
+`reported_fitness`, both penalty terms and scales, normalized objective
+components, CSR, and NFE use, so the reported value can be recomputed directly.
 
 ## My Contributions
 
@@ -69,49 +89,22 @@ into the current reproducible research implementation. My work included:
 
 ```text
 mec-rdho-offloading/
-|-- configs/
-|   |-- main_40tasks.yaml
-|   |-- ablation.yaml
-|   |-- scalability.yaml
-|   `-- sensitivity.yaml
-|-- experiments/
-|   |-- run_main_30.py
-|   |-- run_ablation_30.py
-|   |-- run_scalability.py
-|   |-- run_sensitivity.py
-|   `-- analyze_results.py
-|-- figures/
-|   |-- fig01_convergence_curve.png
-|   |-- fig02_energy_comparison.png
-|   |-- fig03_delay_comparison.png
-|   |-- fig04_aoi_comparison.png
-|   |-- fig05_qoe_fairness_comparison.png
-|   |-- fig06_soft_csr_comparison.png
-|   |-- fig07_ablation_study.png
-|   |-- fig08_scalability.png
-|   |-- fig09_weight_sensitivity_qoe_fairness_csr.png
-|   |-- fig10_penalty_sensitivity_heatmaps.png
-|   |-- fig11_normalized_multi_metric_radar.png
-|   `-- supp_weight_sensitivity_fitness.png
-|-- paper_tables/
+|-- configs/                   # Formal YAML experiment configurations
+|-- docs/                      # Methodology specification and TDD plan
+|-- experiments/               # Experiment runners and result analysis
+|-- figures/                   # Manuscript-facing copies of original figures
+|-- paper_tables/              # Generated paper-ready Markdown tables
 |-- results/
-|   |-- raw/
-|   |-- summary/
-|   |-- figures/
-|   `-- sensitivity/
-|       |-- raw/
-|       |-- summary/
-|       `-- figures/
-|-- src/
-|   |-- algorithms/
-|   |-- utils/
-|   |-- metrics.py
-|   |-- system_model.py
-|   `-- task_generator.py
-|-- tests/
+|   |-- raw/                   # Main, ablation, and scalability raw records
+|   |-- summary/               # Descriptive and inferential statistics
+|   |-- figures/               # Generated source figures
+|   |-- sensitivity/           # Sensitivity raw data, summaries, and figures
+|   |-- manifests/             # Config hashes, seeds, versions, and commands
+|   `-- legacy_before_methodology_revision/
+|-- src/                       # MEC model, metrics, algorithms, and utilities
+|-- tests/                     # Methodology and regression tests
 |-- CITATION.cff
 |-- LICENSE
-|-- NOTICE.md
 |-- data_availability.md
 |-- requirements.txt
 `-- README.md
@@ -119,165 +112,172 @@ mec-rdho-offloading/
 
 ## Environment
 
-The experiments were developed with Python 3.11. Install the required
-dependencies with:
+The formal manifests record Python 3.12.7 and the exact installed dependency
+versions. Install the declared dependencies with:
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-Main dependencies:
-
-- `numpy`
-- `pandas`
-- `scipy`
-- `matplotlib`
-- `PyYAML`
-- `pytest`
-- `tabulate`
-
-## Reproducibility
-
-Run the validation tests:
+Run the test suite before starting formal experiments:
 
 ```bash
-python -m pytest tests -q
+python -m pytest -q
 ```
 
-Run the main 30-run comparison:
+## Reproducing Experiments
+
+Formal runners refuse to reuse existing output files unless `--force` is
+provided. The immutable pre-revision result snapshot is verified before each
+run.
 
 ```bash
-python -m experiments.run_main_30
+python -m experiments.run_main_30 --force
+python -m experiments.run_ablation_30 --force
+python -m experiments.run_sensitivity --force
+python -m experiments.run_scalability --force
 ```
 
-Run the ablation study:
+Each runner writes a JSON manifest under `results/manifests/` containing the
+command, configuration SHA-256 hash, git state, start/end timestamps, Python
+and dependency versions, master seed policy, NFE cap, and output paths.
+Generated summaries, tests, and figures can be rebuilt without rerunning the
+optimizers:
 
 ```bash
-python -m experiments.run_ablation_30
+python -m experiments.regenerate_analysis --force
 ```
 
-Run the scalability analysis:
+`results/manifests/postrun_analysis_manifest.json` binds that analysis to the
+committed analysis code and SHA-256 hashes of every input and output artifact.
+Text hashes use canonical LF line endings so verification is identical on
+Windows, Linux, and macOS; binary figures are hashed byte-for-byte.
 
-```bash
-python -m experiments.run_scalability
-```
+## Experimental Protocol
 
-Run the objective-weight and dynamic-penalty sensitivity analyses:
+The main benchmark uses 20 mobile devices, 4 edge servers, 2 cloud servers, 40
+heterogeneous tasks, population size 50, 150 iterations, 30 paired scenarios,
+and a common `max_evaluations=15050` cap. `scenario_seed` generates the shared
+task and network instance; `algorithm_seed` controls optimizer randomness.
+All algorithms in the same scenario therefore operate on identical MEC data.
 
-```bash
-python -m experiments.run_sensitivity
-```
+Compared methods are RDHO, RIME, DBO, TLBO-HHO, CWTSSA, GA, PSO, DE, and
+Greedy-ED. The stochastic algorithms use the same encoding, reporting
+objective, paired scenarios, and NFE cap. Greedy-ED terminates after its
+deterministic construction and therefore uses fewer evaluations.
 
-All experiment scripts write generated artefacts to `results/` and
-manuscript-ready tables to `paper_tables/`.
-
-## Experimental Setting
-
-The main benchmark uses:
-
-- 20 mobile devices;
-- 4 edge servers;
-- 2 cloud servers;
-- 40 heterogeneous tasks;
-- population size 50;
-- 150 maximum iterations;
-- 30 independent runs.
-
-For a fixed seed, all compared algorithms use the same generated task set and
-network configuration. Task-generation ranges are reported in
-`results/raw/task_generation_ranges.csv` and
-`paper_tables/task_generation_ranges.md`.
-
-Compared methods:
-
-- RDHO;
-- RIME;
-- DBO;
-- TLBO-HHO;
-- CWTSSA;
-- Greedy-ED.
-
-The one-sided paired Wilcoxon signed-rank test compares RDHO fitness against
-RIME, DBO, TLBO-HHO, and CWTSSA across the 30 paired runs, using the
-alternative hypothesis that RDHO obtains lower comprehensive fitness.
+Two-sided paired Wilcoxon signed-rank tests compare reported fitness by
+`(scenario_id, replicate_id)`. Family-wise multiplicity is controlled with the
+Holm procedure, and rank-biserial effect sizes are reported.
 
 ## Main Results
 
-In the 40-task, 30-run benchmark, RDHO obtains the lowest mean comprehensive
-fitness among the compared methods:
+The revised 40-task, 30-scenario benchmark produced the following means:
 
-| Algorithm | Fitness mean | QoE mean | Fairness mean | Soft CSR mean | Runtime mean (s) |
+| Algorithm | Reported fitness | QoE proxy | Task fairness | Soft CSR | Runtime (s) |
 |---|---:|---:|---:|---:|---:|
-| RDHO | 0.9734 | 0.3273 | 0.9000 | 0.7031 | 4.4486 |
-| RIME | 1.4053 | 0.2804 | 0.8199 | 0.5653 | 3.7067 |
-| DBO | 1.0200 | 0.3192 | 0.8971 | 0.6819 | 3.6710 |
-| TLBO-HHO | 1.0692 | 0.3171 | 0.8998 | 0.6544 | 3.7055 |
-| CWTSSA | 1.0307 | 0.3198 | 0.8996 | 0.6761 | 3.7537 |
-| Greedy-ED | 1.0512 | 0.3238 | 0.8985 | 0.6275 | 0.1749 |
+| RDHO | 0.996956 | 0.324119 | 0.898544 | 0.692222 | 9.3726 |
+| RIME | 1.460458 | 0.278139 | 0.818192 | 0.550000 | 9.6433 |
+| DBO | 1.069660 | 0.314095 | 0.894576 | 0.661389 | 9.5430 |
+| TLBO-HHO | 1.100124 | 0.313130 | 0.896350 | 0.628889 | 9.4637 |
+| CWTSSA | 1.068496 | 0.316163 | 0.897088 | 0.654167 | 9.4473 |
+| GA | 1.093163 | 0.310518 | 0.882083 | 0.653889 | 9.5202 |
+| PSO | 1.466857 | 0.281577 | 0.830889 | 0.542500 | 9.4285 |
+| DE | 1.032838 | 0.319635 | 0.899947 | 0.674167 | 9.6391 |
+| Greedy-ED | 1.088138 | 0.321006 | 0.897016 | 0.606111 | 0.2167 |
 
-The result should be interpreted as a comprehensive user-centric trade-off:
-RDHO is not the best method on every raw metric, but it achieves the best
-penalised objective together with the highest QoE, QoE-based fairness, and
-soft QoS satisfaction ratio in this benchmark.
+RDHO has the lowest mean `F_report`, the highest mean QoE proxy, and the
+highest mean CSR in this benchmark. DE has the highest mean task-level
+fairness, while other methods lead individual physical metrics. RDHO is better
+than each baseline in all 30 paired reported-fitness observations; every
+comparison has two-sided raw `p=1.862645e-09` and Holm-adjusted
+`p=1.490116e-08`.
 
-Full summary files are available in:
+Source files:
 
+- `results/raw/main_30_raw_results.csv`
 - `results/summary/main_30_summary_mean_std.csv`
-- `paper_tables/main_30_summary_mean_std.md`
 - `results/summary/wilcoxon_fitness_results.csv`
-- `paper_tables/wilcoxon_fitness_results.md`
+- `results/manifests/main_30_manifest.json`
 
-## Sensitivity Analyses
+## Ablation Results
 
-The objective-weight sensitivity analysis evaluates RDHO under five weight
-vectors:
+All core-component ablations disable local refinement. `RDHO-core` and
+`RDHO-full` isolate the refinement contribution.
 
-- `S1`: `(w_E, w_D, w_A, w_Q, w_J) = (0.15, 0.15, 0.20, 0.25, 0.25)`, original setting.
-- `S2`: `(0.20, 0.20, 0.20, 0.20, 0.20)`, equal weighting.
-- `S3`: `(0.25, 0.25, 0.20, 0.15, 0.15)`, energy-delay priority.
-- `S4`: `(0.10, 0.10, 0.15, 0.325, 0.325)`, QoE-fairness priority.
-- `S5`: `(0.125, 0.125, 0.35, 0.20, 0.20)`, AoI-freshness priority.
+| Variant | Mean reported fitness | Difference from core |
+|---|---:|---:|
+| RDHO-core | 1.012511 | 0.000000 |
+| RDHO-full | 0.996734 | -0.015778 |
+| Without dual-source initialization | 1.120372 | +0.107861 |
+| Without adaptive role allocation | 1.016804 | +0.004292 |
+| Without elite preservation | 1.009914 | -0.002597 |
+| Without dynamic penalty | 1.012491 | -0.000021 |
 
-The dynamic-penalty sensitivity analysis keeps the original objective weights
-and varies `lambda0` in `{0.5, 1.0, 2.0}` and `alpha` in `{1.0, 2.0, 3.0}`.
-The original setting is `lambda0=1.0, alpha=2.0`.
+Paired two-sided Wilcoxon tests with Holm correction show a significant gain
+for `RDHO-full` over `RDHO-core` (`adjusted p=1.490116e-08`) and a significant
+loss when dual-source initialization is removed (`adjusted p=9.313226e-09`).
+Adaptive roles, elite preservation, and dynamic penalty are not significant in
+this 30-scenario ablation (`adjusted p=0.1215`, `0.3038`, and `0.9354`). The
+slightly lower mean after removing elite preservation is therefore reported as
+a non-significant numerical difference, not as evidence of improvement.
 
-Sensitivity outputs are available in:
+Source files:
 
-- `results/sensitivity/raw/`
-- `results/sensitivity/summary/`
-- `results/sensitivity/figures/`
-- `paper_tables/weight_sensitivity_summary.md`
-- `paper_tables/dynamic_penalty_sensitivity_summary.md`
+- `results/raw/ablation_30_raw_results.csv`
+- `results/summary/ablation_30_summary_mean_std.csv`
+- `results/summary/ablation_wilcoxon_results.csv`
+- `results/manifests/ablation_30_manifest.json`
 
-## Figures
+## Sensitivity Results
 
-Paper-facing copies of the manuscript figures are available in `figures/`.
-The result-generation copies are retained under `results/figures/` and
-`results/sensitivity/figures/`.
+Five objective-weight settings were evaluated over the same 30 paired
+scenarios. Because each setting defines a different `F0`, fitness values across
+weight settings are not interpreted as direct rankings. Across the settings,
+mean QoE remains `0.323567-0.324119`, task-level fairness
+`0.897965-0.899721`, and CSR `0.687222-0.693056`.
 
-See `figures/README.md` for the mapping between figure files and manuscript
-figure numbers.
+The penalty grid covers `lambda0 in {0.5, 1.0, 2.0}` and
+`alpha in {1.0, 2.0, 3.0}`. The fixed-scale reported fitness remains
+`0.994892-0.998355`, QoE `0.323787-0.324260`, fairness
+`0.898310-0.898767`, and CSR `0.691389-0.694722`. These single-algorithm
+experiments demonstrate RDHO's observed metric stability across the tested
+settings; they do not establish that its ranking against every baseline is
+preserved under each alternative setting.
 
-## Data and Code Availability
+Three original penalty-sensitivity wall-clock values crossed confirmed Windows
+suspend intervals. Those exact rows were rerun with unchanged scenario,
+algorithm, and configuration seeds. Every non-runtime field reproduced within
+`1e-12`. The original raw file, executable repair command, input/output hashes,
+and replacement timings are retained in `results/sensitivity/audit/` and
+`results/manifests/sensitivity_runtime_repair.json`. The audit can be replayed
+with `python -m experiments.repair_sensitivity_runtime --force`.
 
-The experiments use simulated MEC task sets generated by this repository. No
-proprietary, confidential, or human-subject data are used.
+## Scalability Results
 
-See `data_availability.md` for details on generated data, code, result
-artefacts, and reproducibility notes.
+RDHO was evaluated on 20-100 tasks with 10 paired scenarios per size:
 
-## Citation
+| Tasks | Reported fitness | Soft CSR | Runtime (s) |
+|---:|---:|---:|---:|
+| 20 | 0.898317 | 0.740000 | 4.6884 |
+| 40 | 0.972353 | 0.705833 | 7.9866 |
+| 60 | 0.974559 | 0.700556 | 11.8562 |
+| 80 | 0.968657 | 0.707500 | 14.9493 |
+| 100 | 0.997146 | 0.699000 | 19.4637 |
 
-If you use this repository, please cite the associated manuscript and this
-software artefact. A machine-readable citation file is provided in
-`CITATION.cff`.
+Runtime increases with task count, while reported fitness and CSR remain in a
+relatively narrow range for these simulated offline scenarios.
 
-## License and Provenance
+## Figures and Data
 
-This cleaned research artefact is released under the MIT License. See
-`LICENSE` for details.
+Use the original PNG files under `figures/` for manuscript preparation. Their
+generated source copies and file mapping are retained under `results/figures/`,
+`results/sensitivity/figures/`, and `figures/README.md`.
 
-The implementation was developed and extended from internal research code with
-permission from the project contributors. See `NOTICE.md` for provenance
-details.
+No proprietary, confidential, human-subject, or external measurement data are
+used. See `data_availability.md` for artefact provenance and limitations.
+
+## Citation and License
+
+A machine-readable citation is provided in `CITATION.cff`. The software is
+released under the MIT License; see `LICENSE` and `NOTICE.md`.

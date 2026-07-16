@@ -7,13 +7,16 @@ import numpy as np
 import pandas as pd
 
 
-ALGO_ORDER = ["RDHO", "RIME", "DBO", "TLBO-HHO", "CWTSSA", "Greedy-ED"]
+ALGO_ORDER = ["RDHO", "RIME", "DBO", "TLBO-HHO", "CWTSSA", "GA", "PSO", "DE", "Greedy-ED"]
 COLORS = {
     "RDHO": "#1f4e79",
     "RIME": "#ed7d31",
     "DBO": "#5b9bd5",
     "TLBO-HHO": "#c55a11",
     "CWTSSA": "#70ad47",
+    "GA": "#7f7f7f",
+    "PSO": "#ffc000",
+    "DE": "#a64d79",
     "Greedy-ED": "#8064a2",
 }
 
@@ -53,8 +56,8 @@ def plot_qoe_fairness(df: pd.DataFrame, output_path: str | Path) -> None:
     x = np.arange(len(algos))
     width = 0.36
     fig, ax = plt.subplots(figsize=(9, 5.2))
-    ax.bar(x - width / 2, qoe_means, width, yerr=qoe_stds, capsize=3, label="QoE", color="#4472c4", edgecolor="black")
-    ax.bar(x + width / 2, fair_means, width, yerr=fair_stds, capsize=3, label="Fairness", color="#70ad47", edgecolor="black")
+    ax.bar(x - width / 2, qoe_means, width, yerr=qoe_stds, capsize=3, label="QoE proxy", color="#4472c4", edgecolor="black")
+    ax.bar(x + width / 2, fair_means, width, yerr=fair_stds, capsize=3, label="Task fairness", color="#70ad47", edgecolor="black")
     ax.axhline(0.8, color="#c00000", linestyle="--", linewidth=1.2)
     ax.set_ylim(0, 1.05)
     ax.set_ylabel("Score")
@@ -106,7 +109,7 @@ def plot_convergence(convergence_csv: str | Path, output_path: str | Path) -> No
         mean_curve = subset.groupby("iteration")["fitness"].mean()
         ax.plot(mean_curve.index, mean_curve.values, label=algo, color=COLORS.get(algo, "#666666"), linewidth=2)
     ax.set_xlabel("Iteration")
-    ax.set_ylabel("Fitness")
+    ax.set_ylabel("Reported fitness")
     ax.grid(alpha=0.25)
     ax.legend()
     fig.tight_layout()
@@ -121,10 +124,66 @@ def generate_main_figures(raw_csv: str | Path, convergence_csv: str | Path, outp
     plot_convergence(convergence_csv, output / "convergence_curve.png")
     plot_bar(df, "energy", "Total energy consumption (J)", output / "energy_comparison.png")
     plot_bar(df, "delay", "Average delay (s)", output / "delay_comparison.png")
-    plot_bar(df, "aoi", "Average AoI (s)", output / "aoi_comparison.png")
+    plot_bar(df, "aoi", "Average freshness proxy (s)", output / "aoi_comparison.png")
     plot_qoe_fairness(df, output / "qoe_fairness_comparison.png")
     plot_bar(df, "csr", "Constraint satisfaction rate", output / "csr_comparison.png", higher_is_better=True)
     plot_radar(df, output / "radar_chart.png")
+
+
+def plot_ablation(df: pd.DataFrame, output_path: str | Path) -> None:
+    variants = list(dict.fromkeys(df["algorithm"].tolist()))
+    means = np.asarray([df[df["algorithm"] == variant]["fitness"].mean() for variant in variants])
+    stds = np.nan_to_num(
+        np.asarray([df[df["algorithm"] == variant]["fitness"].std(ddof=1) for variant in variants])
+    )
+    y = np.arange(len(variants))
+    palette = plt.get_cmap("tab10")
+    fig, ax = plt.subplots(figsize=(10.0, max(4.8, 0.65 * len(variants))))
+    bars = ax.barh(
+        y,
+        means,
+        xerr=stds,
+        capsize=4,
+        color=[palette(idx % 10) for idx in range(len(variants))],
+        edgecolor="black",
+    )
+    best_idx = int(np.argmin(means))
+    bars[best_idx].set_linewidth(2.5)
+    bars[best_idx].set_edgecolor("#f2c811")
+    ax.set_yticks(y)
+    ax.set_yticklabels(variants)
+    ax.invert_yaxis()
+    ax.set_xlabel("Reported fitness")
+    ax.grid(axis="x", alpha=0.25)
+    fig.tight_layout()
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output, dpi=300)
+    plt.close(fig)
+
+
+def plot_scalability(df: pd.DataFrame, output_path: str | Path) -> None:
+    task_numbers = sorted(int(value) for value in df["task_number"].unique())
+    metrics = (
+        ("fitness", "Reported fitness", "#1f4e79"),
+        ("csr", "Constraint satisfaction rate", "#70ad47"),
+        ("runtime", "Runtime (s)", "#ed7d31"),
+    )
+    fig, axes = plt.subplots(1, 3, figsize=(13.2, 4.5))
+    for ax, (metric, ylabel, color) in zip(axes, metrics):
+        means = np.asarray([df[df["task_number"] == task_number][metric].mean() for task_number in task_numbers])
+        stds = np.nan_to_num(
+            np.asarray([df[df["task_number"] == task_number][metric].std(ddof=1) for task_number in task_numbers])
+        )
+        ax.errorbar(task_numbers, means, yerr=stds, marker="o", capsize=4, color=color, linewidth=1.8)
+        ax.set_xlabel("Number of tasks")
+        ax.set_ylabel(ylabel)
+        ax.grid(alpha=0.25)
+    fig.tight_layout()
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output, dpi=300)
+    plt.close(fig)
 
 
 def plot_weight_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> None:
@@ -140,13 +199,13 @@ def plot_weight_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> None
     ax.bar(x, means, yerr=np.nan_to_num(stds), capsize=4, color="#4472c4", edgecolor="black")
     ax.set_xticks(x)
     ax.set_xticklabels(settings)
-    ax.set_ylabel("Fitness")
+    ax.set_ylabel("Reported fitness")
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()
     fig.savefig(output / "weight_sensitivity_fitness.png", dpi=300)
     plt.close(fig)
 
-    metrics = [("qoe", "QoE", "#4472c4"), ("fairness", "Fairness", "#70ad47"), ("csr", "CSR", "#ed7d31")]
+    metrics = [("qoe", "QoE proxy", "#4472c4"), ("fairness", "Task fairness", "#70ad47"), ("csr", "CSR", "#ed7d31")]
     width = 0.24
     fig, ax = plt.subplots(figsize=(9.2, 5.2))
     for offset, (metric, label, color) in zip((-width, 0.0, width), metrics):
@@ -164,6 +223,36 @@ def plot_weight_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> None
     plt.close(fig)
 
 
+def plot_weight_ranks(rank_data: pd.DataFrame | str | Path, output_path: str | Path) -> None:
+    ranks = pd.read_csv(rank_data) if isinstance(rank_data, (str, Path)) else rank_data.copy()
+    settings = list(dict.fromkeys(ranks["setting"].tolist()))
+    algorithms = [algorithm for algorithm in ALGO_ORDER if algorithm in set(ranks["algorithm"])]
+    fig, ax = plt.subplots(figsize=(9.2, 5.4))
+    x = np.arange(len(settings))
+    for algorithm in algorithms:
+        subset = ranks[ranks["algorithm"] == algorithm].set_index("setting").reindex(settings)
+        ax.plot(
+            x,
+            subset["mean_rank"].to_numpy(dtype=float),
+            marker="o",
+            linewidth=1.8,
+            label=algorithm,
+            color=COLORS.get(algorithm, "#666666"),
+        )
+    ax.set_xticks(x)
+    ax.set_xticklabels(settings)
+    ax.set_yticks(np.arange(1, len(algorithms) + 1))
+    ax.set_ylim(len(algorithms) + 0.25, 0.75)
+    ax.set_xlabel("Objective-weight setting")
+    ax.set_ylabel("Mean paired rank (lower is better)")
+    ax.grid(alpha=0.25)
+    ax.legend(ncol=2, frameon=False)
+    fig.tight_layout()
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output, dpi=300)
+    plt.close(fig)
+
 def _heatmap_table(df: pd.DataFrame, metric: str) -> tuple[list[float], list[float], np.ndarray]:
     lambdas = sorted(float(value) for value in df["lambda0"].unique())
     alphas = sorted(float(value) for value in df["alpha"].unique())
@@ -180,7 +269,7 @@ def plot_penalty_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> Non
     output.mkdir(parents=True, exist_ok=True)
     df = pd.read_csv(raw_csv)
     fig, axes = plt.subplots(1, 2, figsize=(10.8, 4.8))
-    for ax, metric, title, cmap in zip(axes, ("csr", "fitness"), ("CSR", "Fitness"), ("YlGnBu", "YlOrRd")):
+    for ax, metric, title, cmap in zip(axes, ("csr", "fitness"), ("CSR", "Reported fitness"), ("YlGnBu", "YlOrRd")):
         lambdas, alphas, values = _heatmap_table(df, metric)
         im = ax.imshow(values, cmap=cmap, aspect="auto")
         ax.set_xticks(np.arange(len(alphas)))

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "experiment": "cross_algorithm_weight_sensitivity",
+  "config_path": "configs/sensitivity.yaml",
+  "config_hash": "de0b7ed25d349c610164ab94673aba3d557f5b9ce80c12bece5e0c7ca429736a",
+  "git_commit": "1c2b09bd34a9c4075770fe04851712cbb4199e27",
+  "algorithms": [
+    "RDHO",
+    "RIME",
+    "DBO",
+    "TLBO-HHO",
+    "CWTSSA",
+    "GA",
+    "PSO",
+    "DE"
+  ],
+  "settings": [
+    "S1",
+    "S2",
+    "S3",
+    "S4",
+    "S5"
+  ],
+  "independent_runs": 30,
+  "max_evaluations": 15050,
+  "reporting_objective": "F_report = F0 + 1.0 * (1 - CSR)",
+  "paired_key": [
+    "setting",
+    "scenario_id",
+    "replicate_id",
+    "algorithm"
+  ],
+  "seed_policy": {
+    "scenario_seed": "derive_seed(master_seed, 'scenario', scenario_id, replicate_id)",
+    "algorithm_seed": "derive_seed(master_seed, 'algorithm', algorithm_name, scenario_id, replicate_id)"
+  }
+}
