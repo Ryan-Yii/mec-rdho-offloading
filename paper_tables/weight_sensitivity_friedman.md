@@ -1,0 +1,7 @@
+| setting   | metric   | paired_key                 |   n_blocks |   n_algorithms | algorithms                                     |   statistic |   degrees_of_freedom |     p_value | significant   |
+|:----------|:---------|:---------------------------|-----------:|---------------:|:-----------------------------------------------|------------:|---------------------:|------------:|:--------------|
+| S1        | fitness  | scenario_id + replicate_id |         30 |              8 | RDHO; RIME; DBO; TLBO-HHO; CWTSSA; GA; PSO; DE |     180.878 |                    7 | 1.27127e-35 | True          |
+| S2        | fitness  | scenario_id + replicate_id |         30 |              8 | RDHO; RIME; DBO; TLBO-HHO; CWTSSA; GA; PSO; DE |     177.467 |                    7 | 6.67595e-35 | True          |
+| S3        | fitness  | scenario_id + replicate_id |         30 |              8 | RDHO; RIME; DBO; TLBO-HHO; CWTSSA; GA; PSO; DE |     182.478 |                    7 | 5.83793e-36 | True          |
+| S4        | fitness  | scenario_id + replicate_id |         30 |              8 | RDHO; RIME; DBO; TLBO-HHO; CWTSSA; GA; PSO; DE |     180.033 |                    7 | 1.91683e-35 | True          |
+| S5        | fitness  | scenario_id + replicate_id |         30 |              8 | RDHO; RIME; DBO; TLBO-HHO; CWTSSA; GA; PSO; DE |     177.933 |                    7 | 5.32104e-35 | True          |
