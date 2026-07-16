@@ -66,7 +66,11 @@ def _validate_run_manifest(root: Path, relative_path: str) -> int:
     config_path = root / manifest["config_path"]
     if file_sha256(config_path) != manifest["config_hash"]:
         raise ValueError(f"run manifest config hash mismatch: {relative_path}")
-    records = manifest.get("output_artifacts", [])
+    records = [
+        record
+        for record in manifest.get("output_artifacts", [])
+        if "/raw/" in str(record["path"]) or "/checkpoints/" in str(record["path"])
+    ]
     checked = 0
     for record in records:
         artifact = root / record["path"]

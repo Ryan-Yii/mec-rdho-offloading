@@ -1,0 +1,3 @@
+| metric   | paired_key                 |   n_blocks |   n_algorithms | algorithms                                     |   statistic |   degrees_of_freedom |     p_value | significant   |
+|:---------|:---------------------------|-----------:|---------------:|:-----------------------------------------------|------------:|---------------------:|------------:|:--------------|
+| fitness  | scenario_id + replicate_id |         30 |              8 | RDHO; RIME; DBO; TLBO-HHO; CWTSSA; GA; PSO; DE |     180.878 |                    7 | 1.27127e-35 | True          |
