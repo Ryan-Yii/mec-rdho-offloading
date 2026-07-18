@@ -18,7 +18,6 @@ No proprietary, confidential, personal, or human-subject data are used.
 - `experiments/`: reproducible main, ablation, scalability, sensitivity, statistical-analysis, and figure-generation entry points.
 - `configs/`: YAML settings for each experiment family.
 - `tests/`: regression tests covering objective decomposition, fixed reporting semantics, same-iteration penalty comparison, user-level fairness, coordinate-specific follower bounds, ablation isolation, main/ablation reference reuse, result export, statistical outputs, and figure generation.
-- `tools/revise_round2.py`: OOXML/manuscript helper used for the round-two marked revision; source, intermediate, and output DOCX paths are supplied through `RDHO_SOURCE_DOCX`, `RDHO_INTERMEDIATE_DOCX`, and `RDHO_OUTPUT_DOCX`.
 - `tools/revise_manuscript.py`: earlier manuscript-generation helper retained for regression coverage.
 
 ## Result artefacts
