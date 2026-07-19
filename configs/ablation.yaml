@@ -11,6 +11,7 @@ experiment:
   max_iterations: 150
   variants:
     - RDHO-full
+    - RDHO-core
     - RDHO-w/o dual-source initialization
     - RDHO-w/o adaptive role allocation
     - RDHO-w/o elite preservation

@@ -6,7 +6,7 @@ from typing import Dict, Iterable, List, Tuple
 
 import numpy as np
 import pandas as pd
-from scipy.stats import wilcoxon
+from scipy.stats import rankdata, wilcoxon
 
 from src.algorithms import CWTSSA, DBO, RDHO, RIME, TLBOHHO, GreedyEnergyDelay
 from src.metrics import FitnessWeights, evaluate_solution
@@ -21,6 +21,9 @@ RAW_COLUMNS = [
     "seed",
     "algorithm",
     "fitness",
+    "base_objective",
+    "penalty",
+    "search_fitness",
     "energy",
     "delay",
     "aoi",
@@ -28,6 +31,9 @@ RAW_COLUMNS = [
     "fairness",
     "csr",
     "runtime",
+    "nfe",
+    "pre_refinement_fitness",
+    "local_refinement_gain",
 ]
 
 ALGORITHM_CLASSES = {
@@ -40,11 +46,12 @@ ALGORITHM_CLASSES = {
 }
 
 RDHO_VARIANTS = {
-    "RDHO-full": {},
-    "RDHO-w/o dual-source initialization": {"dual_source_initialization": False},
-    "RDHO-w/o adaptive role allocation": {"adaptive_roles": False},
-    "RDHO-w/o elite preservation": {"elite_preservation": False},
-    "RDHO-w/o dynamic penalty": {"dynamic_penalty": False},
+    "RDHO-full": {"local_refinement": True},
+    "RDHO-core": {"local_refinement": False},
+    "RDHO-w/o dual-source initialization": {"dual_source_initialization": False, "local_refinement": True},
+    "RDHO-w/o adaptive role allocation": {"adaptive_roles": False, "local_refinement": True},
+    "RDHO-w/o elite preservation": {"elite_preservation": False, "local_refinement": True},
+    "RDHO-w/o dynamic penalty": {"dynamic_penalty": False, "local_refinement": True},
 }
 
 
@@ -93,7 +100,7 @@ def make_optimizer(
         system=system,
         max_iter=max_iter,
         population_size=population_size,
-        seed=derive_seed(seed, algorithm_name),
+        seed=derive_seed(seed, "RDHO" if label == "RDHO" else algorithm_name),
         weights=weights,
         penalty_base=penalty_base,
         **kwargs,
@@ -124,12 +131,15 @@ def run_optimizer(
     start = time.perf_counter()
     result = optimizer.optimize()
     runtime = time.perf_counter() - start
-    metrics = evaluate_solution(system, result.solution, weights=weights)
+    metrics = evaluate_solution(system, result.solution, weights=weights, penalty_scale=1.0)
     row = {
         "run_id": run_id,
         "seed": seed,
         "algorithm": algorithm_name,
-        "fitness": metrics.fitness,
+        "fitness": metrics.reporting_fitness,
+        "base_objective": metrics.base_objective,
+        "penalty": 1.0 - metrics.csr,
+        "search_fitness": result.search_fitness,
         "energy": metrics.energy,
         "delay": metrics.delay,
         "aoi": metrics.aoi,
@@ -137,6 +147,9 @@ def run_optimizer(
         "fairness": metrics.fairness,
         "csr": metrics.csr,
         "runtime": runtime,
+        "nfe": result.nfe,
+        "pre_refinement_fitness": result.pre_refinement_fitness,
+        "local_refinement_gain": result.local_refinement_gain,
     }
     return row, result.history
 
@@ -209,7 +222,7 @@ def summarize_mean_std(raw_rows: List[Dict], group_cols: List[str] | None = None
     df = pd.DataFrame(raw_rows)
     numeric_cols = [
         col
-        for col in ["fitness", "energy", "delay", "aoi", "qoe", "fairness", "csr", "runtime"]
+        for col in ["fitness", "base_objective", "penalty", "search_fitness", "energy", "delay", "aoi", "qoe", "fairness", "csr", "runtime", "nfe", "pre_refinement_fitness", "local_refinement_gain"]
         if col in df.columns
     ]
     records = []
@@ -239,28 +252,59 @@ def write_raw_and_summary(raw_path: str | Path, summary_path: str | Path, rows: 
 
 
 def write_wilcoxon_results(raw_rows: List[Dict], output_path: str | Path) -> pd.DataFrame:
+    """Write paired two-sided Wilcoxon tests with Holm correction and effects."""
+
     df = pd.DataFrame(raw_rows)
-    comparisons = [
-        ("RDHO", "RIME"),
-        ("RDHO", "DBO"),
-        ("RDHO", "TLBO-HHO"),
-        ("RDHO", "CWTSSA"),
-    ]
-    records = []
     pivot = df.pivot_table(index="run_id", columns="algorithm", values="fitness", aggfunc="first")
-    for left, right in comparisons:
-        if left not in pivot or right not in pivot:
-            continue
-        stat = wilcoxon(pivot[left], pivot[right], alternative="less", zero_method="wilcox")
-        p_value = float(stat.pvalue)
+    if "RDHO" not in pivot:
+        result = pd.DataFrame()
+        result.to_csv(output_path, index=False)
+        return result
+
+    preferred = ["RIME", "DBO", "TLBO-HHO", "CWTSSA", "Greedy-ED"]
+    baselines = [name for name in preferred if name in pivot]
+    records = []
+    for baseline in baselines:
+        rdho = pivot["RDHO"].to_numpy(dtype=float)
+        other = pivot[baseline].to_numpy(dtype=float)
+        statistic = wilcoxon(rdho, other, alternative="two-sided", zero_method="wilcox")
+        delta = rdho - other
+        nonzero = delta[np.abs(delta) > 1.0e-12]
+        if nonzero.size:
+            ranks = rankdata(np.abs(nonzero))
+            positive = float(np.sum(ranks[nonzero > 0]))
+            negative = float(np.sum(ranks[nonzero < 0]))
+            rank_biserial = (positive - negative) / (positive + negative)
+        else:
+            rank_biserial = 0.0
         records.append(
             {
-                "comparison": f"{left} vs {right}",
-                "p_value": p_value,
-                "significant": "Yes" if p_value < 0.05 else "No",
+                "comparison": f"RDHO vs {baseline}",
+                "w_statistic": float(statistic.statistic),
+                "p_value": float(statistic.pvalue),
+                "median_difference": float(np.median(rdho - other)),
+                "rank_biserial": float(rank_biserial),
+                "wins": int(np.sum(rdho < other - 1.0e-12)),
+                "ties": int(np.sum(np.abs(rdho - other) <= 1.0e-12)),
+                "losses": int(np.sum(rdho > other + 1.0e-12)),
             }
         )
+
+    # Holm step-down adjustment.
+    order = sorted(range(len(records)), key=lambda idx: records[idx]["p_value"])
+    adjusted = [0.0] * len(records)
+    running = 0.0
+    m = len(records)
+    for rank, idx in enumerate(order):
+        value = min(1.0, (m - rank) * records[idx]["p_value"])
+        running = max(running, value)
+        adjusted[idx] = running
+    for idx, record in enumerate(records):
+        record["p_holm"] = float(adjusted[idx])
+        record["significant"] = "Yes" if adjusted[idx] < 0.05 else "No"
+
     result = pd.DataFrame(records)
+    ensure_parent(output_path)
     result.to_csv(output_path, index=False)
     return result
 

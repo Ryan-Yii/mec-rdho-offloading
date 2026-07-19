@@ -1,0 +1,32 @@
+# Documentary mirror of the fixed baseline constants used in the paper.
+# The executable source files under src/algorithms/ remain authoritative.
+# No algorithm-specific tuning was performed on the reported test scenarios.
+
+RIME:
+  initialization: normal
+  search_radius: "h = 2(1-p)"
+  exploration_scale: 0.30
+  puncture_noise_scale: 0.035
+
+DBO:
+  role_shares:
+    rolling: 0.20
+    breeding: 0.20
+    foraging: 0.40
+    theft: 0.20
+  rolling_decay: "1-p"
+
+TLBO-HHO:
+  teaching_branch_threshold: 0.55
+  learner_hho_branch_threshold: 0.80
+  teaching_factor_values: [1, 2]
+  hho_energy_decay: "2(1-p)"
+
+CWTSSA:
+  producer_share: 0.20
+  scout_share: 0.10
+  inertia: "0.9-0.5p"
+  student_t_degrees_of_freedom: 3
+  student_t_scale: 0.12
+  cauchy_mutation_probability: 0.20
+  cauchy_mutation_scale: 0.025

@@ -1,6 +1,7 @@
-| comparison       |     p_value | significant   |
-|:-----------------|------------:|:--------------|
-| RDHO vs RIME     | 9.31323e-10 | Yes           |
-| RDHO vs DBO      | 9.31323e-10 | Yes           |
-| RDHO vs TLBO-HHO | 9.31323e-10 | Yes           |
-| RDHO vs CWTSSA   | 9.31323e-10 | Yes           |
+| comparison        |   w_statistic |     p_value |   median_difference |   rank_biserial |   wins |   ties |   losses |      p_holm | significant   |
+|:------------------|--------------:|------------:|--------------------:|----------------:|-------:|-------:|---------:|------------:|:--------------|
+| RDHO vs RIME      |             0 | 1.86265e-09 |          -0.426299  |              -1 |     30 |      0 |        0 | 9.31323e-09 | Yes           |
+| RDHO vs DBO       |             0 | 1.86265e-09 |          -0.0682527 |              -1 |     30 |      0 |        0 | 9.31323e-09 | Yes           |
+| RDHO vs TLBO-HHO  |             0 | 1.86265e-09 |          -0.104878  |              -1 |     30 |      0 |        0 | 9.31323e-09 | Yes           |
+| RDHO vs CWTSSA    |             0 | 1.86265e-09 |          -0.0661688 |              -1 |     30 |      0 |        0 | 9.31323e-09 | Yes           |
+| RDHO vs Greedy-ED |             0 | 1.86265e-09 |          -0.0864761 |              -1 |     30 |      0 |        0 | 9.31323e-09 | Yes           |

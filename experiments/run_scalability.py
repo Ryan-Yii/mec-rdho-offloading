@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from experiments.analyze_results import plot_scalability
 from experiments.experiment_core import load_config, run_algorithm_suite, write_raw_and_summary
 
 
@@ -20,6 +21,7 @@ def main() -> None:
                 "fitness": row["fitness"],
                 "csr": row["csr"],
                 "runtime": row["runtime"],
+                "nfe": row["nfe"],
             }
             for row in rows
         ]
@@ -31,8 +33,8 @@ def main() -> None:
         group_cols=["task_number"],
     )
 
-    df = pd.read_csv("results/summary/scalability_summary_mean_std.csv")
-    df.to_markdown("paper_tables/scalability_summary.md", index=False)
+    pd.read_csv("results/summary/scalability_summary_mean_std.csv").to_markdown("paper_tables/scalability_summary.md", index=False)
+    plot_scalability(pd.read_csv("results/raw/scalability_raw_results.csv"), "results/figures/scalability.png")
 
 
 if __name__ == "__main__":

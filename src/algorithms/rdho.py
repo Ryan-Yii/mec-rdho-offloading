@@ -16,6 +16,7 @@ class RDHO(MetaheuristicOptimizer):
         dynamic_penalty: bool = True,
         dynamic_penalty_alpha: float = 2.0,
         hybrid_update: bool = True,
+        local_refinement: bool = True,
         **kwargs,
     ) -> None:
         super().__init__(*args, **kwargs)
@@ -25,6 +26,7 @@ class RDHO(MetaheuristicOptimizer):
         self.dynamic_penalty = dynamic_penalty
         self.dynamic_penalty_alpha = dynamic_penalty_alpha
         self.hybrid_update = hybrid_update
+        self.local_refinement = local_refinement
 
     def penalty_scale(self, iteration: int) -> float:
         if not self.dynamic_penalty:
@@ -41,7 +43,11 @@ class RDHO(MetaheuristicOptimizer):
         uniform = self.random_population("uniform")[: self.population_size - half]
         population = np.concatenate([normal, uniform], axis=0)
 
-        seed_solution = greedy_seed_solution(self.system, self.weights)
+        seed_solution = greedy_seed_solution(
+            self.system,
+            self.weights,
+            evaluator=lambda value: self.evaluate_metrics(value, penalty_scale=1.0),
+        )
         population[0] = seed_solution
         for idx in range(1, min(4, self.population_size)):
             population[idx] = seed_solution + self.rng.normal(0.0, 0.08, size=self.dim)
@@ -118,7 +124,9 @@ class RDHO(MetaheuristicOptimizer):
         else:
             c1 = self.rng.random(size=self.dim)
             c2 = self.rng.random(size=self.dim)
-            candidate = best + c1 * (current - 0.0) + c2 * (current - 2.0)
+            lower = np.broadcast_to(np.asarray([0.0, 0.2]), self.dim)
+            upper = np.broadcast_to(np.asarray([2.0, 1.0]), self.dim)
+            candidate = best + c1 * (current - lower) + c2 * (current - upper)
         return candidate
 
     def _scout_update(
@@ -137,25 +145,26 @@ class RDHO(MetaheuristicOptimizer):
 
     def optimize(self) -> OptimizerResult:
         result = super().optimize()
+        if not self.local_refinement:
+            return result
+
         solution, fitness = self._local_refine(result.solution, result.fitness)
-        history = list(result.history)
-        if fitness < result.fitness:
-            history[-1] = fitness
-        return OptimizerResult(solution=solution, fitness=fitness, history=history)
+        gain = max(0.0, result.fitness - fitness)
+        final_search = self.evaluate_metrics(solution, self.penalty_scale(self.max_iter)).fitness
+        return OptimizerResult(
+            solution=solution,
+            fitness=fitness,
+            history=list(result.history),
+            search_fitness=float(final_search),
+            search_history=list(result.search_history),
+            nfe=self.nfe,
+            pre_refinement_fitness=result.fitness,
+            local_refinement_gain=float(gain),
+        )
 
     def _local_refine(self, solution: np.ndarray, current_fitness: float) -> tuple[np.ndarray, float]:
-        full_rdho = (
-            self.dual_source_initialization
-            and self.adaptive_roles
-            and self.elite_preservation
-            and self.dynamic_penalty
-            and self.hybrid_update
-        )
-        if not full_rdho:
-            return solution, current_fitness
-
         best_solution = np.array(solution, copy=True)
-        best_fitness = evaluate_solution(self.system, best_solution, weights=self.weights, penalty_scale=1.0).fitness
+        best_fitness = float(current_fitness)
         resource_candidates = (0.25, 0.40, 0.60, 0.80, 1.00)
         for _ in range(2):
             improved = False
@@ -165,7 +174,7 @@ class RDHO(MetaheuristicOptimizer):
                         trial = np.array(best_solution, copy=True)
                         trial[task_idx, 0] = mode
                         trial[task_idx, 1] = resource
-                        fit = evaluate_solution(self.system, trial, weights=self.weights, penalty_scale=1.0).fitness
+                        fit = self.evaluate_metrics(trial, penalty_scale=1.0).reporting_fitness
                         if fit < best_fitness:
                             best_solution = trial
                             best_fitness = fit

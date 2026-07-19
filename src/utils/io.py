@@ -25,7 +25,7 @@ def write_rows(path: str | Path, rows: Iterable[Mapping]) -> None:
         Path(path).write_text("", encoding="utf-8")
         return
     with open(path, "w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()), lineterminator="\n")
         writer.writeheader()
         writer.writerows(rows)
 
