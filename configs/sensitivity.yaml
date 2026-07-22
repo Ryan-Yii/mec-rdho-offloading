@@ -68,3 +68,6 @@ penalty_grid:
     - 1.0
     - 2.0
     - 3.0
+
+capacity_scales: [0.8, 1.0, 1.2]
+sla_scales: [0.8, 1.0, 1.2]

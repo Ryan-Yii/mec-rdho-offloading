@@ -9,10 +9,12 @@ from experiments.analyze_results import generate_sensitivity_figures
 from experiments.experiment_core import load_config, run_algorithm_suite, write_raw_and_summary
 
 
-WEIGHT_RAW = "results/sensitivity/raw/weight_sensitivity_raw_results.csv"
-WEIGHT_SUMMARY = "results/sensitivity/summary/weight_sensitivity_summary_mean_std.csv"
-PENALTY_RAW = "results/sensitivity/raw/dynamic_penalty_sensitivity_raw_results.csv"
-PENALTY_SUMMARY = "results/sensitivity/summary/dynamic_penalty_sensitivity_summary_mean_std.csv"
+WEIGHT_RAW = "results/v2/sensitivity/raw/weight_sensitivity_raw_results.csv"
+WEIGHT_SUMMARY = "results/v2/sensitivity/summary/weight_sensitivity_summary_mean_std.csv"
+PENALTY_RAW = "results/v2/sensitivity/raw/dynamic_penalty_sensitivity_raw_results.csv"
+PENALTY_SUMMARY = "results/v2/sensitivity/summary/dynamic_penalty_sensitivity_summary_mean_std.csv"
+PHYSICAL_RAW = "results/v2/sensitivity/raw/physical_sensitivity_raw_results.csv"
+PHYSICAL_SUMMARY = "results/v2/sensitivity/summary/physical_sensitivity_summary_mean_std.csv"
 
 
 def _weights_sum_to_one(weights: dict[str, float]) -> bool:
@@ -24,11 +26,6 @@ def _format_weights(weights: dict[str, float]) -> str:
         f"({weights['energy']:.3f}, {weights['delay']:.3f}, {weights['aoi']:.3f}, "
         f"{weights['qoe']:.3f}, {weights['fairness']:.3f})"
     )
-
-
-def _write_markdown_table(csv_path: str, markdown_path: str) -> None:
-    Path(markdown_path).parent.mkdir(parents=True, exist_ok=True)
-    pd.read_csv(csv_path).to_markdown(markdown_path, index=False)
 
 
 def _weight_raw_complete(path: str, settings: list[str], n_runs: int) -> bool:
@@ -56,7 +53,6 @@ def run_weight_sensitivity(config: dict) -> None:
         print(f"Reusing completed weight sensitivity raw results from {WEIGHT_RAW}...")
         rows = pd.read_csv(WEIGHT_RAW).to_dict("records")
         write_raw_and_summary(WEIGHT_RAW, WEIGHT_SUMMARY, rows, group_cols=group_cols)
-        _write_markdown_table(WEIGHT_SUMMARY, "paper_tables/weight_sensitivity_summary.md")
         return
 
     all_rows = []
@@ -88,7 +84,6 @@ def run_weight_sensitivity(config: dict) -> None:
         all_rows,
         group_cols=group_cols,
     )
-    _write_markdown_table(WEIGHT_SUMMARY, "paper_tables/weight_sensitivity_summary.md")
 
 
 def run_penalty_sensitivity(config: dict) -> None:
@@ -99,7 +94,6 @@ def run_penalty_sensitivity(config: dict) -> None:
         print(f"Reusing completed penalty sensitivity raw results from {PENALTY_RAW}...")
         rows = pd.read_csv(PENALTY_RAW).to_dict("records")
         write_raw_and_summary(PENALTY_RAW, PENALTY_SUMMARY, rows, group_cols=["lambda0", "alpha"])
-        _write_markdown_table(PENALTY_SUMMARY, "paper_tables/dynamic_penalty_sensitivity_summary.md")
         return
 
     all_rows = []
@@ -122,14 +116,30 @@ def run_penalty_sensitivity(config: dict) -> None:
         all_rows,
         group_cols=["lambda0", "alpha"],
     )
-    _write_markdown_table(PENALTY_SUMMARY, "paper_tables/dynamic_penalty_sensitivity_summary.md")
+
+
+def run_physical_sensitivity(config: dict) -> None:
+    n_runs = int(config["experiment"]["independent_runs"])
+    rows = []
+    for scale in config.get("capacity_scales", []):
+        result, _ = run_algorithm_suite(config, ["RDHO"], n_runs=n_runs, cpu_capacity_scale=float(scale))
+        for row in result:
+            row.update({"experiment": "cpu_capacity", "setting": f"capacity_{scale}", "cpu_capacity_scale": float(scale), "sla_scale": 1.0})
+        rows.extend(result)
+    for scale in config.get("sla_scales", []):
+        result, _ = run_algorithm_suite(config, ["RDHO"], n_runs=n_runs, sla_scale=float(scale))
+        for row in result:
+            row.update({"experiment": "sla_strictness", "setting": f"sla_{scale}", "cpu_capacity_scale": 1.0, "sla_scale": float(scale)})
+        rows.extend(result)
+    write_raw_and_summary(PHYSICAL_RAW, PHYSICAL_SUMMARY, rows, group_cols=["experiment", "setting", "cpu_capacity_scale", "sla_scale"])
 
 
 def main() -> None:
     config = load_config("configs/sensitivity.yaml")
     run_weight_sensitivity(config)
     run_penalty_sensitivity(config)
-    generate_sensitivity_figures(WEIGHT_RAW, PENALTY_RAW, "results/sensitivity/figures")
+    run_physical_sensitivity(config)
+    generate_sensitivity_figures(WEIGHT_RAW, PENALTY_RAW, "results/v2/sensitivity/figures")
 
 
 if __name__ == "__main__":

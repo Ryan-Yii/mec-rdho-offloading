@@ -57,7 +57,7 @@ def plot_qoe_fairness(df: pd.DataFrame, output_path: str | Path) -> None:
     width = 0.36
     fig, ax = plt.subplots(figsize=(9, 5.2))
     ax.bar(x - width / 2, qoe_means, width, yerr=qoe_stds, capsize=3, label="QoE", color="#4472c4", edgecolor="black")
-    ax.bar(x + width / 2, fair_means, width, yerr=fair_stds, capsize=3, label="Priority-aware per-user utility fairness", color="#70ad47", edgecolor="black")
+    ax.bar(x + width / 2, fair_means, width, yerr=fair_stds, capsize=3, label="Per-user QoE fairness", color="#70ad47", edgecolor="black")
     ax.set_ylim(0, 1.05)
     ax.set_ylabel("Score")
     ax.set_xticks(x)
@@ -82,7 +82,7 @@ def plot_radar(df: pd.DataFrame, output_path: str | Path) -> None:
         else:
             normalized[metric] = (values - np.min(values)) / (np.max(values) - np.min(values))
 
-    labels = ["Energy proxy", "Delay", "AoI", "QoE", "Priority-aware fairness"]
+    labels = ["Device-side energy", "Delay", "AoI", "QoE", "Per-user QoE fairness"]
     angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
     angles += angles[:1]
     fig, ax = plt.subplots(figsize=(7, 7), subplot_kw={"polar": True})

@@ -11,9 +11,8 @@ def main() -> None:
     variants = config["experiment"]["variants"]
     n_runs = int(config["experiment"]["independent_runs"])
     rows, _ = run_algorithm_suite(config, variants, n_runs=n_runs)
-    write_raw_and_summary("results/raw/ablation_30_raw_results.csv", "results/summary/ablation_30_summary_mean_std.csv", rows)
-    pd.read_csv("results/summary/ablation_30_summary_mean_std.csv").to_markdown("paper_tables/ablation_30_summary_mean_std.md", index=False)
-    plot_ablation(pd.read_csv("results/raw/ablation_30_raw_results.csv"), "results/figures/ablation_study_multicolor.png")
+    write_raw_and_summary("results/v2/raw/ablation_30_raw_results.csv", "results/v2/summary/ablation_30_summary_mean_std.csv", rows)
+    plot_ablation(pd.read_csv("results/v2/raw/ablation_30_raw_results.csv"), "results/v2/figures/ablation_study.png")
 
 
 if __name__ == "__main__":

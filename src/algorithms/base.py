@@ -30,6 +30,8 @@ class MetaheuristicOptimizer:
         seed: int = 0,
         weights: FitnessWeights | None = None,
         penalty_base: float = 1.0,
+        common_initial_population: np.ndarray | None = None,
+        common_coordinate_refinement: bool = False,
     ) -> None:
         self.system = system
         self.max_iter = max_iter
@@ -37,6 +39,8 @@ class MetaheuristicOptimizer:
         self.rng = np.random.default_rng(seed)
         self.weights = weights or FitnessWeights()
         self.penalty_base = penalty_base
+        self.common_initial_population = None if common_initial_population is None else self.clip_population(common_initial_population)
+        self.common_coordinate_refinement = common_coordinate_refinement
         # Per-task coordinates: normalised legal-node index and CPU encoding.
         self.dim = (len(system.tasks), 2)
         self.nfe = 0
@@ -111,7 +115,7 @@ class MetaheuristicOptimizer:
 
     def optimize(self) -> OptimizerResult:
         self.nfe = 0
-        population = self.initialize_population()
+        population = np.array(self.common_initial_population, copy=True) if self.common_initial_population is not None else self.initialize_population()
         metrics = self.evaluate_population_metrics(population, 0)
 
         reporting = self.reporting_fitness_array(metrics)
@@ -145,8 +149,10 @@ class MetaheuristicOptimizer:
             history.append(incumbent_reporting)
             search_history.append(float(np.min(search)))
 
-        final_search = self.evaluate_metrics(incumbent, self.penalty_scale(self.max_iter)).fitness
         pre_refinement = incumbent_reporting
+        if self.common_coordinate_refinement:
+            incumbent, incumbent_reporting = self.coordinate_refine(incumbent, incumbent_reporting)
+        final_search = self.evaluate_metrics(incumbent, self.penalty_scale(self.max_iter)).fitness
         return OptimizerResult(
             solution=self.clip(incumbent),
             fitness=incumbent_reporting,
@@ -155,8 +161,24 @@ class MetaheuristicOptimizer:
             search_history=search_history,
             nfe=self.nfe,
             pre_refinement_fitness=pre_refinement,
-            local_refinement_gain=0.0,
+            local_refinement_gain=float(max(0.0, pre_refinement - incumbent_reporting)),
         )
+
+    def coordinate_refine(self, solution: np.ndarray, current_fitness: float) -> tuple[np.ndarray, float]:
+        """Shared deterministic post-processing used only in controlled tests."""
+
+        best_solution = np.array(solution, copy=True)
+        best_fitness = float(current_fitness)
+        for task_idx in range(len(self.system.tasks)):
+            for node in (0.08, 0.28, 0.48, 0.68, 0.88):
+                for resource in (0.10, 0.30, 0.55, 0.80, 1.00):
+                    trial = np.array(best_solution, copy=True)
+                    trial[task_idx] = (node, resource)
+                    fitness = self.evaluate_metrics(trial, penalty_scale=1.0).reporting_fitness
+                    if fitness < best_fitness:
+                        best_solution = trial
+                        best_fitness = fitness
+        return self.clip(best_solution), best_fitness
 
 
 def greedy_seed_solution(

@@ -32,14 +32,13 @@ def main() -> None:
         ]
         all_rows.extend(compact_rows)
     write_raw_and_summary(
-        "results/raw/scalability_raw_results.csv",
-        "results/summary/scalability_summary_mean_std.csv",
+        "results/v2/raw/scalability_raw_results.csv",
+        "results/v2/summary/scalability_summary_mean_std.csv",
         all_rows,
         group_cols=["task_number"],
     )
 
-    pd.read_csv("results/summary/scalability_summary_mean_std.csv").to_markdown("paper_tables/scalability_summary.md", index=False)
-    plot_scalability(pd.read_csv("results/raw/scalability_raw_results.csv"), "results/figures/scalability.png")
+    plot_scalability(pd.read_csv("results/v2/raw/scalability_raw_results.csv"), "results/v2/figures/scalability.png")
 
 
 if __name__ == "__main__":

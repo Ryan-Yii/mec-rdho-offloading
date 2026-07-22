@@ -70,12 +70,16 @@ def generate_system(
     num_edge_servers: int,
     num_cloud_servers: int,
     num_tasks: int,
+    cpu_capacity_scale: float = 1.0,
+    sla_scale: float = 1.0,
 ) -> SystemModel:
     rng = np.random.default_rng(seed)
 
-    device_cpu_hz = rng.uniform(2.2e9, 3.0e9, size=num_devices)
-    edge_cpu_hz = rng.uniform(18.0e9, 28.0e9, size=num_edge_servers)
-    cloud_cpu_hz = rng.uniform(55.0e9, 75.0e9, size=num_cloud_servers)
+    if cpu_capacity_scale <= 0.0 or sla_scale <= 0.0:
+        raise ValueError("cpu_capacity_scale and sla_scale must be positive")
+    device_cpu_hz = rng.uniform(2.2e9, 3.0e9, size=num_devices) * cpu_capacity_scale
+    edge_cpu_hz = rng.uniform(18.0e9, 28.0e9, size=num_edge_servers) * cpu_capacity_scale
+    cloud_cpu_hz = rng.uniform(55.0e9, 75.0e9, size=num_cloud_servers) * cpu_capacity_scale
     device_min_cpu_hz = np.full(num_devices, 0.2e9)
     edge_min_cpu_hz = np.full(num_edge_servers, 0.8e9)
     cloud_min_cpu_hz = np.full(num_cloud_servers, 1.5e9)
@@ -112,9 +116,9 @@ def generate_system(
             task_type=task_type,
             input_data_mb=_sample_range(rng, ranges["input_data_mb"]),
             cpu_cycles_gcycles=_sample_range(rng, ranges["cpu_cycles_gcycles"]),
-            max_delay_s=_sample_range(rng, ranges["max_delay_s"]),
-            aoi_threshold_s=_sample_range(rng, ranges["aoi_threshold_s"]),
-            energy_budget_j=_sample_range(rng, ranges["energy_budget_j"]),
+            max_delay_s=_sample_range(rng, ranges["max_delay_s"]) * sla_scale,
+            aoi_threshold_s=_sample_range(rng, ranges["aoi_threshold_s"]) * sla_scale,
+            energy_budget_j=_sample_range(rng, ranges["energy_budget_j"]) * sla_scale,
             battery_ratio=_sample_range(rng, ranges["battery_ratio"]),
             priority=_sample_range(rng, ranges["priority"]),
             update_interval_s=_sample_range(rng, ranges["update_interval_s"]),
