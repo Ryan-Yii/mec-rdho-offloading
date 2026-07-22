@@ -96,6 +96,22 @@ def test_server_heterogeneity_scale_preserves_topology_and_changes_dispersion():
     assert np.std(canonical.edge_cpu_hz) > 0.0
 
 
+def test_default_server_heterogeneity_is_an_exact_identity():
+    implicit = generate_system(seed=226, num_devices=5, num_edge_servers=3, num_cloud_servers=2, num_tasks=8)
+    explicit = generate_system(
+        seed=226,
+        num_devices=5,
+        num_edge_servers=3,
+        num_cloud_servers=2,
+        num_tasks=8,
+        server_heterogeneity_scale=1.0,
+    )
+    assert np.array_equal(implicit.edge_cpu_hz, explicit.edge_cpu_hz)
+    assert np.array_equal(implicit.cloud_cpu_hz, explicit.cloud_cpu_hz)
+    assert np.array_equal(implicit.device_to_edge_rate_bps, explicit.device_to_edge_rate_bps)
+    assert np.array_equal(implicit.edge_to_cloud_rate_bps, explicit.edge_to_cloud_rate_bps)
+
+
 def test_local_node_is_always_the_source_device():
     system = _system(seed=333)
     encoded = np.zeros((len(system.tasks), 2), dtype=float)

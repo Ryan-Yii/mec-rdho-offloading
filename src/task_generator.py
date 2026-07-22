@@ -68,6 +68,8 @@ def _scale_positive_heterogeneity(values: np.ndarray, scale: float) -> np.ndarra
     """Scale positive-value dispersion around its mean while retaining zeros."""
 
     adjusted = np.array(values, dtype=float, copy=True)
+    if np.isclose(scale, 1.0):
+        return adjusted
     positive = adjusted > 0.0
     if np.any(positive):
         mean = float(np.mean(adjusted[positive]))
