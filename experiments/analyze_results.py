@@ -132,7 +132,7 @@ def generate_main_figures(raw_csv: str | Path, convergence_csv: str | Path, outp
     plot_convergence(convergence_csv, output / "convergence_curve.png")
     plot_bar(df, "energy", "Mean device-side energy proxy (J)", output / "energy_comparison.png")
     plot_bar(df, "delay", "Average delay (s)", output / "delay_comparison.png")
-    plot_bar(df, "aoi", "Average AoI surrogate (s)", output / "aoi_comparison.png")
+    plot_bar(df, "aoi", "Periodic average AoI approximation (s)", output / "aoi_comparison.png")
     plot_qoe_fairness(df, output / "qoe_fairness_comparison.png")
     plot_bar(df, "csr", "Soft CSR", output / "csr_comparison.png", higher_is_better=True)
     plot_radar(df, output / "radar_chart.png")

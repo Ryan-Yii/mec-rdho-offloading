@@ -1,42 +1,19 @@
 # Data and Code Availability
 
-This repository contains the code and generated experimental artefacts used for the revised RDHO mobile edge computing study.
+All tasks, node capacities, link rates, and service parameters in this study are generated synthetically from versioned configurations and the ranges implemented in `src/task_generator.py`. No proprietary, personal, confidential, or human-subject data are used.
 
-## Data source
+The fresh physical-model results are stored exclusively under `results/v2/`:
 
-All task and network instances are generated synthetically by `src/task_generator.py` from the ranges documented in:
+- `raw/`: per-seed main, equal-NFE, common-control, ablation, scalability, task, and convergence records;
+- `summary/`: generated mean and standard-deviation summaries;
+- `statistics/`: paired two-sided Wilcoxon tests, Holm corrections, effect sizes, and wins/ties/losses;
+- `sensitivity/`: objective, dynamic-penalty, task-utility, CPU-capacity, SLA, and server-heterogeneity studies;
+- `figures/` and `logs/`: generated plots and execution logs.
 
-- `results/raw/task_generation_ranges.csv`
-- `results/raw/task_parameters.csv`
-- `paper_tables/task_generation_ranges.md`
+Every result row retains the seed, algorithm, reporting objective and decomposition, device-side energy, delay, AoI, QoE, active-user fairness, soft CSR, hard-feasibility indicator, active-node capacity utilisation, runtime, and NFE as applicable. The main and controlled experiment hard-feasibility rates are 1.0 because all algorithms share the same legal-node decoder and deterministic capacity repair. CPU utilisation is reported independently, so feasibility is not confused with forced node saturation.
 
-No proprietary, confidential, personal, or human-subject data are used.
+Install `requirements.txt`, run `python -m pytest tests -q`, and execute the commands in `README.md`. `python -m experiments.generate_v2_artifacts` rebuilds `paper_tables/v2/`, `figures/paper/v2/`, `paper_artifacts/manifest.csv`, and the experiment execution report solely from V2 data. The manifest records the source data, generation script, output hash, and manuscript location.
 
-## Code
-
-- `src/`: system data structures, task generation, metrics, objective evaluation, and algorithm implementations.
-- `experiments/`: reproducible main, ablation, scalability, sensitivity, statistical-analysis, and figure-generation entry points.
-- `configs/`: YAML settings for each experiment family.
-- `tests/`: regression tests covering objective decomposition, fixed reporting semantics, same-iteration penalty comparison, user-level fairness, coordinate-specific follower bounds, ablation isolation, main/ablation reference reuse, result export, statistical outputs, and figure generation.
-- `tools/revise_manuscript.py`: earlier manuscript-generation helper retained for regression coverage.
-
-## Result artefacts
-
-Per-run outputs, convergence histories, summaries, statistical tests, and figures are stored in:
-
-- `results/raw/`
-- `results/summary/`
-- `results/figures/`
-- `results/sensitivity/`
-- `paper_tables/`
-- `figures/`
-
-The main tables report a fixed-reference reporting fitness with penalty coefficient `lambda_ref = 1.0`. The iteration-dependent dynamic penalty is used only to guide RDHO's search. Raw components, search fitness, reporting fitness, runtime, and number of function evaluations are retained in the CSV outputs.
-
-## Reproduction
-
-Install the dependencies in `requirements.txt`, run `python -m pytest tests -q`, and execute the commands listed in `README.md`. For each paired run, all algorithms receive the same generated MEC scenario; their stochastic search streams use deterministic algorithm-specific seeds. RDHO component variants share the same base RDHO stream, and the ablation RDHO-full row reuses the paired main-run result rather than a second independent execution.
-
-Public repository location:
+The public repository is:
 
 https://github.com/Ryan-Yii/mec-rdho-offloading

@@ -18,11 +18,15 @@ def test_baseline_parameters_are_available_and_parseable():
 
 def test_main_ablation_scalability_and_sensitivity_outputs_are_present():
     expected = [
-        "results/summary/main_30_summary_mean_std.csv",
-        "results/summary/ablation_30_summary_mean_std.csv",
-        "results/summary/scalability_summary_mean_std.csv",
-        "results/sensitivity/summary/weight_sensitivity_summary_mean_std.csv",
-        "results/sensitivity/summary/dynamic_penalty_sensitivity_summary_mean_std.csv",
+        "results/v2/summary/main_30_summary_mean_std.csv",
+        "results/v2/summary/equal_nfe_30_summary_mean_std.csv",
+        "results/v2/summary/common_control_30_summary_mean_std.csv",
+        "results/v2/summary/ablation_30_summary_mean_std.csv",
+        "results/v2/summary/scalability_summary_mean_std.csv",
+        "results/v2/sensitivity/summary/weight_sensitivity_summary_mean_std.csv",
+        "results/v2/sensitivity/summary/dynamic_penalty_sensitivity_summary_mean_std.csv",
+        "results/v2/sensitivity/summary/utility_sensitivity_summary_mean_std.csv",
+        "results/v2/sensitivity/summary/physical_sensitivity_summary_mean_std.csv",
     ]
 
     for relative_path in expected:
@@ -32,7 +36,7 @@ def test_main_ablation_scalability_and_sensitivity_outputs_are_present():
 
 
 def test_readme_rdho_full_values_match_main_summary():
-    with (ROOT / "results" / "summary" / "main_30_summary_mean_std.csv").open(newline="", encoding="utf-8") as handle:
+    with (ROOT / "results" / "v2" / "summary" / "main_30_summary_mean_std.csv").open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     rdho = next(row for row in rows if row["algorithm"] == "RDHO")
 
@@ -49,10 +53,10 @@ def test_readme_rdho_full_values_match_main_summary():
 
 
 def test_paper_table_rdho_values_match_main_summary():
-    with (ROOT / "results" / "summary" / "main_30_summary_mean_std.csv").open(newline="", encoding="utf-8") as handle:
+    with (ROOT / "results" / "v2" / "summary" / "main_30_summary_mean_std.csv").open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
     rdho = next(row for row in rows if row["algorithm"] == "RDHO")
-    table = (ROOT / "paper_tables" / "main_30_summary_mean_std.md").read_text(encoding="utf-8")
+    table = (ROOT / "paper_tables" / "v2" / "main_30_summary_mean_std.md").read_text(encoding="utf-8")
 
     row = next(line for line in table.splitlines() if re.match(r"\| RDHO\s+\|", line))
     assert f"{float(rdho['fitness_mean']):.6f}" in row

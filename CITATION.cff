@@ -1,6 +1,6 @@
 cff-version: 1.2.0
-message: "If you use this code or the generated experimental results, please cite this repository and contact the authors for manuscript status."
-title: "Hybrid RIME-DBO Optimisation for QoE- and Fairness-Aware Task Offloading in Mobile Edge Computing"
+message: "If you use the physical-model code or generated V2 results, please cite this repository and contact the authors for manuscript status."
+title: "Capacity-Feasible Joint Task Offloading and Physical CPU Allocation in Mobile Edge Computing"
 type: software
 authors:
   - family-names: Su
@@ -12,17 +12,19 @@ authors:
 repository-code: "https://github.com/Ryan-Yii/mec-rdho-offloading"
 url: "https://github.com/Ryan-Yii/mec-rdho-offloading"
 license: MIT
-version: "1.0.0"
-date-released: "2026-07-09"
+version: "2.0.0-research"
+date-released: "2026-07-22"
 keywords:
   - mobile edge computing
   - task offloading
   - resource allocation
+  - physical CPU allocation
+  - capacity repair
   - Quality of Experience
   - fairness
   - hybrid metaheuristic optimisation
 abstract: >
   This repository provides the implementation, configuration files, raw
-  outputs, summary tables, and generated figures for experiments on Hybrid
-  RIME-DBO Optimisation (RDHO), a QoE- and fairness-aware task offloading
-  method for mobile edge computing.
+  outputs, controlled comparisons, summary tables, and generated figures for
+  capacity-feasible joint task offloading and physical CPU allocation using
+  RDHO and configured mobile edge computing baselines.
