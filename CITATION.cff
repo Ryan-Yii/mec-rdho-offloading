@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use this code or the generated experimental results, please cite the associated manuscript and this repository."
+message: "If you use this code or the generated experimental results, please cite this repository and contact the authors for manuscript status."
 title: "Hybrid RIME-DBO Optimisation for QoE- and Fairness-Aware Task Offloading in Mobile Edge Computing"
 type: software
 authors:
