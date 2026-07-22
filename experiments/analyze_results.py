@@ -21,6 +21,15 @@ COLORS = {
 }
 
 
+def save_figure(fig, output_path: str | Path) -> None:
+    """Save a raster manuscript preview and an editable vector counterpart."""
+
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output, dpi=300)
+    fig.savefig(output.with_suffix(".svg"), format="svg")
+
+
 def _ordered_algorithms(df: pd.DataFrame) -> list[str]:
     present = list(df["algorithm"].unique())
     return [algo for algo in ALGO_ORDER if algo in present] + [algo for algo in present if algo not in ALGO_ORDER]
@@ -46,7 +55,7 @@ def plot_bar(df: pd.DataFrame, metric: str, ylabel: str, output_path: str | Path
     ax.set_xticklabels([DISPLAY_LABELS.get(a, a) for a in algos], rotation=20, ha="right")
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    save_figure(fig, output_path)
     plt.close(fig)
 
 
@@ -65,7 +74,7 @@ def plot_qoe_fairness(df: pd.DataFrame, output_path: str | Path) -> None:
     ax.legend()
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    save_figure(fig, output_path)
     plt.close(fig)
 
 
@@ -96,7 +105,7 @@ def plot_radar(df: pd.DataFrame, output_path: str | Path) -> None:
     ax.set_ylim(0, 1)
     ax.legend(loc="upper right", bbox_to_anchor=(1.32, 1.12))
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    save_figure(fig, output_path)
     plt.close(fig)
 
 
@@ -112,7 +121,7 @@ def plot_convergence(convergence_csv: str | Path, output_path: str | Path) -> No
     ax.grid(alpha=0.25)
     ax.legend()
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    save_figure(fig, output_path)
     plt.close(fig)
 
 
@@ -145,7 +154,7 @@ def plot_weight_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> None
     ax.set_ylabel("Fixed-reference reporting fitness")
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()
-    fig.savefig(output / "weight_sensitivity_fitness.png", dpi=300)
+    save_figure(fig, output / "weight_sensitivity_fitness.png")
     plt.close(fig)
 
     metrics = [("qoe", "QoE", "#4472c4"), ("fairness", "Priority-aware fairness", "#70ad47"), ("csr", "CSR", "#ed7d31")]
@@ -162,7 +171,7 @@ def plot_weight_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> None
     ax.legend()
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()
-    fig.savefig(output / "weight_sensitivity_qoe_fairness_csr.png", dpi=300)
+    save_figure(fig, output / "weight_sensitivity_qoe_fairness_csr.png")
     plt.close(fig)
 
 
@@ -197,7 +206,7 @@ def plot_penalty_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> Non
                 ax.text(j, i, f"{values[i, j]:.3f}", ha="center", va="center", color="black", fontsize=9)
         fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     fig.tight_layout()
-    fig.savefig(output / "penalty_sensitivity_heatmaps.png", dpi=300)
+    save_figure(fig, output / "penalty_sensitivity_heatmaps.png")
     plt.close(fig)
 
 
@@ -250,7 +259,7 @@ def plot_ablation(df: pd.DataFrame, output_path: str | Path) -> None:
     ax2.set_ylabel("Soft CSR (higher is better)")
     ax2.set_ylim(0, 1)
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    save_figure(fig, output_path)
     plt.close(fig)
 
 
@@ -269,5 +278,5 @@ def plot_scalability(df: pd.DataFrame, output_path: str | Path) -> None:
     axes[1].set_ylabel("Runtime (s)")
     axes[1].grid(alpha=0.25)
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    save_figure(fig, output_path)
     plt.close(fig)
