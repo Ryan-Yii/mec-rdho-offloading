@@ -124,8 +124,8 @@ class RDHO(MetaheuristicOptimizer):
         else:
             c1 = self.rng.random(size=self.dim)
             c2 = self.rng.random(size=self.dim)
-            lower = np.broadcast_to(np.asarray([0.0, 0.2]), self.dim)
-            upper = np.broadcast_to(np.asarray([2.0, 1.0]), self.dim)
+            lower = np.broadcast_to(np.asarray([0.0, 0.0]), self.dim)
+            upper = np.broadcast_to(np.asarray([1.0, 1.0]), self.dim)
             candidate = best + c1 * (current - lower) + c2 * (current - upper)
         return candidate
 
@@ -165,14 +165,15 @@ class RDHO(MetaheuristicOptimizer):
     def _local_refine(self, solution: np.ndarray, current_fitness: float) -> tuple[np.ndarray, float]:
         best_solution = np.array(solution, copy=True)
         best_fitness = float(current_fitness)
-        resource_candidates = (0.25, 0.40, 0.60, 0.80, 1.00)
+        node_candidates = (0.08, 0.28, 0.48, 0.68, 0.88)
+        resource_candidates = (0.10, 0.30, 0.55, 0.80, 1.00)
         for _ in range(2):
             improved = False
             for task_idx in self.rng.permutation(len(self.system.tasks)):
-                for mode in (0.0, 1.0, 2.0):
+                for node in node_candidates:
                     for resource in resource_candidates:
                         trial = np.array(best_solution, copy=True)
-                        trial[task_idx, 0] = mode
+                        trial[task_idx, 0] = node
                         trial[task_idx, 1] = resource
                         fit = self.evaluate_metrics(trial, penalty_scale=1.0).reporting_fitness
                         if fit < best_fitness:

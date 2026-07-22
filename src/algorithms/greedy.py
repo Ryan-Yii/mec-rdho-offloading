@@ -17,7 +17,9 @@ class GreedyEnergyDelay:
         **_: object,
     ) -> None:
         self.system = system
-        self.weights = weights or FitnessWeights(energy=0.4, delay=0.4, aoi=0.2, qoe=0.0, fairness=0.0)
+        # Greedy-ED is named after its construction rule; reporting still uses
+        # the common physical objective and repair for a fair comparison.
+        self.weights = weights or FitnessWeights()
         self.nfe = 0
 
     def _evaluate(self, solution):

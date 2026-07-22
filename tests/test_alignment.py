@@ -31,11 +31,11 @@ def test_user_qoe_fairness_aggregates_tasks_by_source_device():
 
 
 class _DeterministicOptimizer(MetaheuristicOptimizer):
-    """One-dimensional marker encoded in the computation-control slot."""
+    """One-dimensional marker encoded in the normalised CPU slot."""
 
     def initialize_population(self) -> np.ndarray:
         pop = np.zeros((2, len(self.system.tasks), 2), dtype=float)
-        pop[:, :, 0] = 1.0
+        pop[:, :, 0] = 0.5
         pop[0, :, 1] = 0.2
         pop[1, :, 1] = 0.4
         return pop
@@ -152,9 +152,9 @@ def test_rdho_follower_foraging_uses_coordinate_specific_bounds():
 
     optimizer.rng = _NoPunctureRng()
     updated = optimizer._follower_update(current, best, iteration=10)
-    # With c1=c2=1, r should use L_r=0.2 and U_r=1.0:
-    # 0.6 + (0.6-0.2) + (0.6-1.0) = 0.6.
-    assert updated[:, 1] == pytest.approx(np.full(4, 0.6))
+    # With c1=c2=1, the normalised resource uses L_r=0 and U_r=1:
+    # 0.6 + (0.6-0.0) + (0.6-1.0) = 0.8.
+    assert updated[:, 1] == pytest.approx(np.full(4, 0.8))
 
 
 def test_all_rdho_variants_share_same_base_random_stream():

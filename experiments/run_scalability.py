@@ -20,6 +20,11 @@ def main() -> None:
                 "seed": row["seed"],
                 "fitness": row["fitness"],
                 "csr": row["csr"],
+                "hard_feasible": row["hard_feasible"],
+                "capacity_utilisation_mean": row["capacity_utilisation_mean"],
+                "capacity_utilisation_max": row["capacity_utilisation_max"],
+                "qoe": row["qoe"],
+                "fairness": row["fairness"],
                 "runtime": row["runtime"],
                 "nfe": row["nfe"],
             }

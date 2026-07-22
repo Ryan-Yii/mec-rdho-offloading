@@ -73,14 +73,28 @@ def generate_system(
 ) -> SystemModel:
     rng = np.random.default_rng(seed)
 
-    device_cpu_hz = rng.uniform(0.8e9, 2.2e9, size=num_devices)
-    edge_cpu_hz = rng.uniform(8.0e9, 18.0e9, size=num_edge_servers)
-    cloud_cpu_hz = rng.uniform(25.0e9, 40.0e9, size=num_cloud_servers)
+    device_cpu_hz = rng.uniform(2.2e9, 3.0e9, size=num_devices)
+    edge_cpu_hz = rng.uniform(18.0e9, 28.0e9, size=num_edge_servers)
+    cloud_cpu_hz = rng.uniform(55.0e9, 75.0e9, size=num_cloud_servers)
+    device_min_cpu_hz = np.full(num_devices, 0.2e9)
+    edge_min_cpu_hz = np.full(num_edge_servers, 0.8e9)
+    cloud_min_cpu_hz = np.full(num_cloud_servers, 1.5e9)
     device_energy_coeff = rng.uniform(0.8e-27, 1.4e-27, size=num_devices)
     device_tx_power_w = rng.uniform(0.2, 0.8, size=num_devices)
 
     device_to_edge_rate_bps = rng.uniform(8.0e6, 30.0e6, size=(num_devices, num_edge_servers))
     edge_to_cloud_rate_bps = rng.uniform(60.0e6, 150.0e6, size=(num_edge_servers, num_cloud_servers))
+    # A sparse but connected rate graph makes server selection a real decision.
+    device_to_edge_rate_bps[rng.random(device_to_edge_rate_bps.shape) < 0.10] = 0.0
+    edge_to_cloud_rate_bps[rng.random(edge_to_cloud_rate_bps.shape) < 0.05] = 0.0
+    for device_id in range(num_devices):
+        if not np.any(device_to_edge_rate_bps[device_id] > 0.0):
+            edge_id = int(rng.integers(0, num_edge_servers))
+            device_to_edge_rate_bps[device_id, edge_id] = float(rng.uniform(8.0e6, 30.0e6))
+    for cloud_id in range(num_cloud_servers):
+        if not np.any(edge_to_cloud_rate_bps[:, cloud_id] > 0.0):
+            edge_id = int(rng.integers(0, num_edge_servers))
+            edge_to_cloud_rate_bps[edge_id, cloud_id] = float(rng.uniform(60.0e6, 150.0e6))
 
     if num_tasks <= len(TASK_TYPE_ORDER):
         task_types = TASK_TYPE_ORDER[:num_tasks]
@@ -115,6 +129,9 @@ def generate_system(
         device_cpu_hz=device_cpu_hz,
         edge_cpu_hz=edge_cpu_hz,
         cloud_cpu_hz=cloud_cpu_hz,
+        device_min_cpu_hz=device_min_cpu_hz,
+        edge_min_cpu_hz=edge_min_cpu_hz,
+        cloud_min_cpu_hz=cloud_min_cpu_hz,
         device_energy_coeff=device_energy_coeff,
         device_tx_power_w=device_tx_power_w,
         device_to_edge_rate_bps=device_to_edge_rate_bps,

@@ -30,6 +30,10 @@ RAW_COLUMNS = [
     "qoe",
     "fairness",
     "csr",
+    "hard_feasible",
+    "capacity_utilisation_mean",
+    "capacity_utilisation_max",
+    "assignment_unique",
     "runtime",
     "nfe",
     "pre_refinement_fitness",
@@ -146,6 +150,10 @@ def run_optimizer(
         "qoe": metrics.qoe,
         "fairness": metrics.fairness,
         "csr": metrics.csr,
+        "hard_feasible": int(metrics.hard_feasible),
+        "capacity_utilisation_mean": metrics.capacity_utilisation_mean,
+        "capacity_utilisation_max": metrics.capacity_utilisation_max,
+        "assignment_unique": int(metrics.assignment_unique),
         "runtime": runtime,
         "nfe": result.nfe,
         "pre_refinement_fitness": result.pre_refinement_fitness,
@@ -222,7 +230,7 @@ def summarize_mean_std(raw_rows: List[Dict], group_cols: List[str] | None = None
     df = pd.DataFrame(raw_rows)
     numeric_cols = [
         col
-        for col in ["fitness", "base_objective", "penalty", "search_fitness", "energy", "delay", "aoi", "qoe", "fairness", "csr", "runtime", "nfe", "pre_refinement_fitness", "local_refinement_gain"]
+        for col in ["fitness", "base_objective", "penalty", "search_fitness", "energy", "delay", "aoi", "qoe", "fairness", "csr", "hard_feasible", "capacity_utilisation_mean", "capacity_utilisation_max", "assignment_unique", "runtime", "nfe", "pre_refinement_fitness", "local_refinement_gain"]
         if col in df.columns
     ]
     records = []
