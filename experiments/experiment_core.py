@@ -9,7 +9,7 @@ import pandas as pd
 from scipy.stats import rankdata, wilcoxon
 
 from src.algorithms import CWTSSA, DBO, RDHO, RIME, TLBOHHO, GreedyEnergyDelay
-from src.metrics import FitnessWeights, evaluate_solution
+from src.metrics import FitnessWeights, UtilityWeights, evaluate_solution
 from src.system_model import SystemModel
 from src.task_generator import generate_system, task_parameter_rows
 from src.utils.io import ensure_parent, load_yaml, write_rows
@@ -84,12 +84,22 @@ def weights_from_config(config: dict | None) -> FitnessWeights:
     )
 
 
+def utility_weights_from_config(config: dict | None) -> UtilityWeights:
+    config = config or {}
+    return UtilityWeights(
+        delay=float(config.get("delay", 0.45)),
+        energy=float(config.get("energy", 0.30)),
+        aoi=float(config.get("aoi", 0.25)),
+    )
+
+
 def build_system_from_config(
     config: dict,
     seed: int,
     task_number: int | None = None,
     cpu_capacity_scale: float = 1.0,
     sla_scale: float = 1.0,
+    server_heterogeneity_scale: float = 1.0,
 ) -> SystemModel:
     system = config["system"]
     return generate_system(
@@ -100,6 +110,7 @@ def build_system_from_config(
         num_tasks=int(task_number or system["tasks"]),
         cpu_capacity_scale=cpu_capacity_scale,
         sla_scale=sla_scale,
+        server_heterogeneity_scale=server_heterogeneity_scale,
     )
 
 
@@ -110,6 +121,7 @@ def make_optimizer(
     max_iter: int,
     population_size: int,
     weights: FitnessWeights | None = None,
+    utility_weights: UtilityWeights | None = None,
     penalty_base: float = 1.0,
     dynamic_penalty_alpha: float = 2.0,
 ):
@@ -136,6 +148,7 @@ def make_optimizer(
         population_size=population_size,
         seed=derive_seed(seed, "RDHO" if label == "RDHO" else algorithm_name),
         weights=weights,
+        utility_weights=utility_weights,
         penalty_base=penalty_base,
         **kwargs,
     )
@@ -149,6 +162,7 @@ def run_optimizer(
     max_iter: int,
     population_size: int,
     weights: FitnessWeights | None = None,
+    utility_weights: UtilityWeights | None = None,
     penalty_base: float = 1.0,
     dynamic_penalty_alpha: float = 2.0,
 ) -> Tuple[Dict[str, float | int | str], List[float]]:
@@ -159,13 +173,20 @@ def run_optimizer(
         max_iter=max_iter,
         population_size=population_size,
         weights=weights,
+        utility_weights=utility_weights,
         penalty_base=penalty_base,
         dynamic_penalty_alpha=dynamic_penalty_alpha,
     )
     start = time.perf_counter()
     result = optimizer.optimize()
     runtime = time.perf_counter() - start
-    metrics = evaluate_solution(system, result.solution, weights=weights, penalty_scale=1.0)
+    metrics = evaluate_solution(
+        system,
+        result.solution,
+        weights=weights,
+        utility_weights=utility_weights,
+        penalty_scale=1.0,
+    )
     row = {
         "run_id": run_id,
         "seed": seed,
@@ -213,9 +234,11 @@ def run_algorithm_suite(
     algorithm_iterations: dict[str, int] | None = None,
     cpu_capacity_scale: float = 1.0,
     sla_scale: float = 1.0,
+    server_heterogeneity_scale: float = 1.0,
 ) -> Tuple[List[Dict], List[Dict]]:
     experiment = config["experiment"]
     weights = weights_from_config(config.get("weights"))
+    utility_weights = utility_weights_from_config(config.get("utility_weights"))
     penalty = config.get("penalty", {})
     penalty_base = float(penalty.get("lambda0", penalty.get("base", 1.0)))
     dynamic_penalty_alpha = float(penalty.get("alpha", 2.0))
@@ -233,6 +256,7 @@ def run_algorithm_suite(
             task_number=task_number,
             cpu_capacity_scale=cpu_capacity_scale,
             sla_scale=sla_scale,
+            server_heterogeneity_scale=server_heterogeneity_scale,
         )
         for algorithm_name in algorithms:
             row, history = run_optimizer(
@@ -243,6 +267,7 @@ def run_algorithm_suite(
                 max_iter=int((algorithm_iterations or {}).get(algorithm_name, max_iter)),
                 population_size=population_size,
                 weights=weights,
+                utility_weights=utility_weights,
                 penalty_base=penalty_base,
                 dynamic_penalty_alpha=dynamic_penalty_alpha,
             )

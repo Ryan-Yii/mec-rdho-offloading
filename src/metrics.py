@@ -18,6 +18,20 @@ class FitnessWeights:
 
 
 @dataclass(frozen=True)
+class UtilityWeights:
+    """Internal coefficients of the model-based task utility."""
+
+    delay: float = 0.45
+    energy: float = 0.30
+    aoi: float = 0.25
+
+    def __post_init__(self) -> None:
+        values = (self.delay, self.energy, self.aoi)
+        if any(value < 0.0 for value in values) or not np.isclose(sum(values), 1.0):
+            raise ValueError("utility weights must be non-negative and sum to 1.0")
+
+
+@dataclass(frozen=True)
 class DecodedSolution:
     """Physical assignment and allocation after deterministic repair."""
 
@@ -56,6 +70,7 @@ class Metrics:
 
 
 DEFAULT_WEIGHTS = FitnessWeights()
+DEFAULT_UTILITY_WEIGHTS = UtilityWeights()
 REPORTING_PENALTY_SCALE = 1.0
 
 
@@ -219,9 +234,11 @@ def evaluate_solution(
     system: SystemModel,
     solution: np.ndarray,
     weights: FitnessWeights | None = None,
+    utility_weights: UtilityWeights | None = None,
     penalty_scale: float = REPORTING_PENALTY_SCALE,
 ) -> Metrics:
     weights = weights or DEFAULT_WEIGHTS
+    utility_weights = utility_weights or DEFAULT_UTILITY_WEIGHTS
     decoded = decode_and_repair(system, solution)
     energies: list[float] = []
     delays: list[float] = []
@@ -257,7 +274,13 @@ def evaluate_solution(
         delay_score = float(np.exp(-delay / max(task.max_delay_s, 1.0e-12)))
         energy_score = float(np.exp(-energy / max(task.energy_budget_j, 1.0e-12)))
         aoi_score = float(np.exp(-aoi / max(task.aoi_threshold_s, 1.0e-12)))
-        utility = float(np.clip(0.45 * delay_score + 0.30 * energy_score + 0.25 * aoi_score, 0.0, 1.0))
+        utility = float(np.clip(
+            utility_weights.delay * delay_score
+            + utility_weights.energy * energy_score
+            + utility_weights.aoi * aoi_score,
+            0.0,
+            1.0,
+        ))
 
         energies.append(float(energy))
         delays.append(float(delay))

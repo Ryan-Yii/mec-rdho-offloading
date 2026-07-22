@@ -5,7 +5,7 @@ from typing import Callable, List
 
 import numpy as np
 
-from ..metrics import FitnessWeights, Metrics, evaluate_solution, fitness_from_components
+from ..metrics import FitnessWeights, Metrics, UtilityWeights, evaluate_solution, fitness_from_components
 from ..system_model import SystemModel
 
 
@@ -29,6 +29,7 @@ class MetaheuristicOptimizer:
         population_size: int = 50,
         seed: int = 0,
         weights: FitnessWeights | None = None,
+        utility_weights: UtilityWeights | None = None,
         penalty_base: float = 1.0,
         common_initial_population: np.ndarray | None = None,
         common_coordinate_refinement: bool = False,
@@ -38,6 +39,7 @@ class MetaheuristicOptimizer:
         self.population_size = population_size
         self.rng = np.random.default_rng(seed)
         self.weights = weights or FitnessWeights()
+        self.utility_weights = utility_weights or UtilityWeights()
         self.penalty_base = penalty_base
         self.common_initial_population = None if common_initial_population is None else self.clip_population(common_initial_population)
         self.common_coordinate_refinement = common_coordinate_refinement
@@ -73,6 +75,7 @@ class MetaheuristicOptimizer:
             self.system,
             self.clip(solution),
             weights=self.weights,
+            utility_weights=self.utility_weights,
             penalty_scale=penalty_scale,
         )
 
@@ -184,11 +187,14 @@ class MetaheuristicOptimizer:
 def greedy_seed_solution(
     system: SystemModel,
     weights: FitnessWeights | None = None,
+    utility_weights: UtilityWeights | None = None,
     evaluator: Callable[[np.ndarray], Metrics] | None = None,
 ) -> np.ndarray:
     solution = np.full((len(system.tasks), 2), 0.5, dtype=float)
     candidates = [(node, resource) for node in (0.08, 0.35, 0.62, 0.90) for resource in (0.20, 0.50, 0.80, 1.00)]
-    score = evaluator or (lambda value: evaluate_solution(system, value, weights=weights))
+    score = evaluator or (
+        lambda value: evaluate_solution(system, value, weights=weights, utility_weights=utility_weights)
+    )
     for idx in range(len(system.tasks)):
         best_pair = solution[idx].copy()
         best_fit = score(solution).reporting_fitness

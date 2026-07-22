@@ -58,6 +58,33 @@ weight_settings:
       aoi: 0.35
       qoe: 0.20
       fairness: 0.20
+  - setting: S6
+    description: Physical terms only (E+D+A)
+    weights:
+      energy: 0.30
+      delay: 0.30
+      aoi: 0.40
+      qoe: 0.00
+      fairness: 0.00
+  - setting: S7
+    description: Physical terms and aggregate QoE (E+D+A+Q)
+    weights:
+      energy: 0.20
+      delay: 0.20
+      aoi: 0.25
+      qoe: 0.35
+      fairness: 0.00
+
+utility_settings:
+  - setting: U1
+    description: Canonical task-utility coefficients
+    weights: {delay: 0.45, energy: 0.30, aoi: 0.25}
+  - setting: U2
+    description: Equal task-utility coefficients
+    weights: {delay: 0.3333333333333333, energy: 0.3333333333333333, aoi: 0.3333333333333333}
+  - setting: U3
+    description: Freshness-oriented task utility
+    weights: {delay: 0.30, energy: 0.20, aoi: 0.50}
 
 penalty_grid:
   lambda0:
@@ -71,3 +98,4 @@ penalty_grid:
 
 capacity_scales: [0.8, 1.0, 1.2]
 sla_scales: [0.8, 1.0, 1.2]
+server_heterogeneity_scales: [0.0, 1.0, 1.5]

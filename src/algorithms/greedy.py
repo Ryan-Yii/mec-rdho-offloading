@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ..metrics import FitnessWeights, evaluate_solution
+from ..metrics import FitnessWeights, UtilityWeights, evaluate_solution
 from ..system_model import SystemModel
 from .base import OptimizerResult, greedy_seed_solution
 
@@ -13,6 +13,7 @@ class GreedyEnergyDelay:
         population_size: int = 0,
         seed: int = 0,
         weights: FitnessWeights | None = None,
+        utility_weights: UtilityWeights | None = None,
         penalty_base: float = 1.0,
         **_: object,
     ) -> None:
@@ -20,15 +21,27 @@ class GreedyEnergyDelay:
         # Greedy-ED is named after its construction rule; reporting still uses
         # the common physical objective and repair for a fair comparison.
         self.weights = weights or FitnessWeights()
+        self.utility_weights = utility_weights or UtilityWeights()
         self.nfe = 0
 
     def _evaluate(self, solution):
         self.nfe += 1
-        return evaluate_solution(self.system, solution, weights=self.weights, penalty_scale=1.0)
+        return evaluate_solution(
+            self.system,
+            solution,
+            weights=self.weights,
+            utility_weights=self.utility_weights,
+            penalty_scale=1.0,
+        )
 
     def optimize(self) -> OptimizerResult:
         self.nfe = 0
-        solution = greedy_seed_solution(self.system, self.weights, evaluator=self._evaluate)
+        solution = greedy_seed_solution(
+            self.system,
+            self.weights,
+            utility_weights=self.utility_weights,
+            evaluator=self._evaluate,
+        )
         metrics = self._evaluate(solution)
         return OptimizerResult(
             solution=solution,

@@ -136,6 +136,22 @@ def test_additional_figure_generators_create_files(tmp_path):
     assert scale_path.exists() and scale_path.stat().st_size > 0
 
 
+def test_factor_sensitivity_figure_generator(tmp_path):
+    import pandas as pd
+    from experiments.analyze_results import plot_factor_sensitivity
+
+    raw = tmp_path / "factor.csv"
+    pd.DataFrame({
+        "setting": ["A", "A", "B", "B"],
+        "fitness": [0.8, 0.9, 1.0, 1.1],
+        "csr": [0.7, 0.8, 0.6, 0.7],
+        "capacity_utilisation_mean": [0.5, 0.6, 0.7, 0.8],
+    }).to_csv(raw, index=False)
+    output = tmp_path / "factor.png"
+    plot_factor_sensitivity(raw, "setting", "Setting", output)
+    assert output.exists() and output.with_suffix(".svg").exists()
+
+
 def test_rdho_follower_foraging_uses_coordinate_specific_bounds():
     from src.algorithms.rdho import RDHO
 

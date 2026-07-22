@@ -64,6 +64,17 @@ def _sample_range(rng: np.random.Generator, values: Tuple[float, float]) -> floa
     return float(rng.uniform(values[0], values[1]))
 
 
+def _scale_positive_heterogeneity(values: np.ndarray, scale: float) -> np.ndarray:
+    """Scale positive-value dispersion around its mean while retaining zeros."""
+
+    adjusted = np.array(values, dtype=float, copy=True)
+    positive = adjusted > 0.0
+    if np.any(positive):
+        mean = float(np.mean(adjusted[positive]))
+        adjusted[positive] = mean + scale * (adjusted[positive] - mean)
+    return adjusted
+
+
 def generate_system(
     seed: int,
     num_devices: int,
@@ -72,14 +83,19 @@ def generate_system(
     num_tasks: int,
     cpu_capacity_scale: float = 1.0,
     sla_scale: float = 1.0,
+    server_heterogeneity_scale: float = 1.0,
 ) -> SystemModel:
     rng = np.random.default_rng(seed)
 
-    if cpu_capacity_scale <= 0.0 or sla_scale <= 0.0:
-        raise ValueError("cpu_capacity_scale and sla_scale must be positive")
+    if cpu_capacity_scale <= 0.0 or sla_scale <= 0.0 or server_heterogeneity_scale < 0.0:
+        raise ValueError("capacity and SLA scales must be positive; heterogeneity must be non-negative")
     device_cpu_hz = rng.uniform(2.2e9, 3.0e9, size=num_devices) * cpu_capacity_scale
-    edge_cpu_hz = rng.uniform(18.0e9, 28.0e9, size=num_edge_servers) * cpu_capacity_scale
-    cloud_cpu_hz = rng.uniform(55.0e9, 75.0e9, size=num_cloud_servers) * cpu_capacity_scale
+    edge_cpu_hz = _scale_positive_heterogeneity(
+        rng.uniform(18.0e9, 28.0e9, size=num_edge_servers), server_heterogeneity_scale
+    ) * cpu_capacity_scale
+    cloud_cpu_hz = _scale_positive_heterogeneity(
+        rng.uniform(55.0e9, 75.0e9, size=num_cloud_servers), server_heterogeneity_scale
+    ) * cpu_capacity_scale
     device_min_cpu_hz = np.full(num_devices, 0.2e9)
     edge_min_cpu_hz = np.full(num_edge_servers, 0.8e9)
     cloud_min_cpu_hz = np.full(num_cloud_servers, 1.5e9)
@@ -99,6 +115,12 @@ def generate_system(
         if not np.any(edge_to_cloud_rate_bps[:, cloud_id] > 0.0):
             edge_id = int(rng.integers(0, num_edge_servers))
             edge_to_cloud_rate_bps[edge_id, cloud_id] = float(rng.uniform(60.0e6, 150.0e6))
+    device_to_edge_rate_bps = _scale_positive_heterogeneity(
+        device_to_edge_rate_bps, server_heterogeneity_scale
+    )
+    edge_to_cloud_rate_bps = _scale_positive_heterogeneity(
+        edge_to_cloud_rate_bps, server_heterogeneity_scale
+    )
 
     if num_tasks <= len(TASK_TYPE_ORDER):
         task_types = TASK_TYPE_ORDER[:num_tasks]

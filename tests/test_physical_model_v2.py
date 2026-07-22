@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from experiments.experiment_core import make_optimizer
-from src.metrics import _user_qoe_fairness, decode_and_repair, evaluate_solution
+from src.metrics import UtilityWeights, _user_qoe_fairness, decode_and_repair, evaluate_solution
 from src.task_generator import generate_system
 
 
@@ -52,6 +52,48 @@ def test_repair_preserves_feasible_cpu_requests_without_saturating_nodes():
     usage = np.bincount(decoded.node_ids, weights=decoded.frequencies_hz, minlength=system.num_nodes)
     active = usage > 0.0
     assert np.all(usage[active] < system.node_capacity_hz[active])
+
+
+def test_utility_coefficients_are_validated_and_change_qoe():
+    system = _system(seed=224, tasks=10)
+    encoded = np.full((len(system.tasks), 2), 0.55)
+    delay_oriented = evaluate_solution(
+        system,
+        encoded,
+        utility_weights=UtilityWeights(delay=0.8, energy=0.1, aoi=0.1),
+    )
+    energy_oriented = evaluate_solution(
+        system,
+        encoded,
+        utility_weights=UtilityWeights(delay=0.1, energy=0.8, aoi=0.1),
+    )
+    assert 0.0 <= delay_oriented.qoe <= 1.0
+    assert 0.0 <= energy_oriented.qoe <= 1.0
+    assert delay_oriented.qoe != pytest.approx(energy_oriented.qoe)
+    with pytest.raises(ValueError):
+        UtilityWeights(delay=0.5, energy=0.5, aoi=0.5)
+
+
+def test_server_heterogeneity_scale_preserves_topology_and_changes_dispersion():
+    homogeneous = generate_system(
+        seed=225,
+        num_devices=5,
+        num_edge_servers=3,
+        num_cloud_servers=2,
+        num_tasks=8,
+        server_heterogeneity_scale=0.0,
+    )
+    canonical = generate_system(
+        seed=225,
+        num_devices=5,
+        num_edge_servers=3,
+        num_cloud_servers=2,
+        num_tasks=8,
+        server_heterogeneity_scale=1.0,
+    )
+    assert np.array_equal(homogeneous.device_to_edge_rate_bps > 0.0, canonical.device_to_edge_rate_bps > 0.0)
+    assert np.std(homogeneous.edge_cpu_hz) == pytest.approx(0.0, abs=1.0e-6)
+    assert np.std(canonical.edge_cpu_hz) > 0.0
 
 
 def test_local_node_is_always_the_source_device():

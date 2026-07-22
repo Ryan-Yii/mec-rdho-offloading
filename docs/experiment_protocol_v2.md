@@ -23,10 +23,11 @@ while sharing seeds, repair, fixed reporting objective, and nominal budget.
 ## Additional studies
 
 Scalability covers 20, 40, 60, 80, and 100 tasks.  Sensitivity covers objective
-weights, dynamic-penalty parameters, QoE coefficients, CPU-capacity scaling,
-and SLA threshold scaling.  Weight-specific objectives are only compared inside
-their own setting; a fixed canonical reporting objective is also recorded when
-cross-setting interpretation is needed.
+weights, explicit physical-term / QoE objective compositions, dynamic-penalty
+parameters, task-utility coefficients, CPU-capacity scaling, SLA threshold
+scaling, and server heterogeneity.  Weight-specific objectives are only
+compared inside their own setting; a fixed canonical reporting objective is
+also recorded when cross-setting interpretation is needed.
 
 ## Reporting and statistics
 

@@ -157,7 +157,7 @@ def plot_weight_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> None
     save_figure(fig, output / "weight_sensitivity_fitness.png")
     plt.close(fig)
 
-    metrics = [("qoe", "QoE", "#4472c4"), ("fairness", "Priority-aware fairness", "#70ad47"), ("csr", "CSR", "#ed7d31")]
+    metrics = [("qoe", "QoE", "#4472c4"), ("fairness", "Per-user QoE fairness", "#70ad47"), ("csr", "Soft CSR", "#ed7d31")]
     width = 0.24
     fig, ax = plt.subplots(figsize=(9.2, 5.2))
     for offset, (metric, label, color) in zip((-width, 0.0, width), metrics):
@@ -214,9 +214,43 @@ def generate_sensitivity_figures(
     weight_raw_csv: str | Path,
     penalty_raw_csv: str | Path,
     output_dir: str | Path = "results/sensitivity/figures",
+    utility_raw_csv: str | Path | None = None,
+    physical_raw_csv: str | Path | None = None,
 ) -> None:
     plot_weight_sensitivity(weight_raw_csv, output_dir)
     plot_penalty_sensitivity(penalty_raw_csv, output_dir)
+    if utility_raw_csv is not None:
+        plot_factor_sensitivity(utility_raw_csv, "setting", "Task-utility setting", Path(output_dir) / "utility_sensitivity.png")
+    if physical_raw_csv is not None:
+        plot_factor_sensitivity(physical_raw_csv, "setting", "Physical-model setting", Path(output_dir) / "physical_sensitivity.png")
+
+
+def plot_factor_sensitivity(raw_csv: str | Path, category: str, xlabel: str, output_path: str | Path) -> None:
+    frame = pd.read_csv(raw_csv)
+    grouped = frame.groupby(category, sort=False).agg(
+        fitness=("fitness", "mean"),
+        csr=("csr", "mean"),
+        utilisation=("capacity_utilisation_mean", "mean"),
+    ).reset_index()
+    x = np.arange(len(grouped))
+    fig, axes = plt.subplots(1, 2, figsize=(11.2, 4.8))
+    axes[0].bar(x, grouped["fitness"], color="#4472c4", edgecolor="black")
+    axes[0].set_ylabel("Reporting fitness")
+    axes[0].grid(axis="y", alpha=0.25)
+    width = 0.36
+    axes[1].bar(x - width / 2, grouped["csr"], width, label="Soft CSR", color="#70ad47", edgecolor="black")
+    axes[1].bar(x + width / 2, grouped["utilisation"], width, label="Active-node utilisation", color="#ed7d31", edgecolor="black")
+    axes[1].set_ylim(0, 1.05)
+    axes[1].set_ylabel("Mean value")
+    axes[1].legend()
+    axes[1].grid(axis="y", alpha=0.25)
+    for axis in axes:
+        axis.set_xticks(x)
+        axis.set_xticklabels(grouped[category], rotation=25, ha="right")
+        axis.set_xlabel(xlabel)
+    fig.tight_layout()
+    save_figure(fig, output_path)
+    plt.close(fig)
 
 
 if __name__ == "__main__":

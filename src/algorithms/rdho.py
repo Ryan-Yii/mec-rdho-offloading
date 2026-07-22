@@ -46,6 +46,7 @@ class RDHO(MetaheuristicOptimizer):
         seed_solution = greedy_seed_solution(
             self.system,
             self.weights,
+            utility_weights=self.utility_weights,
             evaluator=lambda value: self.evaluate_metrics(value, penalty_scale=1.0),
         )
         population[0] = seed_solution
