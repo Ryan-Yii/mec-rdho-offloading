@@ -42,9 +42,9 @@ deterministic repair to every algorithm:
 1. If a node has more minimum-frequency assignments than it can serve, move
    the highest task IDs first to their legal alternative with the largest
    remaining minimum-frequency slack; ties use the smallest global node ID.
-2. For every node, retain each assigned task's minimum frequency and project
-   its requested excess frequency proportionally onto the node's remaining
-   capacity.
+2. For every node, retain each decoded request whenever its total is within
+   capacity; only if the sum of requested excess frequencies exceeds the
+   remaining capacity is that excess projected proportionally.
 
 The generated parameter ranges ensure a feasible minimum-frequency allocation
 exists.  The repair is deterministic, keeps one legal node per task, and

@@ -38,6 +38,22 @@ def test_capacity_projection_is_deterministic_and_conservative():
     assert np.all(usage <= system.node_capacity_hz + 1.0e-6)
 
 
+def test_repair_preserves_feasible_cpu_requests_without_saturating_nodes():
+    system = generate_system(seed=223, num_devices=5, num_edge_servers=3, num_cloud_servers=2, num_tasks=5)
+    encoded = np.zeros((len(system.tasks), 2), dtype=float)
+    encoded[:, 1] = 0.25
+    decoded = decode_and_repair(system, encoded)
+    expected = np.asarray([
+        system.device_min_cpu_hz[task.source_device]
+        + 0.25 * (system.device_cpu_hz[task.source_device] - system.device_min_cpu_hz[task.source_device])
+        for task in system.tasks
+    ])
+    assert np.allclose(decoded.frequencies_hz, expected)
+    usage = np.bincount(decoded.node_ids, weights=decoded.frequencies_hz, minlength=system.num_nodes)
+    active = usage > 0.0
+    assert np.all(usage[active] < system.node_capacity_hz[active])
+
+
 def test_local_node_is_always_the_source_device():
     system = _system(seed=333)
     encoded = np.zeros((len(system.tasks), 2), dtype=float)

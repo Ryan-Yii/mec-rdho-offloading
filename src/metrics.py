@@ -176,13 +176,14 @@ def decode_and_repair(system: SystemModel, solution: np.ndarray) -> DecodedSolut
         residual = max(0.0, float(capacities[node_id] - task_indices.size * minimum))
         requested_excess = np.maximum(requested[task_indices] - minimum, 0.0)
         total_excess = float(np.sum(requested_excess))
-        if total_excess > 0.0:
-            # Divide the remaining CPU capacity among all assigned tasks.  The
-            # excess requests are relative weights, not independently feasible
-            # per-task maxima when several tasks share the same node.
-            if residual > 0.0:
-                weights = requested_excess / total_excess
-                frequencies[task_indices] = minimum + residual * weights
+        if total_excess <= residual:
+            # The node is not saturated: retain each task's decoded physical
+            # CPU request instead of silently allocating unused capacity.
+            frequencies[task_indices] = minimum + requested_excess
+        elif total_excess > 0.0 and residual > 0.0:
+            # Only an overloaded node is projected proportionally in
+            # excess-over-minimum space, preserving every task's minimum CPU.
+            frequencies[task_indices] = minimum + residual * (requested_excess / total_excess)
     usage = np.bincount(node_ids, weights=frequencies, minlength=system.num_nodes)
     utilisation = usage / capacities
     modes = np.asarray([_decoded_mode(system, int(node)) for node in node_ids], dtype=int)
