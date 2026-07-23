@@ -1,9 +1,45 @@
 # V2 Experiment Execution Report
 
-All listed files were generated from seeded V2 configurations after the physical CPU projection fix.
-The pre-fix outputs are outside the repository and are not consumed by any generator.
+## Provenance
 
-Repository commit at artifact generation: `78c51c13ce7405654d488aea593d184be930e16a`
+All numerical files were freshly generated from seeded V2 configurations after the physical CPU projection fix. Pre-fix outputs are outside the repository and are not consumed by any generator.
+
+- Numerical experiment generation HEAD: `78c51c13ce7405654d488aea593d184be930e16a`.
+- The generated numerical CSV artifacts first entered Git in `d2ca1139d325e21ab03f4db97a5e0c4e13149e8d`.
+- Repository HEAD when this report was assembled: `d2ca1139d325e21ab03f4db97a5e0c4e13149e8d`.
+- Git diff check from numerical generation HEAD through report HEAD for `src/` and `configs/`: `PASS`.
+- Git diff check from the numerical-artifact commit through report HEAD for raw experiment CSV paths: `PASS`.
+- Publication reference: tag `v2-paper-artifacts-2026-07` on branch `research/physical-offloading-model-v2`.
+- Git clean-check result captured before report assembly: Publication changes present; phase-1 clean check pending commit.
+
+## Execution commands
+
+```bash
+python -m experiments.run_main_30
+python -m experiments.run_controlled_30
+python -m experiments.run_ablation_30
+python -m experiments.run_scalability
+python -m experiments.run_sensitivity
+python -m experiments.audit_task_id_neutrality
+python -m experiments.generate_v2_artifacts
+python -m pytest tests -q
+```
+
+## Environment and runtime
+
+- Python: `3.9.6`; platform: `macOS-26.5.2-arm64-arm-64bit`.
+- Dependencies: `numpy 2.0.2`, `pandas 2.3.3`, `scipy 1.13.1`, `matplotlib 3.9.4`, `PyYAML 6.0.3`.
+- Accumulated solver timing across the nine raw experiment suites: `9994.534 s` (`2.776 h`). This is the sum of recorded per-run solver timings, not end-to-end wall-clock time.
+
+## Validation
+
+- Pytest: PASS: 38 tests passed locally on 2026-07-23 (14 third-party dependency deprecation warnings). Tests cover formulas and metrics, legal-node decoding, CPU bounds/capacity repair, fixed reporting fitness, controlled NFE, reproducibility artifacts, and manuscript-output guards.
+- Raw audit: `1580` rows across nine suites; hard feasibility `PASS`; unique assignment `PASS`.
+- Manifest audit: `58` entries; generated-file SHA-256 verification `PASS`.
+- CI: [Pending phase-1 push verification](https://github.com/Ryan-Yii/mec-rdho-offloading/pull/8/checks).
+- All manuscript tables and figures are generated from the listed V2 CSV files; no paper value is entered manually.
+
+## Result files
 
 - `results/v2/raw/ablation_30_raw_results.csv`: 180 data rows; SHA-256 `4ba52615c577c4753905dbfde9947f924cc2edec14f9dec8752d5a835bde7a24`
 - `results/v2/raw/common_control_30_convergence.csv`: 27180 data rows; SHA-256 `d3c3cbf749582beb542467501099e0c08bc54d3c7de6adff6acfbdec31125093`
@@ -28,6 +64,8 @@ Repository commit at artifact generation: `78c51c13ce7405654d488aea593d184be930e
 - `results/v2/statistics/wilcoxon_fitness_results.csv`: 5 data rows; SHA-256 `329e0e4ac900efe15b6f9fa1c8c0cceb9be3f7cd737bb472f3e41cfdda12d565`
 - `results/v2/summary/ablation_30_summary_mean_std.csv`: 6 data rows; SHA-256 `ee9676fcecba07718efe696a72399eda8da721ad0def5ded2e5f96d7b2296d44`
 - `results/v2/summary/common_control_30_summary_mean_std.csv`: 6 data rows; SHA-256 `8b21cc0152a79766dbab8d8f761d3b5fb57f1ad34aca73dfcf199d08f6eaf46f`
+- `results/v2/summary/controlled_attribution_summary.csv`: 8 data rows; SHA-256 `724ae7f77ec7aef28e86bf2c4716c49057f6c7fc4f1eb6f8557f1b9803db88a7`
 - `results/v2/summary/equal_nfe_30_summary_mean_std.csv`: 5 data rows; SHA-256 `58f69221aa734e038b5d44025435c009a4d0543ff03cd4f811ceac0a3f7b9d42`
 - `results/v2/summary/main_30_summary_mean_std.csv`: 6 data rows; SHA-256 `751a936d794c642f640d6d9ae0309b153d728932c27e077c5188861feafa28d6`
 - `results/v2/summary/scalability_summary_mean_std.csv`: 5 data rows; SHA-256 `e6d6c95c905c8a1cb05083e5a8fbf74019612bf3ac71147f35a10c8758fc6621`
+- `results/v2/validation/task_id_neutrality.csv`: 3 data rows; SHA-256 `70fc4b38937407b29d64c73da863acdd0469686f636fd9aed609acff636d6288`

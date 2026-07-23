@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import re
 import zipfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
@@ -23,6 +24,10 @@ def sha256(data: bytes) -> str:
 
 def text_of(element: ET.Element) -> str:
     return "".join(node.text or "" for node in element.iter(qn(W, "t")))
+
+
+def math_text_of(element: ET.Element) -> str:
+    return "".join(node.text or "" for node in element.iter(qn(M, "t")))
 
 
 def comment_records(archive: zipfile.ZipFile) -> tuple[list[dict[str, str]], dict[str, str], list[ET.Element]]:
@@ -115,6 +120,9 @@ def verify_clean(clean: Path) -> None:
             "priority-aware fairness",
             "computation-control",
             "directly deployable",
+            "the supplied parking-edge",
+            "normalised multi-metric illustration",
+            "radar plot",
         )
         found = [term for term in obsolete if term in body_text]
         if found:
@@ -124,21 +132,66 @@ def verify_clean(clean: Path) -> None:
 def verify_equations(path: Path) -> None:
     with zipfile.ZipFile(path) as archive:
         document = ET.fromstring(archive.read("word/document.xml"))
-    math_paragraphs = [
+    body = document.find(qn(W, "body"))
+    if body is None:
+        raise AssertionError("document body is missing")
+    body_math_paragraphs = [
         paragraph
-        for paragraph in document.iter(qn(W, "p"))
+        for paragraph in body.findall(qn(W, "p"))
         if any(True for _ in paragraph.iter(qn(M, "oMath")))
     ]
-    if len(math_paragraphs) != 22:
-        raise AssertionError(f"expected 22 professional equation paragraphs, found {len(math_paragraphs)}")
-    labels = []
-    for paragraph in math_paragraphs:
-        visible_text = text_of(paragraph).strip()
-        if visible_text:
-            labels.append(visible_text)
+    labels = [
+        text_of(paragraph).strip()
+        for paragraph in body_math_paragraphs
+        if re.fullmatch(r"\(\d+\)", text_of(paragraph).strip())
+    ]
     expected = [f"({index})" for index in range(1, 22)]
     if labels != expected:
         raise AssertionError(f"equation numbering mismatch: {labels}")
+    unnumbered_display = [
+        paragraph
+        for paragraph in body_math_paragraphs
+        if paragraph.find(qn(M, "oMathPara")) is not None and not text_of(paragraph).strip()
+    ]
+    if len(unnumbered_display) != 1:
+        raise AssertionError(f"expected one unnumbered task-tuple equation, found {len(unnumbered_display)}")
+    equation_math = [math_text_of(paragraph).replace(" ", "") for paragraph in body_math_paragraphs]
+    p1 = next((value for value in equation_math if "P1" in value), "")
+    if "Freport" not in p1 or "CSR" not in p1 or "minXB(X)" in p1:
+        raise AssertionError(f"P1 is not defined on fixed reporting fitness: {p1}")
+    if "xij" not in p1 or "fjmin" not in p1 or "Fj" not in p1:
+        raise AssertionError(f"P1 lacks selected-node CPU bounds: {p1}")
+
+
+def verify_professional_variables(path: Path) -> None:
+    with zipfile.ZipFile(path) as archive:
+        document = ET.fromstring(archive.read("word/document.xml"))
+    plain_text = "\n".join(node.text or "" for node in document.iter(qn(W, "t")))
+    if "[[" in plain_text or "]]" in plain_text:
+        raise AssertionError("inline-math marker remains in manuscript text")
+    code_style = sorted(set(re.findall(r"\b[A-Za-z]+_[A-Za-z][A-Za-z0-9_]*", plain_text)))
+    if code_style:
+        raise AssertionError(f"code-style variables remain in plain Word text: {code_style}")
+
+
+def verify_notation_table(path: Path) -> None:
+    with zipfile.ZipFile(path) as archive:
+        document = ET.fromstring(archive.read("word/document.xml"))
+    tables = document.findall(f".//{qn(W, 'tbl')}")
+    if not tables:
+        raise AssertionError("manuscript has no tables")
+    rows = tables[0].findall(qn(W, "tr"))
+    if len(rows) != 25:
+        raise AssertionError(f"Table 1 must contain one header and 24 one-variable rows, found {len(rows)} rows")
+    for index, row in enumerate(rows[1:], start=1):
+        cells = row.findall(qn(W, "tc"))
+        if len(cells) != 2:
+            raise AssertionError(f"Table 1 row {index} does not have two cells")
+        equations = list(cells[0].iter(qn(M, "oMath")))
+        if len(equations) != 1:
+            raise AssertionError(f"Table 1 row {index} must have one native Word variable equation")
+        if text_of(cells[0]).strip():
+            raise AssertionError(f"Table 1 row {index} contains plain-text notation")
 
 
 def verify_images(reviewed: Path, repo: Path) -> None:
@@ -154,7 +207,7 @@ def verify_images(reviewed: Path, repo: Path) -> None:
         "word/media/image10.png": repo / "results/v2/figures/scalability.png",
         "word/media/image11.png": repo / "results/v2/sensitivity/figures/weight_sensitivity_qoe_fairness_csr.png",
         "word/media/image12.png": repo / "results/v2/sensitivity/figures/penalty_sensitivity_heatmaps.png",
-        "word/media/image13.png": repo / "results/v2/figures/radar_chart.png",
+        "word/media/image13.png": repo / "results/v2/figures/controlled_attribution.png",
     }
     with zipfile.ZipFile(reviewed) as archive:
         for part, source in expected.items():
@@ -173,6 +226,10 @@ def main() -> None:
     verify_clean(args.clean)
     verify_equations(args.reviewed)
     verify_equations(args.clean)
+    verify_notation_table(args.reviewed)
+    verify_notation_table(args.clean)
+    verify_professional_variables(args.reviewed)
+    verify_professional_variables(args.clean)
     verify_images(args.reviewed, args.repo)
     print("V2 manuscript verification passed")
 

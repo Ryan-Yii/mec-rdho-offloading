@@ -61,6 +61,7 @@ python -m experiments.run_controlled_30
 python -m experiments.run_ablation_30
 python -m experiments.run_scalability
 python -m experiments.run_sensitivity
+python -m experiments.audit_task_id_neutrality
 python -m experiments.generate_v2_artifacts
 ```
 
@@ -74,7 +75,7 @@ The main paired Wilcoxon tests are two-sided and include Holm adjustment, median
 
 The one-factor ablation does not support claiming that every internal component independently improves performance. Removing coordinate refinement causes the large change; removing adaptive roles, elite preservation, or dynamic penalty has only a small mean effect in this configuration. Weight-specific fitness values are meaningful within their own objective setting and are not ranked across different weight vectors.
 
-Results apply only to the supplied simulations, objective, parameter ranges, seeds, and baseline implementations. QoE is a model-based utility rather than human-subject MOS, AoI is a periodic no-backlog average approximation, CSR concerns soft thresholds rather than hard physical feasibility, and the radar plot uses min-max normalisation that can visually amplify small differences.
+Results apply only to the configured simulations, objective, parameter ranges, seeds, and baseline implementations. QoE is a model-based utility rather than human-subject MOS, AoI is a periodic no-backlog average approximation, and CSR concerns soft thresholds rather than hard physical feasibility. The main paper replaces the earlier descriptive radar plot with explicit equal-NFE and common-refinement controls.
 
 ## Repository Structure
 

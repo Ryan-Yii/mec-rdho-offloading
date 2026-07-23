@@ -31,6 +31,8 @@ restrained claims about metrics, ablations, baselines, and deployment scope.
   CPU-capacity, SLA, and server-heterogeneity experiments.
 - Added CSV/Markdown paper tables, PNG/SVG paper figures, SHA-256 artifact
   manifest, execution report, and V2-specific reproduction documentation.
+- Replaced the descriptive radar figure with main-paper Table 9 and Figure 12
+  for equal-NFE and common-refinement attribution.
 
 ## Scientific interpretation
 
@@ -47,3 +49,16 @@ The final reviewed DOCX is generated from
 and tables are highlighted, all original comments and anchors are retained,
 one true threaded V2 reply is added to each supervisor comment, and no thread
 is resolved.  A separate clean DOCX and PDF remove comments and highlighting.
+
+## 0712 and 0722 comment coverage
+
+The 0712 file contains 36 comments, including 24 reviewer comments. Twenty of
+those reviewer texts recur verbatim in the 0722 review; the remaining four
+themes (journal-template formatting, earlier innovation placement, keyword
+removal, and algorithm-format guidance) are substantively covered by the later
+0722 instructions and the V2 changes. The intermediate 0722 file contains 63
+comments, including 43 reviewer comments. The 86-comment revised 0722 source is
+the structure-preserving editing base: all 86 originals remain unchanged, one
+new V2 reply is attached to each of the 43 reviewer threads, and all threads
+remain unresolved. The comment audit records the actual revision for every one
+of those threads.

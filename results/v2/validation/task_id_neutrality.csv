@@ -1,0 +1,4 @@
+relationship,test,statistic,p_value,sample_count,interpretation
+task_id_vs_priority,Spearman rank correlation,0.0042694608970538905,0.8825440145297375,1200,No evidence of a monotonic association in the 30 configured paired scenarios
+task_id_quartile_vs_task_type,Cramer's V from chi-square table,0.03008691156308287,0.9531446143327729,1200,No evidence of an association in the 30 configured paired scenarios
+task_id_quartile_vs_source_device,Cramer's V from chi-square table,0.12103278911963276,0.635656405173959,1200,No evidence of an association in the 30 configured paired scenarios

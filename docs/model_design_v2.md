@@ -39,16 +39,31 @@ list and maps the latter to a tentative frequency between the selected node's
 minimum allocatable frequency and capacity.  It then applies the same
 deterministic repair to every algorithm:
 
-1. If a node has more minimum-frequency assignments than it can serve, move
-   the highest task IDs first to their legal alternative with the largest
-   remaining minimum-frequency slack; ties use the smallest global node ID.
+1. If a node has more minimum-frequency assignments than it can serve, examine
+   tasks in descending ID order and move each selected task to its legal
+   alternative with the largest remaining minimum-frequency slack; ties use the
+   smallest global node ID. Task types are shuffled before IDs are assigned,
+   while source device and priority are sampled independently. A pooled audit of
+   all 1,200 tasks in the 30 configured scenarios found no detectable ID
+   association with type, source device, or priority. The order is therefore a
+   deterministic reproducibility convention, not a task-importance rule.
 2. For every node, retain each decoded request whenever its total is within
    capacity; only if the sum of requested excess frequencies exceeds the
    remaining capacity is that excess projected proportionally.
 
+Let \(\mathcal T_j=\{i:x_{i,j}=1\}\), \(n_j=|\mathcal T_j|\), and
+\(R_j=F_j-n_j f_j^{\min}\). Reassignment is attempted for at most
+\(|\mathcal T||\mathcal N|\) passes and either produces non-negative \(R_j\)
+for every node or fails explicitly. Projection is applied only to tasks in
+\(\mathcal T_j\). If the total requested excess is no larger than \(R_j\), the
+original requests are retained. A zero excess denominator therefore uses the
+retention branch and is never divided by. Otherwise, requested excess above
+\(f_j^{\min}\) is scaled proportionally to \(R_j\).
+
 The generated parameter ranges ensure a feasible minimum-frequency allocation
-exists.  The repair is deterministic, keeps one legal node per task, and
-enforces \(f_{\min,j}\le f_i\le F_j\) and
+exists. The deterministic repair keeps one legal node per task and enforces the
+selected-node bound
+\(\sum_jx_{i,j}f_j^{\min}\le f_i\le\sum_jx_{i,j}F_j\) and node capacity
 \(\sum_i x_{i,j}f_i\le F_j\).
 
 ## Performance model
@@ -79,10 +94,12 @@ which lies in \([0,1]\).  Priority is used only to aggregate system QoE,
 \(Q=\sum_i\pi_i u_i/\sum_i\pi_i\).  Jain fairness is computed over the
 mean base utility of each active source device, not over individual tasks.
 
-The one formal problem minimises a fixed weighted reporting objective formed
-from threshold-normalised energy, delay, and AoI, plus \(1-Q\) and
-\(1-J\).  Assignment validity, uniqueness, CPU bounds, and capacity are hard
-constraints.  Delay, energy, and AoI threshold failures form a soft QoS
-violation ratio.  Search algorithms may use a dynamic multiplier, but parent
-and candidate solutions are always compared at the same multiplier; final
-comparisons always use the fixed reporting multiplier of one.
+The base term \(B(X)\) combines threshold-normalised energy, delay, and AoI with
+\(1-Q\) and \(1-J\). The one formal problem is
+\(\min_X F_{\mathrm{report}}(X)=B(X)+\lambda_{\mathrm{ref}}[1-\mathrm{CSR}(X)]\),
+with \(\lambda_{\mathrm{ref}}=1\), subject to assignment validity, uniqueness,
+selected-node CPU bounds, and capacity. Delay, energy, and AoI threshold
+failures form the soft CSR term. \(F_{\mathrm{search}}(X,t)\) is only a dynamic
+penalty-continuation mechanism for solving this fixed P1: parents and candidates
+are compared at the same iteration coefficient, while all tables and statistics
+use \(F_{\mathrm{report}}\).

@@ -109,6 +109,51 @@ def plot_radar(df: pd.DataFrame, output_path: str | Path) -> None:
     plt.close(fig)
 
 
+def plot_controlled_attribution(
+    equal_nfe_summary: str | Path,
+    common_control_summary: str | Path,
+    output_path: str | Path,
+) -> None:
+    equal = pd.read_csv(equal_nfe_summary).set_index("algorithm")
+    common = pd.read_csv(common_control_summary).set_index("algorithm")
+    panels = [
+        (
+            equal,
+            ["RDHO-core", "RIME", "DBO", "TLBO-HHO", "CWTSSA"],
+            ["RDHO-core", "RIME", "DBO", "TLBO-HHO", "CWTSSA"],
+            "Equal NFE (3,801 evaluations)",
+        ),
+        (
+            common,
+            [
+                "RIME-common-init",
+                "RIME-common-init-refine",
+                "DBO-common-init",
+                "DBO-common-init-refine",
+                "RDHO-core",
+                "RDHO-full",
+            ],
+            ["RIME\ninit.", "RIME\n+ refine", "DBO\ninit.", "DBO\n+ refine", "RDHO\ncore", "RDHO\nfull"],
+            "Common initialisation and refinement controls",
+        ),
+    ]
+    fig, axes = plt.subplots(1, 2, figsize=(11.4, 4.8))
+    for ax, (frame, order, labels, title) in zip(axes, panels):
+        means = np.asarray([float(frame.loc[name, "fitness_mean"]) for name in order])
+        stds = np.asarray([float(frame.loc[name, "fitness_std"]) for name in order])
+        x = np.arange(len(order))
+        colors = ["#1f4e79" if name.startswith("RDHO") else "#70ad47" if "refine" in name else "#8faadc" for name in order]
+        ax.bar(x, means, yerr=stds, capsize=3, color=colors, edgecolor="black")
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels, rotation=18 if len(order) == 5 else 0, ha="right" if len(order) == 5 else "center")
+        ax.set_ylabel("Reporting fitness (lower is better)")
+        ax.set_title(title)
+        ax.grid(axis="y", alpha=0.25)
+    fig.tight_layout()
+    save_figure(fig, output_path)
+    plt.close(fig)
+
+
 def plot_convergence(convergence_csv: str | Path, output_path: str | Path) -> None:
     df = pd.read_csv(convergence_csv)
     fig, ax = plt.subplots(figsize=(8.5, 5.2))

@@ -19,6 +19,8 @@ A second controlled benchmark compares RIME and DBO with RDHO's common
 dual-source initialisation, then with the same coordinate refinement, alongside
 RDHO-core and RDHO-full.  Each ablation changes exactly one RDHO component
 while sharing seeds, repair, fixed reporting objective, and nominal budget.
+The resulting equal-NFE and common-refinement results form main-paper Table 9
+and Figure 12 rather than being left only as narrative qualifications.
 
 ## Additional studies
 
@@ -38,3 +40,8 @@ and NFE.  Primary paired comparisons use two-sided Wilcoxon signed-rank tests,
 Holm adjustment, median paired difference, rank-biserial correlation, and
 wins/ties/losses.  Figures and manuscript tables are regenerated solely from
 the V2 raw and summary files.
+
+The implemented descending-ID reassignment order is separately audited across
+the 30 configured systems for association with task type, source device, and
+priority. This audit does not alter any scenario, solver, repair decision, or
+numerical result.

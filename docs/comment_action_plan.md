@@ -1,9 +1,12 @@
 # Comment Action Plan
 
 The editing base is `0722-review_revised_SCI_with_comments.docx`, which contains
-86 comments.  The 0712 draft has 36 and the intermediate 0722 draft has 63;
-they are consulted for context only.  The final document must preserve the 86
-comment anchors, author/date data, and existing comment text.
+86 comments. The 0712 draft has 36 comments (24 reviewer comments), and the
+intermediate 0722 draft has 63 (43 reviewer comments). Twenty 0712 reviewer
+comments recur verbatim in 0722; the other four themes are covered by later
+0722 instructions. Thus 0712 is not treated as an unused historical file, while
+the revised 0722 source remains the sole structure-preserving base. The final
+document must preserve all 86 source anchors, author/date data, and comment text.
 
 ## Global actions
 

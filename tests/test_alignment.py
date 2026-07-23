@@ -115,7 +115,7 @@ def test_wilcoxon_output_includes_holm_effect_size_and_wtl(tmp_path):
 
 def test_additional_figure_generators_create_files(tmp_path):
     import pandas as pd
-    from experiments.analyze_results import plot_ablation, plot_scalability
+    from experiments.analyze_results import plot_ablation, plot_controlled_attribution, plot_scalability
 
     ablation = pd.DataFrame({
         "algorithm": ["RDHO-full", "RDHO-core"],
@@ -134,6 +134,22 @@ def test_additional_figure_generators_create_files(tmp_path):
     plot_scalability(scale, scale_path)
     assert ablation_path.exists() and ablation_path.stat().st_size > 0
     assert scale_path.exists() and scale_path.stat().st_size > 0
+
+    equal = tmp_path / "equal.csv"
+    common = tmp_path / "common.csv"
+    pd.DataFrame({
+        "algorithm": ["RDHO-core", "RIME", "DBO", "TLBO-HHO", "CWTSSA"],
+        "fitness_mean": [1.4, 1.6, 1.2, 1.25, 1.3],
+        "fitness_std": [0.1] * 5,
+    }).to_csv(equal, index=False)
+    pd.DataFrame({
+        "algorithm": ["RIME-common-init", "RIME-common-init-refine", "DBO-common-init", "DBO-common-init-refine", "RDHO-core", "RDHO-full"],
+        "fitness_mean": [1.2, 1.0, 1.15, 0.98, 1.1, 0.95],
+        "fitness_std": [0.1] * 6,
+    }).to_csv(common, index=False)
+    controlled_path = tmp_path / "controlled.png"
+    plot_controlled_attribution(equal, common, controlled_path)
+    assert controlled_path.exists() and controlled_path.with_suffix(".svg").exists()
 
 
 def test_factor_sensitivity_figure_generator(tmp_path):
