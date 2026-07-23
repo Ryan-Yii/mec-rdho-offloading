@@ -5,8 +5,8 @@ from typing import Callable, List
 
 import numpy as np
 
-from ..metrics import FitnessWeights, Metrics, evaluate_solution, fitness_from_components
-from ..system_model import MODE_CLOUD, MODE_LOCAL, SystemModel
+from ..metrics import FitnessWeights, Metrics, UtilityWeights, evaluate_solution, fitness_from_components
+from ..system_model import SystemModel
 
 
 @dataclass(frozen=True)
@@ -29,36 +29,41 @@ class MetaheuristicOptimizer:
         population_size: int = 50,
         seed: int = 0,
         weights: FitnessWeights | None = None,
+        utility_weights: UtilityWeights | None = None,
         penalty_base: float = 1.0,
+        common_initial_population: np.ndarray | None = None,
+        common_coordinate_refinement: bool = False,
     ) -> None:
         self.system = system
         self.max_iter = max_iter
         self.population_size = population_size
         self.rng = np.random.default_rng(seed)
         self.weights = weights or FitnessWeights()
+        self.utility_weights = utility_weights or UtilityWeights()
         self.penalty_base = penalty_base
+        self.common_initial_population = None if common_initial_population is None else self.clip_population(common_initial_population)
+        self.common_coordinate_refinement = common_coordinate_refinement
+        # Per-task coordinates: normalised legal-node index and CPU encoding.
         self.dim = (len(system.tasks), 2)
         self.nfe = 0
 
     def clip(self, solution: np.ndarray) -> np.ndarray:
         clipped = np.array(solution, dtype=float, copy=True)
-        clipped[:, 0] = np.clip(clipped[:, 0], MODE_LOCAL, MODE_CLOUD)
-        clipped[:, 1] = np.clip(clipped[:, 1], 0.2, 1.0)
+        clipped[:] = np.clip(clipped, 0.0, 1.0)
         return clipped
 
     def random_population(self, style: str = "uniform") -> np.ndarray:
         if style == "normal":
-            modes = self.rng.normal(1.0, 0.7, size=(self.population_size, len(self.system.tasks), 1))
-            resources = self.rng.normal(0.68, 0.18, size=(self.population_size, len(self.system.tasks), 1))
+            nodes = self.rng.normal(0.55, 0.25, size=(self.population_size, len(self.system.tasks), 1))
+            resources = self.rng.normal(0.60, 0.20, size=(self.population_size, len(self.system.tasks), 1))
         else:
-            modes = self.rng.uniform(MODE_LOCAL, MODE_CLOUD, size=(self.population_size, len(self.system.tasks), 1))
-            resources = self.rng.uniform(0.2, 1.0, size=(self.population_size, len(self.system.tasks), 1))
-        return self.clip_population(np.concatenate([modes, resources], axis=2))
+            nodes = self.rng.uniform(0.0, 1.0, size=(self.population_size, len(self.system.tasks), 1))
+            resources = self.rng.uniform(0.0, 1.0, size=(self.population_size, len(self.system.tasks), 1))
+        return self.clip_population(np.concatenate([nodes, resources], axis=2))
 
     def clip_population(self, population: np.ndarray) -> np.ndarray:
         clipped = np.array(population, dtype=float, copy=True)
-        clipped[:, :, 0] = np.clip(clipped[:, :, 0], MODE_LOCAL, MODE_CLOUD)
-        clipped[:, :, 1] = np.clip(clipped[:, :, 1], 0.2, 1.0)
+        clipped[:] = np.clip(clipped, 0.0, 1.0)
         return clipped
 
     def penalty_scale(self, iteration: int) -> float:
@@ -70,6 +75,7 @@ class MetaheuristicOptimizer:
             self.system,
             self.clip(solution),
             weights=self.weights,
+            utility_weights=self.utility_weights,
             penalty_scale=penalty_scale,
         )
 
@@ -112,7 +118,7 @@ class MetaheuristicOptimizer:
 
     def optimize(self) -> OptimizerResult:
         self.nfe = 0
-        population = self.initialize_population()
+        population = np.array(self.common_initial_population, copy=True) if self.common_initial_population is not None else self.initialize_population()
         metrics = self.evaluate_population_metrics(population, 0)
 
         reporting = self.reporting_fitness_array(metrics)
@@ -146,8 +152,10 @@ class MetaheuristicOptimizer:
             history.append(incumbent_reporting)
             search_history.append(float(np.min(search)))
 
-        final_search = self.evaluate_metrics(incumbent, self.penalty_scale(self.max_iter)).fitness
         pre_refinement = incumbent_reporting
+        if self.common_coordinate_refinement:
+            incumbent, incumbent_reporting = self.coordinate_refine(incumbent, incumbent_reporting)
+        final_search = self.evaluate_metrics(incumbent, self.penalty_scale(self.max_iter)).fitness
         return OptimizerResult(
             solution=self.clip(incumbent),
             fitness=incumbent_reporting,
@@ -156,26 +164,43 @@ class MetaheuristicOptimizer:
             search_history=search_history,
             nfe=self.nfe,
             pre_refinement_fitness=pre_refinement,
-            local_refinement_gain=0.0,
+            local_refinement_gain=float(max(0.0, pre_refinement - incumbent_reporting)),
         )
+
+    def coordinate_refine(self, solution: np.ndarray, current_fitness: float) -> tuple[np.ndarray, float]:
+        """Shared deterministic post-processing used only in controlled tests."""
+
+        best_solution = np.array(solution, copy=True)
+        best_fitness = float(current_fitness)
+        for task_idx in range(len(self.system.tasks)):
+            for node in (0.08, 0.28, 0.48, 0.68, 0.88):
+                for resource in (0.10, 0.30, 0.55, 0.80, 1.00):
+                    trial = np.array(best_solution, copy=True)
+                    trial[task_idx] = (node, resource)
+                    fitness = self.evaluate_metrics(trial, penalty_scale=1.0).reporting_fitness
+                    if fitness < best_fitness:
+                        best_solution = trial
+                        best_fitness = fitness
+        return self.clip(best_solution), best_fitness
 
 
 def greedy_seed_solution(
     system: SystemModel,
     weights: FitnessWeights | None = None,
+    utility_weights: UtilityWeights | None = None,
     evaluator: Callable[[np.ndarray], Metrics] | None = None,
 ) -> np.ndarray:
-    solution = np.zeros((len(system.tasks), 2), dtype=float)
-    solution[:, 0] = 1.0
-    solution[:, 1] = 0.70
-    candidates = [(0, 0.55), (0, 0.85), (1, 0.45), (1, 0.70), (1, 0.95), (2, 0.55), (2, 0.80), (2, 1.00)]
-    score = evaluator or (lambda value: evaluate_solution(system, value, weights=weights))
+    solution = np.full((len(system.tasks), 2), 0.5, dtype=float)
+    candidates = [(node, resource) for node in (0.08, 0.35, 0.62, 0.90) for resource in (0.20, 0.50, 0.80, 1.00)]
+    score = evaluator or (
+        lambda value: evaluate_solution(system, value, weights=weights, utility_weights=utility_weights)
+    )
     for idx in range(len(system.tasks)):
         best_pair = solution[idx].copy()
         best_fit = score(solution).reporting_fitness
-        for mode, resource in candidates:
+        for node, resource in candidates:
             trial = np.array(solution, copy=True)
-            trial[idx, 0] = mode
+            trial[idx, 0] = node
             trial[idx, 1] = resource
             fit = score(trial).reporting_fitness
             if fit < best_fit:

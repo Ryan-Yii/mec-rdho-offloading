@@ -21,6 +21,15 @@ COLORS = {
 }
 
 
+def save_figure(fig, output_path: str | Path) -> None:
+    """Save a raster manuscript preview and an editable vector counterpart."""
+
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output, dpi=300)
+    fig.savefig(output.with_suffix(".svg"), format="svg")
+
+
 def _ordered_algorithms(df: pd.DataFrame) -> list[str]:
     present = list(df["algorithm"].unique())
     return [algo for algo in ALGO_ORDER if algo in present] + [algo for algo in present if algo not in ALGO_ORDER]
@@ -46,7 +55,7 @@ def plot_bar(df: pd.DataFrame, metric: str, ylabel: str, output_path: str | Path
     ax.set_xticklabels([DISPLAY_LABELS.get(a, a) for a in algos], rotation=20, ha="right")
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    save_figure(fig, output_path)
     plt.close(fig)
 
 
@@ -57,7 +66,7 @@ def plot_qoe_fairness(df: pd.DataFrame, output_path: str | Path) -> None:
     width = 0.36
     fig, ax = plt.subplots(figsize=(9, 5.2))
     ax.bar(x - width / 2, qoe_means, width, yerr=qoe_stds, capsize=3, label="QoE", color="#4472c4", edgecolor="black")
-    ax.bar(x + width / 2, fair_means, width, yerr=fair_stds, capsize=3, label="Priority-aware per-user utility fairness", color="#70ad47", edgecolor="black")
+    ax.bar(x + width / 2, fair_means, width, yerr=fair_stds, capsize=3, label="Per-user QoE fairness", color="#70ad47", edgecolor="black")
     ax.set_ylim(0, 1.05)
     ax.set_ylabel("Score")
     ax.set_xticks(x)
@@ -65,7 +74,7 @@ def plot_qoe_fairness(df: pd.DataFrame, output_path: str | Path) -> None:
     ax.legend()
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    save_figure(fig, output_path)
     plt.close(fig)
 
 
@@ -82,7 +91,7 @@ def plot_radar(df: pd.DataFrame, output_path: str | Path) -> None:
         else:
             normalized[metric] = (values - np.min(values)) / (np.max(values) - np.min(values))
 
-    labels = ["Energy proxy", "Delay", "AoI", "QoE", "Priority-aware fairness"]
+    labels = ["Device-side energy", "Delay", "AoI", "QoE", "Per-user QoE fairness"]
     angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
     angles += angles[:1]
     fig, ax = plt.subplots(figsize=(7, 7), subplot_kw={"polar": True})
@@ -96,7 +105,52 @@ def plot_radar(df: pd.DataFrame, output_path: str | Path) -> None:
     ax.set_ylim(0, 1)
     ax.legend(loc="upper right", bbox_to_anchor=(1.32, 1.12))
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    save_figure(fig, output_path)
+    plt.close(fig)
+
+
+def plot_controlled_attribution(
+    equal_nfe_summary: str | Path,
+    common_control_summary: str | Path,
+    output_path: str | Path,
+) -> None:
+    equal = pd.read_csv(equal_nfe_summary).set_index("algorithm")
+    common = pd.read_csv(common_control_summary).set_index("algorithm")
+    panels = [
+        (
+            equal,
+            ["RDHO-core", "RIME", "DBO", "TLBO-HHO", "CWTSSA"],
+            ["RDHO-core", "RIME", "DBO", "TLBO-HHO", "CWTSSA"],
+            "Equal NFE (3,801 evaluations)",
+        ),
+        (
+            common,
+            [
+                "RIME-common-init",
+                "RIME-common-init-refine",
+                "DBO-common-init",
+                "DBO-common-init-refine",
+                "RDHO-core",
+                "RDHO-full",
+            ],
+            ["RIME\ninit.", "RIME\n+ refine", "DBO\ninit.", "DBO\n+ refine", "RDHO\ncore", "RDHO\nfull"],
+            "Common initialisation and refinement controls",
+        ),
+    ]
+    fig, axes = plt.subplots(1, 2, figsize=(11.4, 4.8))
+    for ax, (frame, order, labels, title) in zip(axes, panels):
+        means = np.asarray([float(frame.loc[name, "fitness_mean"]) for name in order])
+        stds = np.asarray([float(frame.loc[name, "fitness_std"]) for name in order])
+        x = np.arange(len(order))
+        colors = ["#1f4e79" if name.startswith("RDHO") else "#70ad47" if "refine" in name else "#8faadc" for name in order]
+        ax.bar(x, means, yerr=stds, capsize=3, color=colors, edgecolor="black")
+        ax.set_xticks(x)
+        ax.set_xticklabels(labels, rotation=18 if len(order) == 5 else 0, ha="right" if len(order) == 5 else "center")
+        ax.set_ylabel("Reporting fitness (lower is better)")
+        ax.set_title(title)
+        ax.grid(axis="y", alpha=0.25)
+    fig.tight_layout()
+    save_figure(fig, output_path)
     plt.close(fig)
 
 
@@ -112,7 +166,7 @@ def plot_convergence(convergence_csv: str | Path, output_path: str | Path) -> No
     ax.grid(alpha=0.25)
     ax.legend()
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    save_figure(fig, output_path)
     plt.close(fig)
 
 
@@ -123,7 +177,7 @@ def generate_main_figures(raw_csv: str | Path, convergence_csv: str | Path, outp
     plot_convergence(convergence_csv, output / "convergence_curve.png")
     plot_bar(df, "energy", "Mean device-side energy proxy (J)", output / "energy_comparison.png")
     plot_bar(df, "delay", "Average delay (s)", output / "delay_comparison.png")
-    plot_bar(df, "aoi", "Average AoI surrogate (s)", output / "aoi_comparison.png")
+    plot_bar(df, "aoi", "Periodic average AoI approximation (s)", output / "aoi_comparison.png")
     plot_qoe_fairness(df, output / "qoe_fairness_comparison.png")
     plot_bar(df, "csr", "Soft CSR", output / "csr_comparison.png", higher_is_better=True)
     plot_radar(df, output / "radar_chart.png")
@@ -145,10 +199,10 @@ def plot_weight_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> None
     ax.set_ylabel("Fixed-reference reporting fitness")
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()
-    fig.savefig(output / "weight_sensitivity_fitness.png", dpi=300)
+    save_figure(fig, output / "weight_sensitivity_fitness.png")
     plt.close(fig)
 
-    metrics = [("qoe", "QoE", "#4472c4"), ("fairness", "Priority-aware fairness", "#70ad47"), ("csr", "CSR", "#ed7d31")]
+    metrics = [("qoe", "QoE", "#4472c4"), ("fairness", "Per-user QoE fairness", "#70ad47"), ("csr", "Soft CSR", "#ed7d31")]
     width = 0.24
     fig, ax = plt.subplots(figsize=(9.2, 5.2))
     for offset, (metric, label, color) in zip((-width, 0.0, width), metrics):
@@ -162,7 +216,7 @@ def plot_weight_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> None
     ax.legend()
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()
-    fig.savefig(output / "weight_sensitivity_qoe_fairness_csr.png", dpi=300)
+    save_figure(fig, output / "weight_sensitivity_qoe_fairness_csr.png")
     plt.close(fig)
 
 
@@ -197,7 +251,7 @@ def plot_penalty_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> Non
                 ax.text(j, i, f"{values[i, j]:.3f}", ha="center", va="center", color="black", fontsize=9)
         fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
     fig.tight_layout()
-    fig.savefig(output / "penalty_sensitivity_heatmaps.png", dpi=300)
+    save_figure(fig, output / "penalty_sensitivity_heatmaps.png")
     plt.close(fig)
 
 
@@ -205,9 +259,43 @@ def generate_sensitivity_figures(
     weight_raw_csv: str | Path,
     penalty_raw_csv: str | Path,
     output_dir: str | Path = "results/sensitivity/figures",
+    utility_raw_csv: str | Path | None = None,
+    physical_raw_csv: str | Path | None = None,
 ) -> None:
     plot_weight_sensitivity(weight_raw_csv, output_dir)
     plot_penalty_sensitivity(penalty_raw_csv, output_dir)
+    if utility_raw_csv is not None:
+        plot_factor_sensitivity(utility_raw_csv, "setting", "Task-utility setting", Path(output_dir) / "utility_sensitivity.png")
+    if physical_raw_csv is not None:
+        plot_factor_sensitivity(physical_raw_csv, "setting", "Physical-model setting", Path(output_dir) / "physical_sensitivity.png")
+
+
+def plot_factor_sensitivity(raw_csv: str | Path, category: str, xlabel: str, output_path: str | Path) -> None:
+    frame = pd.read_csv(raw_csv)
+    grouped = frame.groupby(category, sort=False).agg(
+        fitness=("fitness", "mean"),
+        csr=("csr", "mean"),
+        utilisation=("capacity_utilisation_mean", "mean"),
+    ).reset_index()
+    x = np.arange(len(grouped))
+    fig, axes = plt.subplots(1, 2, figsize=(11.2, 4.8))
+    axes[0].bar(x, grouped["fitness"], color="#4472c4", edgecolor="black")
+    axes[0].set_ylabel("Reporting fitness")
+    axes[0].grid(axis="y", alpha=0.25)
+    width = 0.36
+    axes[1].bar(x - width / 2, grouped["csr"], width, label="Soft CSR", color="#70ad47", edgecolor="black")
+    axes[1].bar(x + width / 2, grouped["utilisation"], width, label="Active-node utilisation", color="#ed7d31", edgecolor="black")
+    axes[1].set_ylim(0, 1.05)
+    axes[1].set_ylabel("Mean value")
+    axes[1].legend()
+    axes[1].grid(axis="y", alpha=0.25)
+    for axis in axes:
+        axis.set_xticks(x)
+        axis.set_xticklabels(grouped[category], rotation=25, ha="right")
+        axis.set_xlabel(xlabel)
+    fig.tight_layout()
+    save_figure(fig, output_path)
+    plt.close(fig)
 
 
 if __name__ == "__main__":
@@ -250,7 +338,7 @@ def plot_ablation(df: pd.DataFrame, output_path: str | Path) -> None:
     ax2.set_ylabel("Soft CSR (higher is better)")
     ax2.set_ylim(0, 1)
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    save_figure(fig, output_path)
     plt.close(fig)
 
 
@@ -269,5 +357,5 @@ def plot_scalability(df: pd.DataFrame, output_path: str | Path) -> None:
     axes[1].set_ylabel("Runtime (s)")
     axes[1].grid(alpha=0.25)
     fig.tight_layout()
-    fig.savefig(output_path, dpi=300)
+    save_figure(fig, output_path)
     plt.close(fig)

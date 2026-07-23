@@ -1,117 +1,94 @@
-# MEC RDHO Offloading Research Repository
+# Capacity-Feasible MEC Task Offloading and CPU Allocation
 
-**Manuscript:** *RIME-DBO-Based QoE- and Fairness-Aware Task Offloading in Mobile Edge Computing*
-**Status:** Manuscript in preparation
+**Manuscript:** *RDHO-Based Joint Task Offloading and Computing Resource Allocation in Mobile Edge Computing*
+**Research branch:** `research/physical-offloading-model-v2`
 
-This repository is a reproducible research artefact for a simulated mobile-edge-computing (MEC) task-offloading problem. For every generated task, the optimizer selects local, edge, or cloud execution and a normalized service-intensity control. The study evaluates a weighted trade-off among mobile-device energy, delay, a single-epoch AoI surrogate, priority-weighted QoE, and Jain fairness. Its evidence is configuration-driven and preserved as raw outputs, summaries, figures, and tests.
+This repository is the reproducibility package for a simulated three-tier cloud-edge-device MEC study. Each task selects exactly one legal local, edge, or cloud execution node and receives a physical CPU allocation in Hz. A deterministic common repair preserves feasible decoded CPU requests and proportionally projects only overloaded nodes, so every reported solution satisfies assignment, reachability, CPU-bound, and aggregate node-capacity constraints.
 
 [![Tests](https://github.com/Ryan-Yii/mec-rdho-offloading/actions/workflows/tests.yml/badge.svg)](https://github.com/Ryan-Yii/mec-rdho-offloading/actions/workflows/tests.yml)
-[![Release](https://img.shields.io/github/v/release/Ryan-Yii/mec-rdho-offloading?label=release)](https://github.com/Ryan-Yii/mec-rdho-offloading/releases/tag/v1.0-paper)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-## Research Snapshot
+## Model Scope
 
-- **Problem:** simulated MEC task offloading across local, edge, and cloud execution modes.
-- **Decision variables:** execution mode and bounded normalized service intensity; associations and communication rates are fixed scenario parameters.
-- **Objective:** a weighted energy, delay, AoI-surrogate, QoE-proxy, and fairness objective with soft constraint-satisfaction reporting.
-- **Canonical benchmark:** 30 paired scenarios, six primary algorithms, fixed configurations, and separate algorithm random streams.
-- **Evidence beyond the main benchmark:** local-refinement ablation, objective-weight and dynamic-penalty sensitivity, scalability analysis, and paired statistical analysis.
-- **Status:** manuscript in preparation; results describe the supplied simulated configurations and do not claim universal superiority or real deployment validation.
+- **Decisions:** execution node and per-task physical CPU frequency.
+- **Legal paths:** local execution only at the source device; edge and cloud choices only through generated positive-rate links.
+- **Fixed scenario parameters:** communication rates, transmit power, topology, and service overheads.
+- **Reported criteria:** device-side energy, delay, periodic no-backlog average-AoI approximation, model-based QoE, active-user Jain fairness, and soft QoS CSR.
+- **Hard feasibility:** unique legal assignment, finite CPU bounds, and total CPU capacity are enforced by the shared decoder and repair for every algorithm.
+- **Excluded decisions:** bandwidth, power, association, routing, queue scheduling, and infrastructure energy.
 
-## Main Evidence
+The formal reporting objective is fixed across algorithms. RDHO's iteration-dependent penalty guides search only; parent and candidate solutions in one greedy comparison use the same coefficient.
 
-The [canonical configuration](configs/main_40tasks.yaml) specifies 20 devices, 4 edge servers, 2 cloud servers, 40 tasks, population 50, 150 iterations, and 30 paired runs. The primary algorithms are **RDHO-full**, **RIME**, **DBO**, **TLBO-HHO**, **CWTSSA**, and **Greedy-ED**; `RDHO-core` is a local-refinement ablation, not an additional primary baseline.
+## Fresh V2 Evidence
 
-- [Raw paired main results](results/raw/main_30_raw_results.csv), [main summary](results/summary/main_30_summary_mean_std.csv), and [convergence records](results/raw/main_30_convergence.csv)
-- [Paired Wilcoxon results](results/summary/wilcoxon_fitness_results.csv) and [main manuscript table](paper_tables/main_30_summary_mean_std.md)
-- [Ablation raw results](results/raw/ablation_30_raw_results.csv) and [summary](results/summary/ablation_30_summary_mean_std.csv)
-- [Scalability raw results](results/raw/scalability_raw_results.csv) and [summary](results/summary/scalability_summary_mean_std.csv)
-- [Sensitivity raw outputs](results/sensitivity/raw), [sensitivity summaries](results/sensitivity/summary), and [figures](figures)
-- [Reproducibility release](https://github.com/Ryan-Yii/mec-rdho-offloading/releases/tag/v1.0-paper), [software citation](CITATION.cff), and [data availability statement](data_availability.md)
+The canonical configuration uses 20 devices, 4 edge servers, 2 cloud servers, 40 tasks, population 50, 150 iterations, and 30 paired scenarios. All V2 raw results were rerun after the physical CPU-repair correction and are isolated under [`results/v2`](results/v2). Legacy results are not consumed by V2 generators.
 
-![Main convergence evidence](figures/fig01_convergence_curve.png)
+| Algorithm | Reporting fitness | QoE | Per-user fairness | Soft CSR | Runtime (s) | NFE |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| RDHO-full | 0.9470 | 0.4468 | 0.9244 | 0.7206 | 7.8306 | 10232 |
+| RIME | 1.5848 | 0.3551 | 0.8385 | 0.5133 | 5.9657 | 7551 |
+| DBO | 1.1837 | 0.4145 | 0.9161 | 0.6286 | 5.8198 | 7551 |
+| TLBO-HHO | 1.2263 | 0.4070 | 0.9098 | 0.5989 | 5.7114 | 7551 |
+| CWTSSA | 1.2473 | 0.4079 | 0.9140 | 0.5883 | 5.6783 | 7551 |
+| Greedy-ED | 1.0932 | 0.4282 | 0.9164 | 0.6481 | 0.5069 | 681 |
 
-## Quick Reproduction
+All main-run hard-feasibility rates are 1.0. RDHO-full has mean active-node CPU utilisation 0.8189, which also verifies that feasible allocations are not silently saturated.
 
-### Level 1: install and test
+The paired end-to-end result must not be read as universal superiority of the hybrid population operator. At equal NFE (3801 evaluations), RDHO-core beats RIME but is worse than DBO, TLBO-HHO, and CWTSSA. With common initialisation and common coordinate refinement, RIME and DBO reach 0.9819 and 0.9671 mean fitness, respectively, close to RDHO-full at 0.9470. The complete pipeline, especially shared postprocessing, explains much of the end-to-end difference.
+
+## Evidence Map
+
+- [Main raw results](results/v2/raw/main_30_raw_results.csv), [summary](results/v2/summary/main_30_summary_mean_std.csv), [convergence](results/v2/raw/main_30_convergence.csv), and [paired statistics](results/v2/statistics/wilcoxon_fitness_results.csv)
+- [Equal-NFE results](results/v2/summary/equal_nfe_30_summary_mean_std.csv) and [common-control results](results/v2/summary/common_control_30_summary_mean_std.csv)
+- [Ablation](results/v2/summary/ablation_30_summary_mean_std.csv), [scalability](results/v2/summary/scalability_summary_mean_std.csv), and [sensitivity](results/v2/sensitivity)
+- [Paper tables](paper_tables/v2), [paper figures](figures/paper/v2), and [artifact manifest](paper_artifacts/manifest.csv)
+- [Model definition](docs/model_design_v2.md), [experiment protocol](docs/experiment_protocol_v2.md), and [execution report](docs/experiment_execution_report.md)
+
+## Reproduction
+
+Use Python 3.9 or later from the repository root:
 
 ```bash
 python -m pip install -r requirements.txt
 python -m pytest tests -q
 ```
 
-### Level 2: focused pipeline smoke check
-
-```bash
-python -m pytest tests/test_experiment_pipeline.py -q
-```
-
-This focused test exercises a reduced scenario through the experiment pipeline. It verifies that the execution path runs; it does **not** reproduce manuscript results and does not write into the committed result directories.
-
-### Level 3: full experiments
+Run every experiment family:
 
 ```bash
 python -m experiments.run_main_30
+python -m experiments.run_controlled_30
 python -m experiments.run_ablation_30
 python -m experiments.run_scalability
 python -m experiments.run_sensitivity
+python -m experiments.audit_task_id_neutrality
+python -m experiments.generate_v2_artifacts
 ```
 
-The full runs can take substantial time. They use deterministic scenario seeds: within a run ID, compared algorithms receive the same generated tasks and network configuration, while algorithm-specific random streams are derived separately.
+The runners use deterministic scenario seeds. Algorithms compared within one run ID receive the same task and network instance while using separately derived, repeatable algorithm random streams. Full runs take substantial time; per-row seeds and the checksums in `docs/experiment_execution_report.md` document the completed execution.
 
-## Main Benchmark
+The optional OOXML manuscript tools under `tools/` use `requirements-docs.txt` and a LibreOffice installation for DOCX/PDF rendering. They require an explicit source DOCX and output directory and contain no workstation-specific paths.
 
-| Algorithm | Reporting fitness | QoE | Priority-aware fairness | Soft CSR | Runtime (s) | NFE |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| RDHO-full | 0.9571 | 0.3270 | 0.9388 | 0.7089 | 4.2626 | 9112 |
-| RIME | 1.3858 | 0.2800 | 0.8972 | 0.5617 | 4.4626 | 7551 |
-| DBO | 1.0276 | 0.3177 | 0.9360 | 0.6753 | 4.3956 | 7551 |
-| TLBO-HHO | 1.0638 | 0.3164 | 0.9350 | 0.6450 | 4.3127 | 7551 |
-| CWTSSA | 1.0258 | 0.3195 | 0.9383 | 0.6728 | 4.3180 | 7551 |
-| Greedy-ED | 1.0420 | 0.3236 | 0.9389 | 0.6272 | 0.1995 | 361 |
+## Interpretation
 
-The table is a weighted trade-off under the canonical configuration, not dominance on every metric. In these outputs, RDHO-full has the lowest mean fixed-reference reporting fitness; TLBO-HHO has the lowest energy, while Greedy-ED has the lowest delay, AoI, and runtime. The paired test artefacts above record the corresponding comparisons.
+The main paired Wilcoxon tests are two-sided and include Holm adjustment, median paired difference, rank-biserial effect size, and wins/ties/losses. RDHO-full beats each configured main baseline in all 30 paired scenarios, but its NFE differs from those baselines. The equal-NFE and common-postprocessing controls therefore carry equal weight in the scientific interpretation.
 
-## Method and Scope
+The one-factor ablation does not support claiming that every internal component independently improves performance. Removing coordinate refinement causes the large change; removing adaptive roles, elite preservation, or dynamic penalty has only a small mean effect in this configuration. Weight-specific fitness values are meaningful within their own objective setting and are not ranked across different weight vectors.
 
-The implementation distinguishes the base objective, the iteration-dependent search fitness used by RDHO, and the fixed-reference reporting fitness used for final comparisons. Soft delay, battery-adjusted energy, and AoI conditions are summarized by the soft constraint-satisfaction ratio (CSR).
-
-`RDHO-full` includes the configured coordinate-wise local-refinement stage. `RDHO-core` removes only that stage for the ablation. GA, PSO, and DE are not implemented or reported in this branch's canonical benchmark; this repository makes no primary-comparison claim about them. If such methods are retained in a future extended or historical evaluation, they should be kept separate from the current primary manuscript benchmark.
-
-## My Contributions
-
-The [provenance notice](NOTICE.md) records that this work builds on an earlier group research framework. Within that boundary, my documented work in the current research artefact includes:
-
-1. **Methodology and objective alignment:** restructuring the implementation and clarifying the implemented mode-and-service-intensity optimization scope.
-2. **Experimental design and paired evaluation:** configuration-driven main runs, seed handling, consistent scenario generation, and baseline comparison.
-3. **Ablation, sensitivity, scalability, and statistics:** organizing the supplied analyses and paired statistical outputs.
-4. **Reproducibility engineering and artefact organization:** tests, raw outputs, summaries, figures, tables, configurations, and availability documentation.
-5. **Manuscript preparation and project coordination:** maintaining the research presentation while preserving contributor and source provenance.
+Results apply only to the configured simulations, objective, parameter ranges, seeds, and baseline implementations. QoE is a model-based utility rather than human-subject MOS, AoI is a periodic no-backlog average approximation, and CSR concerns soft thresholds rather than hard physical feasibility. The main paper replaces the earlier descriptive radar plot with explicit equal-NFE and common-refinement controls.
 
 ## Repository Structure
 
 ```text
-configs/          Canonical and auxiliary experiment settings
-experiments/      Experiment and analysis entry points
-results/          Raw outputs, summaries, and sensitivity artefacts
-figures/          Manuscript-facing figures
-paper_tables/     Manuscript-facing tables
-src/              System model, metrics, task generation, and algorithms
-tests/            Regression, alignment, and reproducibility checks
+configs/             Versioned experiment configurations
+experiments/         Runners, statistics, plotting, and artifact generation
+src/                 Physical model, decoder/repair, metrics, and algorithms
+tests/               Formula, feasibility, control, and artifact regression tests
+results/v2/          Fresh raw data, summaries, statistics, and figures
+paper_tables/v2/     Generated CSV and Markdown manuscript tables
+figures/paper/v2/    Manuscript PNG and editable SVG figures
+paper_artifacts/     Hash-linked manuscript artifact manifest
+docs/                Model, protocol, audit, and execution documentation
 ```
 
-## Limitations and Interpretation
-
-- Scenarios are simulated with fixed association and fixed-rate communication parameters.
-- QoE is a model-based proxy; it is not human-subject MOS data.
-- AoI is a single-epoch surrogate rather than a complete temporal freshness model.
-- Results depend on the stated objective, parameter ranges, seeds, implementations, and baseline suite.
-- The repository does not claim universal superiority, a real edge-network deployment, or hard satisfaction of every soft service threshold.
-
-## Data, Citation, and Provenance
-
-No proprietary or human-subject data are used. See [data_availability.md](data_availability.md) for generated data and reproduction notes, [CITATION.cff](CITATION.cff) for software citation metadata, and [NOTICE.md](NOTICE.md) for source and contributor provenance. The repository is released under the [MIT License](LICENSE).
-
-## Related Projects
-
-For online distributed execution infrastructure and scheduling-policy experiments, see [mec-distributed-task-scheduler](https://github.com/Ryan-Yii/mec-distributed-task-scheduler).
+See [data_availability.md](data_availability.md) for data provenance, [CITATION.cff](CITATION.cff) for citation metadata, and [NOTICE.md](NOTICE.md) for contributor and source provenance.

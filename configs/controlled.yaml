@@ -1,0 +1,38 @@
+system:
+  mobile_devices: 20
+  edge_servers: 4
+  cloud_servers: 2
+  tasks: 40
+
+experiment:
+  seed_start: 20260701
+  independent_runs: 30
+  population_size: 50
+  max_iterations: 150
+
+weights:
+  energy: 0.15
+  delay: 0.15
+  aoi: 0.20
+  qoe: 0.25
+  fairness: 0.25
+
+equal_nfe:
+  # All solvers consume one initial population, one candidate population per
+  # iteration, and one final verification evaluation: 50 * (1 + 75) + 1.
+  algorithms: [RDHO-core, RIME, DBO, TLBO-HHO, CWTSSA]
+  algorithm_iterations:
+    RDHO-core: 75
+    RIME: 75
+    DBO: 75
+    TLBO-HHO: 75
+    CWTSSA: 75
+
+common_controls:
+  algorithms:
+    - RIME-common-init
+    - DBO-common-init
+    - RIME-common-init-refine
+    - DBO-common-init-refine
+    - RDHO-core
+    - RDHO-full
