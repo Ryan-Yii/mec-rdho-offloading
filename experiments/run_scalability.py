@@ -21,6 +21,7 @@ def main() -> None:
                 "fitness": row["fitness"],
                 "csr": row["csr"],
                 "hard_feasible": row["hard_feasible"],
+                "assignment_unique": row["assignment_unique"],
                 "capacity_utilisation_mean": row["capacity_utilisation_mean"],
                 "capacity_utilisation_max": row["capacity_utilisation_max"],
                 "qoe": row["qoe"],

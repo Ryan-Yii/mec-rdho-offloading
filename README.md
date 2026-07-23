@@ -64,7 +64,9 @@ python -m experiments.run_sensitivity
 python -m experiments.generate_v2_artifacts
 ```
 
-The runners use deterministic scenario seeds. Algorithms compared within one run ID receive the same task and network instance while using separately derived, repeatable algorithm random streams. Full runs take substantial time; the committed logs and per-row seeds document the completed execution.
+The runners use deterministic scenario seeds. Algorithms compared within one run ID receive the same task and network instance while using separately derived, repeatable algorithm random streams. Full runs take substantial time; per-row seeds and the checksums in `docs/experiment_execution_report.md` document the completed execution.
+
+The optional OOXML manuscript tools under `tools/` use `requirements-docs.txt` and a LibreOffice installation for DOCX/PDF rendering. They require an explicit source DOCX and output directory and contain no workstation-specific paths.
 
 ## Interpretation
 
@@ -81,7 +83,7 @@ configs/             Versioned experiment configurations
 experiments/         Runners, statistics, plotting, and artifact generation
 src/                 Physical model, decoder/repair, metrics, and algorithms
 tests/               Formula, feasibility, control, and artifact regression tests
-results/v2/          Fresh raw data, summaries, statistics, figures, and logs
+results/v2/          Fresh raw data, summaries, statistics, and figures
 paper_tables/v2/     Generated CSV and Markdown manuscript tables
 figures/paper/v2/    Manuscript PNG and editable SVG figures
 paper_artifacts/     Hash-linked manuscript artifact manifest

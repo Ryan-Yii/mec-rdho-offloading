@@ -35,6 +35,16 @@ def test_main_ablation_scalability_and_sensitivity_outputs_are_present():
         assert artifact.stat().st_size > 0
 
 
+def test_scalability_rows_record_assignment_uniqueness():
+    with (ROOT / "results" / "v2" / "raw" / "scalability_raw_results.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        rows = list(csv.DictReader(handle))
+
+    assert rows
+    assert all(row["assignment_unique"] == "1" for row in rows)
+
+
 def test_readme_rdho_full_values_match_main_summary():
     with (ROOT / "results" / "v2" / "summary" / "main_30_summary_mean_std.csv").open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))

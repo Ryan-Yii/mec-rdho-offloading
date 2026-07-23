@@ -36,6 +36,12 @@ def _copy(source: Path, destination: Path) -> None:
         shutil.copy2(source, destination)
 
 
+def _normalise_svgs(directory: Path) -> None:
+    for path in directory.rglob("*.svg"):
+        lines = path.read_text(encoding="utf-8").splitlines()
+        path.write_text("\n".join(line.rstrip() for line in lines) + "\n", encoding="utf-8")
+
+
 def _artifact_record(
     item: str,
     number: str,
@@ -118,6 +124,7 @@ def _generate_figures() -> list[dict[str, str]]:
         utility_raw_csv=V2 / "sensitivity" / "raw" / "utility_sensitivity_raw_results.csv",
         physical_raw_csv=V2 / "sensitivity" / "raw" / "physical_sensitivity_raw_results.csv",
     )
+    _normalise_svgs(V2)
 
     specs = [
         ("Figure 1", "1", FIGURES / "system_architecture.png", V2 / "raw" / "task_parameters.csv", "Cloud-edge-device architecture", "Section 3"),
@@ -172,18 +179,13 @@ def _write_execution_report() -> None:
         "All listed files were generated from seeded V2 configurations after the physical CPU projection fix.",
         "The pre-fix outputs are outside the repository and are not consumed by any generator.",
         "",
-        f"Generation code commit before result commit: `{_commit()}`",
+        f"Repository commit at artifact generation: `{_commit()}`",
         "",
     ]
     for path in paths:
         rel = path.relative_to(ROOT)
         rows = max(0, sum(1 for _ in path.open(encoding="utf-8")) - 1)
         lines.append(f"- `{rel}`: {rows} data rows; SHA-256 `{_sha256(path)}`")
-    log_dir = V2 / "logs"
-    if log_dir.is_dir():
-        lines.extend(["", "## Execution logs", ""])
-        for path in sorted(log_dir.glob("*.log")):
-            lines.append(f"- `{path.relative_to(ROOT)}`: SHA-256 `{_sha256(path)}`")
     report = ROOT / "docs" / "experiment_execution_report.md"
     ensure_parent(report)
     report.write_text("\n".join(lines) + "\n", encoding="utf-8")

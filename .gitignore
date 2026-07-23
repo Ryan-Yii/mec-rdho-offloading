@@ -10,3 +10,4 @@ env/
 Thumbs.db
 *.log
 .venv-v2/
+work/

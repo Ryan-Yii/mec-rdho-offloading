@@ -1,0 +1,5 @@
+task_type,input_data_mb,cpu_cycles_gcycles,max_delay_s,aoi_threshold_s,energy_budget_j,battery_ratio,priority,update_interval_s
+compute_intensive,8.0-35.0,1.8-4.5,1.5-3.0,2.0-3.0,2.5-6.0,0.45-1.0,0.6-0.9,0.5-1.0
+data_intensive,30.0-90.0,0.8-2.2,2.5-5.0,3.0-5.0,2.0-5.0,0.4-0.95,0.5-0.8,0.8-1.5
+realtime_sensitive,2.0-15.0,0.5-1.8,0.35-1.0,0.5-1.0,1.0-3.5,0.55-1.0,0.8-1.0,0.1-0.3
+lightweight,0.5-5.0,0.1-0.8,0.8-2.0,1.0-2.0,0.5-2.0,0.5-1.0,0.4-0.7,0.3-0.6
