@@ -6,11 +6,11 @@ All numerical files were freshly generated from seeded V2 configurations after t
 
 - Numerical experiment generation HEAD: `78c51c13ce7405654d488aea593d184be930e16a`.
 - The generated numerical CSV artifacts first entered Git in `d2ca1139d325e21ab03f4db97a5e0c4e13149e8d`.
-- Repository HEAD when this report was assembled: `d2ca1139d325e21ab03f4db97a5e0c4e13149e8d`.
+- Repository HEAD when this report was assembled: `72bc01105c45d29caf64218d5ffe820a00d62d2d`.
 - Git diff check from numerical generation HEAD through report HEAD for `src/` and `configs/`: `PASS`.
 - Git diff check from the numerical-artifact commit through report HEAD for raw experiment CSV paths: `PASS`.
 - Publication reference: tag `v2-paper-artifacts-2026-07` on branch `research/physical-offloading-model-v2`.
-- Git clean-check result captured before report assembly: Publication changes present; phase-1 clean check pending commit.
+- Git clean-check result captured before report assembly: PASS: worktree clean at phase-1 commit 72bc01105c45d29caf64218d5ffe820a00d62d2d before final report assembly.
 
 ## Execution commands
 
@@ -36,7 +36,7 @@ python -m pytest tests -q
 - Pytest: PASS: 38 tests passed locally on 2026-07-23 (14 third-party dependency deprecation warnings). Tests cover formulas and metrics, legal-node decoding, CPU bounds/capacity repair, fixed reporting fitness, controlled NFE, reproducibility artifacts, and manuscript-output guards.
 - Raw audit: `1580` rows across nine suites; hard feasibility `PASS`; unique assignment `PASS`.
 - Manifest audit: `58` entries; generated-file SHA-256 verification `PASS`.
-- CI: [Pending phase-1 push verification](https://github.com/Ryan-Yii/mec-rdho-offloading/pull/8/checks).
+- CI: [PASS: Tests/test on phase-1 commit 72bc011](https://github.com/Ryan-Yii/mec-rdho-offloading/actions/runs/29993308799/job/89160920552).
 - All manuscript tables and figures are generated from the listed V2 CSV files; no paper value is entered manually.
 
 ## Result files
