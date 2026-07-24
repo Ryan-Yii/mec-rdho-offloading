@@ -22,3 +22,8 @@ must be confirmed before journal submission.
 6. **Reference bibliography.** The supplied reference PDFs help write the
    related work, but the final journal bibliography and copyright/self-overlap
    review require author approval.
+7. **Requested fairness sentence conflicts with V2 evidence.** The requested
+   conclusion wording says Greedy-ED slightly leads fairness, but the locked V2
+   summary and Table 5 report active-user fairness 0.9244 for RDHO-full and
+   0.9164 for Greedy-ED. The manuscript therefore follows the CSV and identifies
+   RDHO-full as the fairness leader; no result or experiment was changed.

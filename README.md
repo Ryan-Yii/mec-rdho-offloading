@@ -3,7 +3,7 @@
 **Manuscript:** *RDHO-Based Joint Task Offloading and Computing Resource Allocation in Mobile Edge Computing*
 **Research branch:** `research/physical-offloading-model-v2`
 
-This repository is the reproducibility package for a simulated three-tier cloud-edge-device MEC study. Each task selects exactly one legal local, edge, or cloud execution node and receives a physical CPU allocation in Hz. A deterministic common repair preserves feasible decoded CPU requests and proportionally projects only overloaded nodes, so every reported solution satisfies assignment, reachability, CPU-bound, and aggregate node-capacity constraints.
+This repository is the reproducibility package for a simulated three-tier cloud-edge-device MEC study. Each task selects exactly one legal local, edge, or cloud execution node and receives a physical CPU allocation in Hz. A deterministic common repair reassigns minimum-frequency-infeasible tasks when necessary, preserves feasible decoded requests, and proportionally projects excess demand only on overloaded nodes, so every reported solution satisfies assignment, reachability, CPU-bound, and aggregate node-capacity constraints.
 
 [![Tests](https://github.com/Ryan-Yii/mec-rdho-offloading/actions/workflows/tests.yml/badge.svg)](https://github.com/Ryan-Yii/mec-rdho-offloading/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -34,14 +34,14 @@ The canonical configuration uses 20 devices, 4 edge servers, 2 cloud servers, 40
 
 All main-run hard-feasibility rates are 1.0. RDHO-full has mean active-node CPU utilisation 0.8189, which also verifies that feasible allocations are not silently saturated.
 
-The paired end-to-end result must not be read as universal superiority of the hybrid population operator. At equal NFE (3801 evaluations), RDHO-core beats RIME but is worse than DBO, TLBO-HHO, and CWTSSA. With common initialisation and common coordinate refinement, RIME and DBO reach 0.9819 and 0.9671 mean fitness, respectively, close to RDHO-full at 0.9470. The complete pipeline, especially shared postprocessing, explains much of the end-to-end difference.
+The paired end-to-end result must not be read as universal superiority of the hybrid population operator. At equal NFE (3801 evaluations), RDHO-core beats RIME but is worse than DBO, TLBO-HHO, and CWTSSA. With common initialisation and common coordinate refinement, RIME and DBO reach 0.9819 and 0.9671 mean fitness, respectively, close to RDHO-full at 0.9470. The common-refinement control explains much of the end-to-end difference.
 
 ## Evidence Map
 
 - [Main raw results](results/v2/raw/main_30_raw_results.csv), [summary](results/v2/summary/main_30_summary_mean_std.csv), [convergence](results/v2/raw/main_30_convergence.csv), and [paired statistics](results/v2/statistics/wilcoxon_fitness_results.csv)
 - [Equal-NFE results](results/v2/summary/equal_nfe_30_summary_mean_std.csv) and [common-control results](results/v2/summary/common_control_30_summary_mean_std.csv)
 - [Ablation](results/v2/summary/ablation_30_summary_mean_std.csv), [scalability](results/v2/summary/scalability_summary_mean_std.csv), and [sensitivity](results/v2/sensitivity)
-- [Paper tables](paper_tables/v2), [paper figures](figures/paper/v2), and [artifact manifest](paper_artifacts/manifest.csv)
+- [Paper tables](paper_tables/v2), [paper figures](figures/paper), including the editable [Figure 1 source](figures/paper/fig1_system_architecture.svg), and [artifact manifest](paper_artifacts/manifest.csv)
 - [Model definition](docs/model_design_v2.md), [experiment protocol](docs/experiment_protocol_v2.md), and [execution report](docs/experiment_execution_report.md)
 
 ## Reproduction
@@ -71,11 +71,11 @@ The optional OOXML manuscript tools under `tools/` use `requirements-docs.txt` a
 
 ## Interpretation
 
-The main paired Wilcoxon tests are two-sided and include Holm adjustment, median paired difference, rank-biserial effect size, and wins/ties/losses. RDHO-full beats each configured main baseline in all 30 paired scenarios, but its NFE differs from those baselines. The equal-NFE and common-postprocessing controls therefore carry equal weight in the scientific interpretation.
+The main paired Wilcoxon tests are two-sided and include Holm adjustment, median paired difference, rank-biserial effect size, and wins/ties/losses. RDHO-full beats each configured main baseline in all 30 paired scenarios, but its NFE differs from those baselines. The equal-NFE, common-initialisation, and common-refinement controls therefore carry equal weight in the scientific interpretation.
 
 The one-factor ablation does not support claiming that every internal component independently improves performance. Removing coordinate refinement causes the large change; removing adaptive roles, elite preservation, or dynamic penalty has only a small mean effect in this configuration. Weight-specific fitness values are meaningful within their own objective setting and are not ranked across different weight vectors.
 
-Results apply only to the configured simulations, objective, parameter ranges, seeds, and baseline implementations. QoE is a model-based utility rather than human-subject MOS, AoI is a periodic no-backlog average approximation, and CSR concerns soft thresholds rather than hard physical feasibility. The main paper replaces the earlier descriptive radar plot with explicit equal-NFE and common-refinement controls.
+Results apply only to the configured simulations, objective, parameter ranges, seeds, and baseline implementations. QoE is a model-based utility rather than human-subject MOS, AoI is a periodic no-backlog average approximation, and CSR concerns soft thresholds rather than hard physical feasibility. The main paper reports explicit equal-NFE and common-initialisation/common-refinement controls.
 
 ## Repository Structure
 
@@ -86,7 +86,7 @@ src/                 Physical model, decoder/repair, metrics, and algorithms
 tests/               Formula, feasibility, control, and artifact regression tests
 results/v2/          Fresh raw data, summaries, statistics, and figures
 paper_tables/v2/     Generated CSV and Markdown manuscript tables
-figures/paper/v2/    Manuscript PNG and editable SVG figures
+figures/paper/       Figure 1 SVG/PNG/PDF and generated V2 figures
 paper_artifacts/     Hash-linked manuscript artifact manifest
 docs/                Model, protocol, audit, and execution documentation
 ```

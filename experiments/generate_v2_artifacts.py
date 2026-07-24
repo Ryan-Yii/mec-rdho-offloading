@@ -144,7 +144,7 @@ def _generate_tables() -> list[dict[str, str]]:
         ("Table 9", "9", CONTROL_SUMMARY, "Controlled attribution comparison", "Section 6.3"),
         ("Table 10", "10", V2 / "sensitivity" / "summary" / "dynamic_penalty_sensitivity_summary_mean_std.csv", "Dynamic-penalty sensitivity", "Section 6.4"),
         ("Table S1", "S1", V2 / "summary" / "equal_nfe_30_summary_mean_std.csv", "Equal-NFE comparison", "Section 6.2 and repository supplement"),
-        ("Table S2", "S2", V2 / "summary" / "common_control_30_summary_mean_std.csv", "Common-initialisation/postprocessing control", "Section 6.2 and repository supplement"),
+        ("Table S2", "S2", V2 / "summary" / "common_control_30_summary_mean_std.csv", "Common-initialisation/common-refinement control", "Section 6.2 and repository supplement"),
         ("Table S3", "S3", V2 / "statistics" / "equal_nfe_wilcoxon.csv", "Equal-NFE paired statistics", "Repository supplement"),
         ("Table S4", "S4", V2 / "statistics" / "common_control_wilcoxon.csv", "Common-control paired statistics", "Repository supplement"),
         ("Table S5", "S5", V2 / "sensitivity" / "summary" / "utility_sensitivity_summary_mean_std.csv", "Task-utility coefficient sensitivity", "Section 6.4 and repository supplement"),
@@ -212,7 +212,7 @@ def _generate_figures() -> list[dict[str, str]]:
         obsolete.unlink(missing_ok=True)
 
     specs = [
-        ("Figure 1", "1", FIGURES / "system_architecture.png", V2 / "raw" / "task_parameters.csv", "Cloud-edge-device architecture", "Section 3"),
+        ("Figure 1", "1", ROOT / "figures" / "paper" / "fig1_system_architecture.png", V2 / "raw" / "task_parameters.csv", "Three-tier cloud-edge-device architecture with legal execution-node choices and shared physical CPU-capacity pools", "Section 3.1, after the opening architecture paragraph and before the task tuple"),
         ("Figure 2", "2", V2 / "figures" / "convergence_curve.png", V2 / "raw" / "main_30_convergence.csv", "End-to-end convergence", "Section 6.2"),
         ("Figure 3", "3", V2 / "figures" / "energy_comparison.png", V2 / "raw" / "main_30_raw_results.csv", "Device-side energy comparison", "Section 6.2"),
         ("Figure 4", "4", V2 / "figures" / "delay_comparison.png", V2 / "raw" / "main_30_raw_results.csv", "Mean delay comparison", "Section 6.2"),
@@ -239,16 +239,19 @@ def _generate_figures() -> list[dict[str, str]]:
         vector = png_source.with_suffix(".svg")
         if vector.is_file():
             sources.append(vector)
+        pdf = png_source.with_suffix(".pdf")
+        if item == "Figure 1" and pdf.is_file():
+            sources.append(pdf)
         for source in sources:
             destination = FIGURES / f"{item.lower().replace(' ', '_')}_{source.name}"
             if item == "Figure 1":
-                destination = FIGURES / source.name
+                destination = source
             _copy(source, destination)
             records.append(_artifact_record(
                 item,
                 number,
                 title,
-                "figures/paper/v2/system_architecture.svg" if item == "Figure 1" else "experiments/generate_v2_artifacts.py",
+                "figures/paper/fig1_system_architecture.svg" if item == "Figure 1" else "experiments/generate_v2_artifacts.py",
                 data_source,
                 destination,
                 location,

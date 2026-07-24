@@ -60,7 +60,7 @@ def verify_comments(source: Path, reviewed: Path) -> None:
     with zipfile.ZipFile(source) as source_zip, zipfile.ZipFile(reviewed) as reviewed_zip:
         original, _, _ = comment_records(source_zip)
         revised, para_to_id, extended = comment_records(reviewed_zip)
-        if len(original) != 86 or len(revised) != 129:
+        if len(original) != 86 or len(revised) != 130:
             raise AssertionError(f"unexpected comment counts: source={len(original)}, reviewed={len(revised)}")
         original_by_id = {row["id"]: row for row in original}
         revised_by_id = {row["id"]: row for row in revised}
@@ -73,6 +73,15 @@ def verify_comments(source: Path, reviewed: Path) -> None:
         new_replies = [row for row in revised if row["text"].startswith("V2 reply:")]
         if len(new_replies) != 43:
             raise AssertionError(f"expected 43 V2 replies, found {len(new_replies)}")
+        supplemental = [
+            row for row in revised
+            if row["text"] == (
+                "已进一步按意见更新系统架构图：增加终端设备的直观数量，将图片放置于系统模型第3.1节，"
+                "并统一为当前物理CPU资源分配模型的术语。图片源文件和论文插图已同步至仓库。"
+            )
+        ]
+        if len(supplemental) != 1:
+            raise AssertionError(f"expected one supplemental Figure 1 reply, found {len(supplemental)}")
         author_original = [row for row in revised if row["author"] == "祎宝" and row["id"] in original_by_id]
         web_para_ids = {
             para_id
@@ -89,6 +98,8 @@ def verify_comments(source: Path, reviewed: Path) -> None:
             raise AssertionError("an original author reply is not threaded to a supervisor comment")
         if any(parent_by_para.get(row["para_id"], "") not in web_para_ids for row in new_replies):
             raise AssertionError("a V2 reply is not threaded to a supervisor comment")
+        if any(parent_by_para.get(row["para_id"], "") not in web_para_ids for row in supplemental):
+            raise AssertionError("the supplemental Figure 1 reply is not threaded to a supervisor comment")
         if any(para_to_id.get(parent_by_para[row["para_id"]], "") == "" for row in new_replies):
             raise AssertionError("a V2 reply parent cannot be resolved")
 
@@ -196,7 +207,7 @@ def verify_notation_table(path: Path) -> None:
 
 def verify_images(reviewed: Path, repo: Path) -> None:
     expected = {
-        "word/media/image2.png": repo / "figures/paper/v2/system_architecture.png",
+        "word/media/image2.png": repo / "figures/paper/fig1_system_architecture.png",
         "word/media/image3.png": repo / "results/v2/figures/convergence_curve.png",
         "word/media/image4.png": repo / "results/v2/figures/energy_comparison.png",
         "word/media/image5.png": repo / "results/v2/figures/delay_comparison.png",

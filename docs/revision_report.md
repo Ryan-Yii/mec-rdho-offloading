@@ -26,10 +26,10 @@ restrained claims about metrics, ablations, baselines, and deployment scope.
 - Added regression tests for formulae, bounds, capacity, deterministic repair,
   unsaturated feasible requests, reporting semantics, utility coefficients,
   and server heterogeneity.
-- Added fresh main, equal-NFE, common-initialisation/postprocessing, one-factor
+- Added fresh main, equal-NFE, common-initialisation/common-refinement, one-factor
   ablation, scalability, objective-composition, dynamic-penalty, task-utility,
   CPU-capacity, SLA, and server-heterogeneity experiments.
-- Added CSV/Markdown paper tables, PNG/SVG paper figures, SHA-256 artifact
+- Added CSV/Markdown paper tables, PNG/SVG/PDF paper figures, SHA-256 artifact
   manifest, execution report, and V2-specific reproduction documentation.
 - Replaced the descriptive radar figure with main-paper Table 9 and Figure 12
   for equal-NFE and common-refinement attribution.
@@ -49,6 +49,10 @@ The final reviewed DOCX is generated from
 and tables are highlighted, all original comments and anchors are retained,
 one true threaded V2 reply is added to each supervisor comment, and no thread
 is resolved.  A separate clean DOCX and PDF remove comments and highlighting.
+Figure 1 was redrawn as a three-tier device-edge-cloud architecture, inserted
+after the opening Section 3.1 architecture paragraph and before the task tuple,
+and synchronized from one repository SVG source to the manuscript PNG and
+vector PDF.
 
 ## 0712 and 0722 comment coverage
 
@@ -59,6 +63,7 @@ removal, and algorithm-format guidance) are substantively covered by the later
 0722 instructions and the V2 changes. The intermediate 0722 file contains 63
 comments, including 43 reviewer comments. The 86-comment revised 0722 source is
 the structure-preserving editing base: all 86 originals remain unchanged, one
-new V2 reply is attached to each of the 43 reviewer threads, and all threads
-remain unresolved. The comment audit records the actual revision for every one
-of those threads.
+new V2 reply is attached to each of the 43 reviewer threads, one supplemental
+Figure 1 reply is attached to the existing figure-placement thread, and all
+threads remain unresolved. The comment audit records the actual revision for
+every one of those threads.

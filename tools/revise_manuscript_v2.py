@@ -453,7 +453,7 @@ COMMENT_ACTIONS = {
     "5": "The abstract reports the problem, method, controlled evidence and limits without a detailed table of numbers.",
     "7": "The abstract follows background, challenge, method, evidence and limitation order.",
     "9": "MEC, AoI, QoE, CSR and RDHO are expanded independently at first use in the abstract and main text.",
-    "10": "Keywords use established retrieval terms and omit the self-created priority-aware label.",
+    "10": "Keywords use established retrieval terms and omit the earlier self-created fairness label.",
     "12": "The Introduction follows the requested inverted-pyramid structure and closes with contributions and organisation.",
     "14": "Citations retain bracketed numbering and references remain ordered by first appearance.",
     "16": "An original editable architecture figure is placed in Section 3, not the Introduction.",
@@ -465,7 +465,7 @@ COMMENT_ACTIONS = {
     "26": "Optimisation, learning and metaheuristic studies are separated; objective dimensions are discussed only within each class.",
     "27": "The evolutionary relationship to the earlier chapter is omitted from Related Work; TLBO-HHO is treated as literature and a comparator.",
     "28": "Section 3 now contains the full cloud-edge-device model, node choice, physical CPU allocation, delay, energy and AoI assumptions.",
-    "30": "The non-standard single-epoch surrogate wording was replaced by a periodic no-backlog average-AoI approximation with its scope stated.",
+    "30": "The earlier AoI wording was replaced by a periodic no-backlog average-AoI approximation with its scope stated.",
     "31": "Assumptions are integrated at the relevant network, path, communication and AoI descriptions.",
     "32": "The task tuple, unified node set, assignment variable and physical CPU variable are explicitly defined for later use.",
     "33": "Each formula is preceded or followed by modelling rationale and physical interpretation.",
@@ -480,7 +480,7 @@ COMMENT_ACTIONS = {
     "47": "Short sub-subsections were folded into continuous prose.",
     "49": "Problem complexity is retained as a short paragraph rather than a separate small subsection.",
     "50": "Section 5 is explicitly titled an RDHO-based task-offloading strategy.",
-    "51": "Computation-control algorithm terminology was removed; the normalised resource coordinate is described only as an internal encoding.",
+    "51": "Obsolete algorithm-control terminology was removed; the normalised resource coordinate is described only as an internal encoding.",
     "52": "Section 5.1 is written as algorithm design and solution representation, not program implementation commentary.",
     "53": "RDHO update equations and cross-references were renumbered consistently.",
     "55": "The algorithm section retains only two substantive second-level headings.",
@@ -513,6 +513,12 @@ LEGACY_REPLY_PARENTS = {
     "63": "62",
     "65": "64",
 }
+
+
+ARCHITECTURE_FOLLOW_UP = (
+    "已进一步按意见更新系统架构图：增加终端设备的直观数量，将图片放置于系统模型第3.1节，"
+    "并统一为当前物理CPU资源分配模型的术语。图片源文件和论文插图已同步至仓库。"
+)
 
 
 def comment_anchor_text(parts: dict[str, bytes], comments: etree._Element, extended: etree._Element) -> dict[str, str]:
@@ -627,6 +633,52 @@ def append_replies(parts: dict[str, bytes]) -> list[dict[str, str]]:
             "status": status,
         })
         next_id += 1
+
+    parent = comment_by_id["19"]
+    parent_para = comment_para_id(parent)
+    while True:
+        para_id = secrets.token_hex(4).upper()
+        if para_id not in used_para:
+            used_para.add(para_id)
+            break
+    while True:
+        durable_id = secrets.token_hex(4).upper()
+        if durable_id not in used_durable:
+            used_durable.add(durable_id)
+            break
+    reply = etree.SubElement(comments, qn(W, "comment"))
+    reply.set(qn(W, "id"), str(next_id))
+    reply.set(qn(W, "author"), "祎宝")
+    reply.set(qn(W, "date"), now)
+    reply.set(qn(W, "initials"), "")
+    paragraph = etree.SubElement(reply, qn(W, "p"))
+    paragraph.set(qn(W14, "paraId"), para_id)
+    paragraph.set(qn(W14, "textId"), "77777777")
+    paragraph.append(new_run(ARCHITECTURE_FOLLOW_UP, highlighted=False))
+    ex = etree.SubElement(extended, qn(W15, "commentEx"))
+    ex.set(qn(W15, "paraId"), para_id)
+    ex.set(qn(W15, "paraIdParent"), parent_para)
+    ex.set(qn(W15, "done"), "0")
+    id_node = etree.SubElement(ids, qn(W16CID, "commentId"))
+    id_node.set(qn(W16CID, "paraId"), para_id)
+    id_node.set(qn(W16CID, "durableId"), durable_id)
+    ext_node = etree.SubElement(extensible, qn(W16CEX, "commentExtensible"))
+    ext_node.set(qn(W16CEX, "durableId"), durable_id)
+    ext_node.set(qn(W16CEX, "dateUtc"), now)
+    audit.append({
+        "original_comment_id": "19",
+        "author": parent.get(qn(W, "author"), ""),
+        "original_comment": comment_text(parent),
+        "anchor": anchors.get("19", "thread anchor inherited from parent"),
+        "actual_revision": "Figure 1 was redrawn, moved to Section 3.1 and synchronized with repository SVG, PNG and PDF sources.",
+        "legacy_reply_id": legacy_by_parent.get("19", ""),
+        "legacy_reply_status": "existing threaded reply preserved",
+        "thread_parent_para_id": parent_para,
+        "reply_comment_id": str(next_id),
+        "reply_para_id": para_id,
+        "reply": ARCHITECTURE_FOLLOW_UP,
+        "status": "supplemental figure reply; thread left open",
+    })
     parts["word/comments.xml"] = etree.tostring(comments, xml_declaration=True, encoding="UTF-8", standalone="yes")
     parts["word/commentsExtended.xml"] = etree.tostring(extended, xml_declaration=True, encoding="UTF-8", standalone="yes")
     parts["word/commentsIds.xml"] = etree.tostring(ids, xml_declaration=True, encoding="UTF-8", standalone="yes")
@@ -644,31 +696,31 @@ def paragraph_updates() -> dict[int, str]:
     reductions = {name: 100.0 * (float(row["fitness_mean"]) - float(rdho["fitness_mean"])) / float(row["fitness_mean"]) for name, row in main.items() if name != "RDHO"}
     return {
         0: "RDHO-Based Joint Task Offloading and Computing Resource Allocation in Mobile Edge Computing",
-        6: "Mobile edge computing (MEC) complements resource-limited devices with nearby edge and remote cloud resources, but heterogeneous tasks couple discrete execution-node choice with continuous processor allocation. This paper formulates a capacity-feasible cloud-edge-device model in which each task selects one legal local, edge, or cloud node and receives a physical CPU frequency. A deterministic repair preserves feasible requests and projects only overloaded nodes. Device-side energy, processing delay, a periodic no-backlog average Age of Information (AoI) approximation, a model-based Quality of Experience (QoE) utility, and active-user Jain fairness form one fixed weighted reporting objective, while a dynamic penalty guides search only. The complete RIME-DBO hybrid optimisation (RDHO) procedure gives the lowest mean reporting fitness in 30 paired end-to-end runs. Equal-evaluation and common-postprocessing controls substantially qualify this result: RDHO-core is worse than DBO, TLBO-HHO and CWTSSA at equal NFE, so the evidence supports the configured full pipeline rather than universal superiority of the hybrid population operator. Conclusions are limited to the stated simulated model and baseline implementations.",
-        7: "Keywords: mobile edge computing; task offloading; computing resource allocation; Age of Information; metaheuristic optimisation.",
+        6: "Mobile edge computing (MEC) complements resource-limited devices with nearby edge and remote cloud resources, but heterogeneous tasks couple discrete execution-node choice with continuous processor allocation. This paper formulates a capacity-feasible cloud-edge-device model in which each task selects one legal local, edge, or cloud node and receives a physical CPU frequency. A deterministic repair reassigns minimum-frequency-infeasible tasks when necessary, preserves feasible requests, and projects excess demand only on overloaded nodes. Device-side energy, processing delay, a periodic no-backlog average Age of Information (AoI) approximation, a model-based Quality of Experience (QoE) utility, and active-user Jain fairness form one fixed weighted reporting objective, while a dynamic penalty guides search only. The complete RIME-DBO hybrid optimisation (RDHO) procedure gives the lowest mean reporting fitness in 30 paired end-to-end runs. Equal-NFE and common-initialisation/common-refinement controls substantially qualify this result: RDHO-core is worse than DBO, TLBO-HHO and CWTSSA at equal NFE, so the evidence supports the configured full pipeline rather than universal superiority of the hybrid population operator. Conclusions are limited to the stated simulated model and baseline implementations.",
+        7: "Keywords: mobile edge computing; joint task offloading; computing resource allocation; quality of experience; user fairness.",
         9: "Latency-sensitive sensing, Internet of Things (IoT), fifth-generation (5G) and emerging sixth-generation services generate heterogeneous workloads close to users. Mobile edge computing (MEC) reduces service distance by supplementing devices with edge and cloud resources [1,2].",
         10: "A practical offloading decision must select a legal execution node and allocate finite processor capacity. The resulting categorical-continuous decisions interact through transmission paths, per-node CPU budgets, device-side energy and task-specific service thresholds.",
         11: "Existing studies primarily optimise energy and latency, while freshness-aware work adds Age of Information (AoI) and user-oriented work considers Quality of Experience (QoE) or fairness [3-7]. These criteria are related rather than statistically independent: in the present model AoI contains service delay and QoE transforms delay, energy and freshness into bounded utility.",
         12: "The study therefore evaluates a transparent scalar engineering preference rather than a Pareto method. RIME-DBO hybrid optimisation (RDHO) is treated as a complete solver configuration whose seeding, population updates and refinement must be distinguished experimentally.",
-        13: "The contributions are threefold. First, the paper integrates capacity-feasible three-tier task offloading and physical CPU allocation with priority-weighted aggregate QoE and priority-neutral active-user fairness. Second, it designs an RDHO solution workflow with legal-node encoding, physical-frequency decoding, deterministic capacity repair, dynamic search guidance and fixed-objective incumbent tracking shared across the controlled solvers. Third, paired, equal-NFE, common-postprocessing, ablation, scalability and sensitivity experiments separate the evidence for the complete workflow from evidence for its individual search mechanisms.",
+        13: "The contributions are threefold. First, the paper integrates capacity-feasible three-tier task offloading and physical CPU allocation with priority-weighted aggregate QoE and priority-neutral active-user fairness. Second, it develops an RDHO workflow with legal-node encoding, physical-frequency decoding, deterministic capacity repair, dynamic penalty guidance and fixed-objective incumbent tracking. The encoding, physical decoding, repair, hard-feasibility checks and reporting objective are applied consistently across the controlled solvers; dynamic penalty guidance and independent fixed-objective incumbent tracking are RDHO mechanisms. Third, paired, equal-NFE, common-initialisation and common-refinement, ablation, scalability and sensitivity experiments separate the evidence for the complete workflow from evidence for its individual search mechanisms.",
         14: f"Under the configured end-to-end procedures, RDHO-full obtains mean reporting fitness {f(rdho, 'fitness_mean')} and reductions of " + ", ".join(f"{reductions[name]:.1f}% versus {name}" for name in ("RIME", "DBO", "TLBO-HHO", "CWTSSA", "Greedy-ED")) + ". This is a full-pipeline result, not an equal-NFE claim for RIME-DBO fusion.",
         15: "Section 2 reviews related work. Sections 3 and 4 define the physical system and P1. Section 5 describes RDHO. Section 6 reports controlled evidence, and Section 7 concludes.",
         17: "Following MEC surveys, related work is organised by solution methodology: model-based optimisation, learning-based methods and metaheuristic search [8-10]. Objective dimensions are discussed within these classes.",
         18: "Model-based studies jointly allocate communication and computation resources or coordinate edge-cloud execution under explicit system constraints [3,11-14]. Legal collaboration topology and resource budgets must be represented before optimising task placement.",
         19: "Learning-based methods adapt policies to changing states and have been applied to online offloading, vehicular cooperation and blockchain-enabled edge-cloud systems [15-17]. Their training and data requirements motivate complementary transparent offline optimisation for a fixed decision epoch.",
         20: "Freshness-aware MEC incorporates AoI alongside service time [18-20]. The earlier TLBO-HHO method is included as an AoI-aware metaheuristic baseline [21]. QoE and fairness studies represent service acceptability and user balance [5-7,22-26].",
-        21: "Metaheuristic methods search nonlinear mixed spaces without a learned policy. Relevant mechanisms include HHO, GA, TLBO, RIME, DBO and enhanced sparrow search [27-36]. A hybrid label alone does not establish benefit; seeding, evaluation budget and postprocessing require controlled comparisons.",
-        22: "Representative studies on parking-edge cooperation, blockchain-enabled edge-cloud offloading, cooperative deep reinforcement learning and potential-game strategies show how collaboration topology, resource coupling and service requirements alter offloading decisions [37-40]. Existing MEC work already includes physical resource and capacity models; the specific gap addressed here is their integration with priority-weighted system QoE, priority-neutral active-user fairness and controlled attribution across initialisation, NFE and postprocessing.",
+        21: "Metaheuristic methods search nonlinear mixed spaces without a learned policy. Relevant mechanisms include HHO, GA, TLBO, RIME, DBO and enhanced sparrow search [27-36]. A hybrid label alone does not establish benefit; initialisation, evaluation budget, population updates and refinement require controlled comparisons.",
+        22: "Representative studies on parking-edge cooperation, blockchain-enabled edge-cloud offloading, cooperative deep reinforcement learning and potential-game strategies show how collaboration topology, resource coupling and service requirements alter offloading decisions [37-40]. A remaining methodological gap is a reproducible framework that combines capacity-feasible physical resource allocation with priority-weighted system QoE and priority-neutral active-user fairness, while experimentally separating the effects of initialisation, evaluation budget, population updates and refinement.",
         23: "The present work addresses that combined methodological and evaluation gap for a simulated cloud-edge-device epoch; it does not claim that physical CPU modelling alone is novel, nor does it claim communication-resource optimisation, online queue scheduling or deployment validation.",
-        26: "Consider devices [[\\mathcal D]], edge servers [[\\mathcal E]], cloud servers [[\\mathcal C]] and tasks [[\\mathcal T]] in the three-tier architecture of Fig. 1. Their union [[\\mathcal N=\\mathcal D\\cup\\mathcal E\\cup\\mathcal C]] uses global node IDs. We assume fixed topology and link rates during one decision epoch so that the optimisation focuses on execution-node choice and computing-resource allocation.",
-        27: "Task [[i]] is generated by source device [[d(i)]]. Local execution is legal only at [[d(i)]]; reachable edge nodes have positive device-edge rates; a cloud node is legal only through at least one reachable edge with a positive backhaul rate. For a selected cloud, evaluation uses the legal relay with minimum task-specific transmission delay. This is deterministic path evaluation, not route or bandwidth optimisation.",
-        29: "Fig. 1. Three-tier cloud-edge-device architecture, legal execution-node choices and physical CPU-capacity pools.",
-        30: "Task [[i]] is represented by the following tuple, which records input bits, CPU cycles, period, service thresholds, battery ratio, priority and source device.",
+        26: "Consider devices [[\\mathcal D]], edge servers [[\\mathcal E]], cloud servers [[\\mathcal C]] and tasks [[\\mathcal T]] in a three-tier architecture. Their union [[\\mathcal N=\\mathcal D\\cup\\mathcal E\\cup\\mathcal C]] uses global node IDs. We assume fixed topology and link rates during one decision epoch so that the optimisation focuses on execution-node choice and computing-resource allocation. Figure 1 illustrates the three-tier architecture, legal execution-node choices and shared physical CPU-capacity pools considered in one decision epoch.",
+        27: "",
+        29: "Fig. 1. Three-tier cloud-edge-device architecture with legal execution-node choices and shared physical CPU-capacity pools.",
+        30: "Task [[i]] is generated by source device [[d(i)]]. Local execution is legal only at [[d(i)]]; reachable edge nodes have positive device-edge rates; a cloud node is legal only through at least one reachable edge with a positive backhaul rate. For a selected cloud, evaluation uses the legal relay with minimum task-specific transmission delay. This is deterministic path evaluation, not route or bandwidth optimisation. Task [[i]] is represented by the following tuple, which records input bits, CPU cycles, period, service thresholds, battery ratio, priority and source device.",
         32: "Binary [[x_{ij}=1]] selects exactly one node [[j]]. The derived layer [[z_i]] is local, edge or cloud and [[s_i]] denotes the selected remote server. The physical allocation [[f_i]] is measured in Hz.",
         33: "Each search individual stores two normalised coordinates per task. The node coordinate indexes the sorted legal-node set, while [[r_i\\in[0,1]]] decodes to a tentative physical frequency. The normalised coordinate is internal algorithm encoding, not a system-level abstract control variable.",
         35: "For node [[j]] with minimum allocatable frequency [[f_j^{\\min}]] and capacity [[F_j]], the tentative request is",
         36: "f_i^req = f_j^min + r_i(F_j-f_j^min).                                                     (1)",
-        37: "If minimum allocations overload a node, tasks are examined in descending semantic-neutral ID order and moved to a legal alternative with the largest remaining minimum-frequency slack; node ties use the smallest global ID. Task types are shuffled before IDs are assigned, and source device and priority are independently sampled. Across the 30 paired scenarios, the pooled ID audit finds no association with type, source or priority. This deterministic order is a reproducibility convention, not a task-importance rule.",
+        37: "When reassignment is required, tasks are processed in a deterministic identifier order used solely for reproducibility. Identifiers are assigned independently of task type, source device and priority; the corresponding neutrality audit is provided in the reproducibility repository.",
         38: "T_j={i:x_i,j=1}; n_j=card(T_j); R_j=F_j-n_j f_j^min.                            (2)",
         39: "Reassignment repeats for at most [[|\\mathcal T||\\mathcal N|]] passes and either reaches non-negative [[R_j]] for every node or fails explicitly. For a feasible assignment, the projection below applies only to [[i\\in\\mathcal T_j]]. A zero excess denominator necessarily selects the first branch, so no division is performed; feasible requests are retained and only overloaded excess is scaled.",
         40: "q_i=max(f_i^req-f_j^min,0); retain q_i when sum q<=R_j, otherwise allocate R_j q_i/sum q.  (3)",
@@ -739,7 +791,7 @@ def paragraph_updates() -> dict[int, str]:
         126: "X_i^new = omega(t) X_i^RIME + (1-omega(t)) X_i^DBO.                               (21)",
         127: "The continuous update is an algorithmic neighbourhood only; every resulting assignment is interpreted through the task's legal-node list.",
         128: "Greedy replacement compares parent and candidate under the same current [[\\lambda(t)]]. A separate incumbent is tracked on [[F_{\\mathrm{report}}]].",
-        129: "RDHO-full applies deterministic coordinate refinement and then reports the common fixed objective. RDHO-core and controlled RIME/DBO variants expose the contribution of postprocessing and initialisation; all NFE values are recorded.",
+        129: "RDHO-full applies deterministic coordinate refinement and then reports the common fixed objective. RDHO-core and controlled RIME/DBO variants expose the contributions of common initialisation and common refinement; all NFE values are recorded.",
         130: "The complete procedure is summarised in Algorithm 1.",
         131: "Algorithm 1. RDHO joint task-offloading and physical CPU-allocation strategy.",
         133: "The pseudocode separates dynamic-penalty selection, fixed-reference incumbent tracking, common repair and optional refinement.",
@@ -754,7 +806,7 @@ def paragraph_updates() -> dict[int, str]:
         148: "Fig. 2. Fixed-reference reporting-fitness convergence over 150 iterations.",
         149: "Table 5. End-to-end solver comparison over 30 paired scenarios (mean ± standard deviation).",
         150: f"RDHO-full has the lowest mean reporting fitness ({pm(rdho, 'fitness')}) and mean QoE {f(rdho, 'qoe_mean')}, fairness {f(rdho, 'fairness_mean')} and CSR {f(rdho, 'csr_mean')}. All hard-feasibility rates are 1.0. This supports the complete configured solver only.",
-        151: "Metric-specific leaders differ: TLBO-HHO has the lowest device-side energy, RDHO-full has the lowest delay and AoI and the highest QoE and CSR, while Greedy-ED has the highest fairness by a small margin and is fastest. RDHO-full also consumes more NFE.",
+        151: "Metric-specific leaders differ: TLBO-HHO has the lowest device-side energy, RDHO-full has the lowest delay and AoI and the highest QoE, active-user fairness and CSR, while Greedy-ED is fastest. RDHO-full also consumes more NFE.",
         153: "Fig. 3. Mean device-side energy over 30 paired runs.",
         154: "TLBO-HHO is the energy leader; RDHO optimises energy as one component of the coupled reporting preference.",
         156: "Fig. 4. Mean processing delay over 30 paired runs.",
@@ -773,7 +825,7 @@ def paragraph_updates() -> dict[int, str]:
         173: "Table 7. One-factor RDHO configuration analysis over 30 paired scenarios.",
         175: "Fig. 8. Reporting fitness and soft CSR for RDHO variants.",
         176: f"Coordinate refinement changes mean fitness from {f(ablation['RDHO-core'], 'fitness_mean')} to {f(ablation['RDHO-full'], 'fitness_mean')}. Removing dual-source initialisation changes it to {f(ablation['RDHO-w/o dual-source initialization'], 'fitness_mean')}; removing adaptive roles, elite preservation or dynamic penalty changes the mean by less than 0.002, so no independent necessity is claimed without the paired test record.",
-        177: "Common-initialisation and postprocessing controls.",
+        177: "Common-initialisation and common-refinement controls.",
         178: f"With common initialisation alone, RIME and DBO obtain {f(common['RIME-common-init'], 'fitness_mean')} and {f(common['DBO-common-init'], 'fitness_mean')}. Adding the same refinement yields {f(common['RIME-common-init-refine'], 'fitness_mean')} and {f(common['DBO-common-init-refine'], 'fitness_mean')}, close to RDHO-full {f(common['RDHO-full'], 'fitness_mean')}. RDHO-full remains lower in the paired tests, but refinement explains a substantial part of the end-to-end gap.",
         179: "Table 8. RDHO scalability under 20-100 tasks.",
         181: "Fig. 9. Reporting fitness, soft CSR and runtime versus task count.",
@@ -793,9 +845,9 @@ def paragraph_updates() -> dict[int, str]:
         199: "Figure 12 shows directly that RDHO-core is not universally best at equal NFE and that common refinement closes much of the RIME/DBO gap.",
         200: "RDHO-full supplies the lowest configured end-to-end reporting fitness, but the equal-NFE result rejects universal superiority of RDHO-core, common refinement closes much of the parent-algorithm gap, raw-metric leaders vary and not every ablation is independently important.",
         202: "This work formulated joint task offloading and physical CPU allocation for a simulated cloud-edge-device epoch. Each task selects one legal source-local, reachable-edge or reachable-cloud node, and deterministic repair enforces physical Hz bounds and per-node capacity.",
-        203: f"Across 30 paired end-to-end runs, RDHO-full has the lowest mean fixed reporting fitness ({f(rdho, 'fitness_mean')}) with hard feasibility in every returned solution. Corrected paired tests support the complete solver. Equal-NFE and common-postprocessing controls prevent attributing this result to the hybrid operator alone.",
+        203: f"Across 30 paired end-to-end runs, RDHO-full has the lowest mean fixed reporting fitness ({f(rdho, 'fitness_mean')}) with hard feasibility in every returned solution. RDHO-full also achieves the highest aggregate QoE, active-user fairness and soft CSR in the end-to-end comparison, whereas TLBO-HHO leads device-side energy and Greedy-ED leads runtime. Corrected paired tests support the complete solver. Equal-NFE and common-initialisation/common-refinement controls prevent attributing this result to the hybrid operator alone.",
         204: "Limitations include synthetic offline tasks, fixed-rate communication, deterministic cloud relay selection, device-side rather than infrastructure energy, a periodic no-backlog AoI approximation, coupled objective terms, engineering utility coefficients, aggregate binary CSR and unequal NFE in the end-to-end comparison. Future work should study queue-aware arrivals, communication-resource optimisation, infrastructure energy, calibrated QoE, discrete server operators and physical testbeds.",
-        214: "Code, configurations, tests, all fresh V2 per-run outputs, summaries, paired statistics, figures and reproduction commands are archived at tag v2-paper-artifacts-2026-07 in https://github.com/Ryan-Yii/mec-rdho-offloading. Numerical artifacts were generated at 78c51c13ce7405654d488aea593d184be930e16a; the tagged publication changes only audit, export, plotting and manuscript tooling thereafter. All data are synthetic, and the WHITE repository is provenance context only.",
+        214: "Code, configurations, validation tests, fresh V2 per-run outputs, summaries, paired statistics, figures and reproduction commands are archived in the public repository under the tag v2-paper-artifacts-2026-07. All reported data are synthetic, and no proprietary, confidential or human-subject data were used.",
     }
 
 
@@ -839,7 +891,7 @@ def table_values() -> list[list[list[str]]]:
 
 
 def architecture_png() -> bytes:
-    return (ROOT / "figures" / "paper" / "v2" / "system_architecture.png").read_bytes()
+    return (ROOT / "figures" / "paper" / "fig1_system_architecture.png").read_bytes()
 
 
 SUPPLIED_REFERENCES = [
@@ -943,7 +995,9 @@ def write_audit(rows: list[dict[str, str]]) -> None:
         "",
         f"Reviewed source SHA-256: `{hashlib.sha256(SOURCE.read_bytes()).hexdigest()}`",
         "",
-        f"Original supervisor comments replied to: {len(rows)}",
+        f"Reply records generated: {len(rows)}",
+        "Original supervisor threads covered: 43",
+        "Supplemental Figure 1 reply records: 1",
         f"Legacy stand-alone replies rethreaded: {rethreaded}",
         "All original and V2 reply threads remain unresolved.",
         "",
