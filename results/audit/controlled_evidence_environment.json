@@ -1,0 +1,9 @@
+{
+  "python": "3.9.6 (default, May 22 2026, 11:13:45)  [Clang 21.0.0 (clang-2100.1.1.101)]",
+  "platform": "macOS-26.5.2-arm64-arm-64bit",
+  "numpy": "2.0.2",
+  "pandas": "2.3.3",
+  "scipy": "1.13.1",
+  "matplotlib": "3.9.4",
+  "matplotlib_backend": "Agg"
+}
