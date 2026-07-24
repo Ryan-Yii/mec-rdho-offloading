@@ -1,0 +1,9 @@
+parent_comment_id,parent_author,parent_comment,parent_para_id,reply_comment_id,reply_para_id,reply,resolved
+0,webuser,0712-可以考虑：RIME-DBO for QoE and Fairness-Aware Task Offloading in MEC，更加简洁,7AB1F407,133,CAF95FB2,已按意见保留并前置 RDHO 作为本文特色。标题、摘要、引言和贡献部分均提前说明 RDHO-based 框架。同时根据新增严格受控实验，将创新表述限定为完整 RDHO 求解框架，不再将端到端优势直接归因于混合人口算子。,false
+2,webuser,0722-因为本文考虑5个因素，只写其中2个QoE and Fairness-Aware不太全面？不如都删除？保留问题继续思考，标题最后确定。,039658E9,134,5DADF664,已按意见保留并前置 RDHO 作为本文特色。标题、摘要、引言和贡献部分均提前说明 RDHO-based 框架。同时根据新增严格受控实验，将创新表述限定为完整 RDHO 求解框架，不再将端到端优势直接归因于混合人口算子。,false
+7,webuser,0712-开头介绍研究背景-意义，1-2句。接着介绍challenge，1-2句，然后再介绍本文工作。,4D5375AC,135,0A1AE713,已按意见保留并前置 RDHO 作为本文特色。标题、摘要、引言和贡献部分均提前说明 RDHO-based 框架。同时根据新增严格受控实验，将创新表述限定为完整 RDHO 求解框架，不再将端到端优势直接归因于混合人口算子。,false
+12,webuser,"倒三角结构：背景-意义-MEC-Offloading-challange,本文贡献-组织结构。本节篇幅稍短，1页左右。",6C799909,136,5D8D6F12,已按意见保留并前置 RDHO 作为本文特色。标题、摘要、引言和贡献部分均提前说明 RDHO-based 框架。同时根据新增严格受控实验，将创新表述限定为完整 RDHO 求解框架，不再将端到端优势直接归因于混合人口算子。,false
+50,webuser,+ strategy,0479C1D2,137,1FAA901F,已按意见保留并前置 RDHO 作为本文特色。标题、摘要、引言和贡献部分均提前说明 RDHO-based 框架。同时根据新增严格受控实验，将创新表述限定为完整 RDHO 求解框架，不再将端到端优势直接归因于混合人口算子。,false
+52,webuser,0722-本节为算法设计，不是编程,784EE9E7,138,0925FEB3,已按意见保留并前置 RDHO 作为本文特色。标题、摘要、引言和贡献部分均提前说明 RDHO-based 框架。同时根据新增严格受控实验，将创新表述限定为完整 RDHO 求解框架，不再将端到端优势直接归因于混合人口算子。,false
+56,webuser,0712-算法格式一般为三线表，参考TLBO-HHO论文中算法1,0C331B6D,139,F75E466C,已按意见保留并前置 RDHO 作为本文特色。标题、摘要、引言和贡献部分均提前说明 RDHO-based 框架。同时根据新增严格受控实验，将创新表述限定为完整 RDHO 求解框架，不再将端到端优势直接归因于混合人口算子。,false
+61,webuser,0722-本节二级标题偏多，可以考虑合并,1A7098F3,140,8D57098C,已按意见保留并前置 RDHO 作为本文特色。标题、摘要、引言和贡献部分均提前说明 RDHO-based 框架。同时根据新增严格受控实验，将创新表述限定为完整 RDHO 求解框架，不再将端到端优势直接归因于混合人口算子。,false
