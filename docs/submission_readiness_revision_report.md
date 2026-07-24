@@ -14,15 +14,17 @@ It re-scores each already-returned solution as `F_lambda = B + lambda_ref * (1 -
 ## Implemented Pre-submission Corrections
 
 1. Section 5 defines RDHO dual-source initialisation, greedy seed, all three seed perturbations, diversity, role shares, elite treatment, producer/follower/scout updates, all random variables, clipping, refinement variants, exact controlled NFE counts, and time/space complexity.
-2. Algorithm 2 specifies deterministic legal-node reassignment, target ranking, ties, failure handling, bounded passes, and excess-only capacity projection.
+2. Algorithm 2 is placed directly after the Section 3.2 repair equations and specifies deterministic legal-node reassignment, target ranking, ties, failure handling, bounded passes, and excess-only capacity projection. Failure means this deterministic order did not construct a reassignment for the decoded candidate; it is not a proof of scenario infeasibility. The current implementation propagates `ValueError` and aborts the affected run rather than assigning infinity, retaining a parent, or resampling. Reported controlled runs contain zero repair failures.
 3. The abstract, Section 6.3, Figure 12 discussion, and conclusion distinguish DBO's clear Experiment-A advantage from its smaller but statistically significant Experiment-B advantage.
 4. Table 7 reports reporting fitness, base objective, soft CSR, QoE, fairness, NFE, and runtime. The fixed-return lambda analysis is written with its non-re-optimisation boundary.
 5. New prose and revised notation use allocated CPU-cycle rate and aggregate CPU-cycle capacity. It distinguishes effective local DVFS frequency from edge/cloud task computation service rate.
 6. The model now states the negligible-result-size assumption, omitted downlink/result-return terms, independent sparse-link removal, and exact connectivity repair procedure.
-7. Parameter provenance is disclosed honestly as versioned heterogeneous synthetic settings, not hardware calibration. Capacity, SLA, and heterogeneity sensitivity coverage is stated without fabricated citations.
+7. Parameter provenance is disclosed as versioned heterogeneous synthetic settings, not hardware calibration. Representative MEC references [1,3,11,13] support order-of-magnitude reasonableness; capacity, SLA, and heterogeneity sensitivity coverage is also stated.
 8. Related Work moves reference [12] to the learning-based class. Sections 6.3 and 6.4 are reordered logically, and duplicate legacy comparisons are removed from the main-text Table 9 location in favour of Algorithm 2 and a repository supplement reference.
 9. The experimental environment and serial runner boundary are disclosed; Table 4 gives fixed RDHO and baseline parameters and their provenance.
 10. Data Availability identifies the public GitHub repository, exact controlled paths, and the lambda-analysis command while correctly stating that a public immutable tag/release containing this revision is still required before formal submission.
+11. RDHO role counts are identified as nominal full-population thresholds with exact elite/producer/follower/scout `if/elif` precedence and deterministic truncation. Complexity now separates the practical repair cost from the `O(N^2 M L)` per-candidate worst case. The duplicate Problem Complexity paragraph is removed.
+12. The abstract qualifies Experiment B at the prespecified `lambda_ref=1`, and limitations explicitly state that the incremental contribution of nested objective layers has not been isolated.
 
 ## Post-hoc Fixed-return Results
 

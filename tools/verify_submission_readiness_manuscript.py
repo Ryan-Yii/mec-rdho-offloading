@@ -101,10 +101,17 @@ def verify(source: Path, reviewed: Path, clean: Path, audit: Path) -> dict[str, 
         for required_text in (
             "RDHO-Based Capacity-Feasible Joint Task Offloading and Computing Resource Allocation",
             "Algorithm 2 defines complete deterministic repair",
+            "does not prove that the entire scenario has no feasible assignment",
+            "does not assign +infinity, retain the parent, or resample",
             "At iteration t, p=t/T_max and diversity D",
+            "Nominal counts n_P, n_F and n_S",
+            "no member is assigned twice",
+            "one candidate can require O(N^2 M L)",
             "For fixed returned solutions, post-hoc rescoring",
             "DBO a clear advantage",
+            "prespecified reporting coefficient lambda_ref=1",
             "smaller but statistically significant advantage",
+            "does not isolate the incremental contribution of each nested objective layer",
             "public immutable GitHub tag/release",
             "allocated CPU-cycle rate",
             "result-return delay and downlink energy are omitted",
@@ -115,6 +122,11 @@ def verify(source: Path, reviewed: Path, clean: Path, audit: Path) -> dict[str, 
         ):
             if required_text not in text:
                 raise AssertionError(f"manuscript misses required controlled framing: {required_text}")
+        if text.index("Algorithm 2. Deterministic Legal-Node Reassignment") > text.index("5 RDHO-Based Capacity-Feasible"):
+            raise AssertionError("Algorithm 2 must appear before the RDHO population method that references it")
+        duplicate = "A returned incumbent consists of one repaired legal node and one allocated CPU-cycle rate per task."
+        if text.count(duplicate) != 1:
+            raise AssertionError("problem-complexity incumbent sentence is duplicated or missing")
         reviewed_yellow_count = len(document.xpath(".//w:highlight[@w:val='yellow']", namespaces=NS))
         if reviewed_yellow_count == 0:
             raise AssertionError("annotated manuscript contains no yellow revised text")
