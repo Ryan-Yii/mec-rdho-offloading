@@ -1,7 +1,7 @@
 {
   "source_sha256": "e42e5f23d553a7b0e0fe29938c69cd6676494d2397f54bb2adb0838f59c86200",
-  "reviewed_sha256": "0fbf980396315aa08a084a24ec55f5c2aa04b1e77c82d4cdc54a9ce4996c6fec",
-  "clean_sha256": "7fc164c60c362c641b52e9b98a2b09d81ef931321d9f291842adbd88fe01e558",
+  "reviewed_sha256": "87ebb2c00f177c23aa0b23aef9290e83c7d2a5c591aec737b26753d0d67e6eeb",
+  "clean_sha256": "c9746b34d02933857e0a677a5c3c1afec2652e3a1f8df5d87a235851c6207a41",
   "base_comment_count": 138,
   "reviewed_comment_count": 146,
   "new_threaded_reply_ids": [
@@ -14,5 +14,5 @@
     "147",
     "148"
   ],
-  "yellow_highlight_count": 1694
+  "yellow_highlight_count": 1687
 }

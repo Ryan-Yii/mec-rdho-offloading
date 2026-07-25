@@ -23,8 +23,9 @@ It re-scores each already-returned solution as `F_lambda = B + lambda_ref * (1 -
 8. Related Work moves reference [12] to the learning-based class. Sections 6.3 and 6.4 are reordered logically, and duplicate legacy comparisons are removed from the main-text Table 9 location in favour of Algorithm 2 and a repository supplement reference.
 9. The experimental environment and serial runner boundary are disclosed; Table 4 gives fixed RDHO and baseline parameters and their provenance.
 10. Data Availability identifies the public GitHub repository, exact controlled paths, and the lambda-analysis command while correctly stating that a public immutable tag/release containing this revision is still required before formal submission.
-11. RDHO role counts are identified as nominal full-population thresholds with exact elite/producer/follower/scout `if/elif` precedence and deterministic truncation. Complexity now separates the practical repair cost from the `O(N^2 M L)` per-candidate worst case. The duplicate Problem Complexity paragraph is removed.
-12. The abstract qualifies Experiment B at the prespecified `lambda_ref=1`, and limitations explicitly state that the incremental contribution of nested objective layers has not been isolated.
+11. RDHO role counts are identified as nominal full-population thresholds with exact elite/producer/follower/scout `if/elif` precedence and deterministic truncation; the text clarifies that these thresholds are not guaranteed realised population proportions. Complexity now separates the practical repair cost from the `O(N^2 M L)` per-candidate worst case. The duplicate Problem Complexity paragraph is removed.
+12. The abstract qualifies Experiment A as no-refinement and identifies common refinement as an Experiment-B condition, while retaining the prespecified `lambda_ref=1` qualification for Experiment B.
+13. The Limitations section states that the current implementation aborts an optimiser run when deterministic candidate repair fails, and records that no such failure occurred in the controlled experiments. It also states that the incremental contribution of nested objective layers has not been isolated.
 
 ## Post-hoc Fixed-return Results
 
