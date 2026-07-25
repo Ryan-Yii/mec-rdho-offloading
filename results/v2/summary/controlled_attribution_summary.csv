@@ -1,0 +1,9 @@
+method,equal_nfe,common_initialisation,common_refinement,reporting_fitness_mean_sd,paired_effect
+RDHO-core,Yes (3801),No,No,1.402 (0.165),Reference
+RIME,Yes (3801),No,No,1.633 (0.161),-0.978
+DBO,Yes (3801),No,No,1.246 (0.145),1.000
+TLBO-HHO,Yes (3801),No,No,1.240 (0.139),0.996
+CWTSSA,Yes (3801),No,No,1.330 (0.158),0.733
+RIME + common refinement,No,Yes,Yes,0.982 (0.129),-1.000
+DBO + common refinement,No,Yes,Yes,0.967 (0.127),-0.892
+RDHO-full,No (10232),RDHO,Yes,0.947 (0.120),Reference

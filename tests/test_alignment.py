@@ -31,11 +31,11 @@ def test_user_qoe_fairness_aggregates_tasks_by_source_device():
 
 
 class _DeterministicOptimizer(MetaheuristicOptimizer):
-    """One-dimensional marker encoded in the computation-control slot."""
+    """One-dimensional marker encoded in the normalised CPU slot."""
 
     def initialize_population(self) -> np.ndarray:
         pop = np.zeros((2, len(self.system.tasks), 2), dtype=float)
-        pop[:, :, 0] = 1.0
+        pop[:, :, 0] = 0.5
         pop[0, :, 1] = 0.2
         pop[1, :, 1] = 0.4
         return pop
@@ -115,7 +115,7 @@ def test_wilcoxon_output_includes_holm_effect_size_and_wtl(tmp_path):
 
 def test_additional_figure_generators_create_files(tmp_path):
     import pandas as pd
-    from experiments.analyze_results import plot_ablation, plot_scalability
+    from experiments.analyze_results import plot_ablation, plot_controlled_attribution, plot_scalability
 
     ablation = pd.DataFrame({
         "algorithm": ["RDHO-full", "RDHO-core"],
@@ -135,6 +135,38 @@ def test_additional_figure_generators_create_files(tmp_path):
     assert ablation_path.exists() and ablation_path.stat().st_size > 0
     assert scale_path.exists() and scale_path.stat().st_size > 0
 
+    equal = tmp_path / "equal.csv"
+    common = tmp_path / "common.csv"
+    pd.DataFrame({
+        "algorithm": ["RDHO-core", "RIME", "DBO", "TLBO-HHO", "CWTSSA"],
+        "fitness_mean": [1.4, 1.6, 1.2, 1.25, 1.3],
+        "fitness_std": [0.1] * 5,
+    }).to_csv(equal, index=False)
+    pd.DataFrame({
+        "algorithm": ["RIME-common-init", "RIME-common-init-refine", "DBO-common-init", "DBO-common-init-refine", "RDHO-core", "RDHO-full"],
+        "fitness_mean": [1.2, 1.0, 1.15, 0.98, 1.1, 0.95],
+        "fitness_std": [0.1] * 6,
+    }).to_csv(common, index=False)
+    controlled_path = tmp_path / "controlled.png"
+    plot_controlled_attribution(equal, common, controlled_path)
+    assert controlled_path.exists() and controlled_path.with_suffix(".svg").exists()
+
+
+def test_factor_sensitivity_figure_generator(tmp_path):
+    import pandas as pd
+    from experiments.analyze_results import plot_factor_sensitivity
+
+    raw = tmp_path / "factor.csv"
+    pd.DataFrame({
+        "setting": ["A", "A", "B", "B"],
+        "fitness": [0.8, 0.9, 1.0, 1.1],
+        "csr": [0.7, 0.8, 0.6, 0.7],
+        "capacity_utilisation_mean": [0.5, 0.6, 0.7, 0.8],
+    }).to_csv(raw, index=False)
+    output = tmp_path / "factor.png"
+    plot_factor_sensitivity(raw, "setting", "Setting", output)
+    assert output.exists() and output.with_suffix(".svg").exists()
+
 
 def test_rdho_follower_foraging_uses_coordinate_specific_bounds():
     from src.algorithms.rdho import RDHO
@@ -152,9 +184,9 @@ def test_rdho_follower_foraging_uses_coordinate_specific_bounds():
 
     optimizer.rng = _NoPunctureRng()
     updated = optimizer._follower_update(current, best, iteration=10)
-    # With c1=c2=1, r should use L_r=0.2 and U_r=1.0:
-    # 0.6 + (0.6-0.2) + (0.6-1.0) = 0.6.
-    assert updated[:, 1] == pytest.approx(np.full(4, 0.6))
+    # With c1=c2=1, the normalised resource uses L_r=0 and U_r=1:
+    # 0.6 + (0.6-0.0) + (0.6-1.0) = 0.8.
+    assert updated[:, 1] == pytest.approx(np.full(4, 0.8))
 
 
 def test_all_rdho_variants_share_same_base_random_stream():

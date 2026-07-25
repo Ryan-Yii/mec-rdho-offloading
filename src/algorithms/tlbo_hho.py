@@ -8,7 +8,7 @@ from .base import MetaheuristicOptimizer
 class TLBOHHO(MetaheuristicOptimizer):
     def initialize_population(self) -> np.ndarray:
         population = self.random_population("uniform")
-        population[:, :, 1] = np.clip(population[:, :, 1] * 0.9 + 0.05, 0.2, 1.0)
+        population[:, :, 1] = np.clip(population[:, :, 1] * 0.9 + 0.05, 0.0, 1.0)
         return population
 
     def step(self, population: np.ndarray, fitness: np.ndarray, best: np.ndarray, worst: np.ndarray, iteration: int) -> np.ndarray:

@@ -50,24 +50,8 @@ def test_write_rows_uses_lf_line_endings(tmp_path):
     assert payload == b'a\n1\n2\n'
 
 
-def test_ablation_full_rows_reuse_main_rdho_metrics(tmp_path):
-    import pandas as pd
-    from experiments.run_ablation_30 import reuse_main_rdho_rows
+def test_ablation_does_not_reuse_legacy_main_results():
+    import inspect
+    import experiments.run_ablation_30 as module
 
-    main_path = tmp_path / "main.csv"
-    pd.DataFrame([
-        {"run_id": 1, "seed": 101, "algorithm": "RDHO", "fitness": 0.9, "runtime": 4.2, "nfe": 9112},
-        {"run_id": 2, "seed": 102, "algorithm": "RDHO", "fitness": 1.0, "runtime": 4.3, "nfe": 9112},
-    ]).to_csv(main_path, index=False)
-    rows = [
-        {"run_id": 1, "seed": 101, "algorithm": "RDHO-full", "fitness": 9.9, "runtime": 9.9, "nfe": 9},
-        {"run_id": 1, "seed": 101, "algorithm": "RDHO-core", "fitness": 1.1, "runtime": 3.8, "nfe": 7911},
-        {"run_id": 2, "seed": 102, "algorithm": "RDHO-full", "fitness": 8.8, "runtime": 8.8, "nfe": 8},
-    ]
-
-    aligned = reuse_main_rdho_rows(rows, main_path)
-
-    full = [row for row in aligned if row["algorithm"] == "RDHO-full"]
-    assert [(row["fitness"], row["runtime"], row["nfe"]) for row in full] == [(0.9, 4.2, 9112), (1.0, 4.3, 9112)]
-    core = next(row for row in aligned if row["algorithm"] == "RDHO-core")
-    assert core["fitness"] == 1.1
+    assert "reuse_main_rdho_rows" not in inspect.getsource(module)

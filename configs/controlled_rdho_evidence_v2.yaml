@@ -1,0 +1,34 @@
+system:
+  mobile_devices: 20
+  edge_servers: 4
+  cloud_servers: 2
+  tasks: 40
+
+experiment:
+  seed_start: 20260701
+  independent_runs: 30
+  population_size: 50
+
+weights:
+  energy: 0.15
+  delay: 0.15
+  aoi: 0.20
+  qoe: 0.25
+  fairness: 0.25
+
+utility_weights:
+  delay: 0.45
+  energy: 0.30
+  aoi: 0.25
+
+penalty:
+  lambda0: 1.0
+  alpha: 2.0
+
+controlled_population_stage:
+  total_nfe: 3801
+  common_refinement: false
+
+controlled_common_pipeline:
+  total_nfe: 10232
+  common_refinement: true

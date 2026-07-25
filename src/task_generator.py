@@ -64,23 +64,65 @@ def _sample_range(rng: np.random.Generator, values: Tuple[float, float]) -> floa
     return float(rng.uniform(values[0], values[1]))
 
 
+def _scale_positive_heterogeneity(values: np.ndarray, scale: float) -> np.ndarray:
+    """Scale positive-value dispersion around its mean while retaining zeros."""
+
+    adjusted = np.array(values, dtype=float, copy=True)
+    if np.isclose(scale, 1.0):
+        return adjusted
+    positive = adjusted > 0.0
+    if np.any(positive):
+        mean = float(np.mean(adjusted[positive]))
+        adjusted[positive] = mean + scale * (adjusted[positive] - mean)
+    return adjusted
+
+
 def generate_system(
     seed: int,
     num_devices: int,
     num_edge_servers: int,
     num_cloud_servers: int,
     num_tasks: int,
+    cpu_capacity_scale: float = 1.0,
+    sla_scale: float = 1.0,
+    server_heterogeneity_scale: float = 1.0,
 ) -> SystemModel:
     rng = np.random.default_rng(seed)
 
-    device_cpu_hz = rng.uniform(0.8e9, 2.2e9, size=num_devices)
-    edge_cpu_hz = rng.uniform(8.0e9, 18.0e9, size=num_edge_servers)
-    cloud_cpu_hz = rng.uniform(25.0e9, 40.0e9, size=num_cloud_servers)
+    if cpu_capacity_scale <= 0.0 or sla_scale <= 0.0 or server_heterogeneity_scale < 0.0:
+        raise ValueError("capacity and SLA scales must be positive; heterogeneity must be non-negative")
+    device_cpu_hz = rng.uniform(2.2e9, 3.0e9, size=num_devices) * cpu_capacity_scale
+    edge_cpu_hz = _scale_positive_heterogeneity(
+        rng.uniform(18.0e9, 28.0e9, size=num_edge_servers), server_heterogeneity_scale
+    ) * cpu_capacity_scale
+    cloud_cpu_hz = _scale_positive_heterogeneity(
+        rng.uniform(55.0e9, 75.0e9, size=num_cloud_servers), server_heterogeneity_scale
+    ) * cpu_capacity_scale
+    device_min_cpu_hz = np.full(num_devices, 0.2e9)
+    edge_min_cpu_hz = np.full(num_edge_servers, 0.8e9)
+    cloud_min_cpu_hz = np.full(num_cloud_servers, 1.5e9)
     device_energy_coeff = rng.uniform(0.8e-27, 1.4e-27, size=num_devices)
     device_tx_power_w = rng.uniform(0.2, 0.8, size=num_devices)
 
     device_to_edge_rate_bps = rng.uniform(8.0e6, 30.0e6, size=(num_devices, num_edge_servers))
     edge_to_cloud_rate_bps = rng.uniform(60.0e6, 150.0e6, size=(num_edge_servers, num_cloud_servers))
+    # A sparse but connected rate graph makes server selection a real decision.
+    device_to_edge_rate_bps[rng.random(device_to_edge_rate_bps.shape) < 0.10] = 0.0
+    edge_to_cloud_rate_bps[rng.random(edge_to_cloud_rate_bps.shape) < 0.05] = 0.0
+    for device_id in range(num_devices):
+        if not np.any(device_to_edge_rate_bps[device_id] > 0.0):
+            edge_id = int(rng.integers(0, num_edge_servers))
+            device_to_edge_rate_bps[device_id, edge_id] = float(rng.uniform(8.0e6, 30.0e6))
+    for cloud_id in range(num_cloud_servers):
+        if not np.any(edge_to_cloud_rate_bps[:, cloud_id] > 0.0):
+            edge_id = int(rng.integers(0, num_edge_servers))
+            edge_to_cloud_rate_bps[edge_id, cloud_id] = float(rng.uniform(60.0e6, 150.0e6))
+    device_to_edge_rate_bps = _scale_positive_heterogeneity(
+        device_to_edge_rate_bps, server_heterogeneity_scale
+    )
+    edge_to_cloud_rate_bps = _scale_positive_heterogeneity(
+        edge_to_cloud_rate_bps, server_heterogeneity_scale
+    )
 
     if num_tasks <= len(TASK_TYPE_ORDER):
         task_types = TASK_TYPE_ORDER[:num_tasks]
@@ -98,9 +140,9 @@ def generate_system(
             task_type=task_type,
             input_data_mb=_sample_range(rng, ranges["input_data_mb"]),
             cpu_cycles_gcycles=_sample_range(rng, ranges["cpu_cycles_gcycles"]),
-            max_delay_s=_sample_range(rng, ranges["max_delay_s"]),
-            aoi_threshold_s=_sample_range(rng, ranges["aoi_threshold_s"]),
-            energy_budget_j=_sample_range(rng, ranges["energy_budget_j"]),
+            max_delay_s=_sample_range(rng, ranges["max_delay_s"]) * sla_scale,
+            aoi_threshold_s=_sample_range(rng, ranges["aoi_threshold_s"]) * sla_scale,
+            energy_budget_j=_sample_range(rng, ranges["energy_budget_j"]) * sla_scale,
             battery_ratio=_sample_range(rng, ranges["battery_ratio"]),
             priority=_sample_range(rng, ranges["priority"]),
             update_interval_s=_sample_range(rng, ranges["update_interval_s"]),
@@ -115,6 +157,9 @@ def generate_system(
         device_cpu_hz=device_cpu_hz,
         edge_cpu_hz=edge_cpu_hz,
         cloud_cpu_hz=cloud_cpu_hz,
+        device_min_cpu_hz=device_min_cpu_hz,
+        edge_min_cpu_hz=edge_min_cpu_hz,
+        cloud_min_cpu_hz=cloud_min_cpu_hz,
         device_energy_coeff=device_energy_coeff,
         device_tx_power_w=device_tx_power_w,
         device_to_edge_rate_bps=device_to_edge_rate_bps,

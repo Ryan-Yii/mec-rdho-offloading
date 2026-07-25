@@ -9,7 +9,7 @@ import pandas as pd
 from scipy.stats import rankdata, wilcoxon
 
 from src.algorithms import CWTSSA, DBO, RDHO, RIME, TLBOHHO, GreedyEnergyDelay
-from src.metrics import FitnessWeights, evaluate_solution
+from src.metrics import FitnessWeights, UtilityWeights, evaluate_solution
 from src.system_model import SystemModel
 from src.task_generator import generate_system, task_parameter_rows
 from src.utils.io import ensure_parent, load_yaml, write_rows
@@ -30,6 +30,10 @@ RAW_COLUMNS = [
     "qoe",
     "fairness",
     "csr",
+    "hard_feasible",
+    "capacity_utilisation_mean",
+    "capacity_utilisation_max",
+    "assignment_unique",
     "runtime",
     "nfe",
     "pre_refinement_fitness",
@@ -54,6 +58,20 @@ RDHO_VARIANTS = {
     "RDHO-w/o dynamic penalty": {"dynamic_penalty": False, "local_refinement": True},
 }
 
+CONTROLLED_VARIANTS = {
+    "RIME-common-init": ("RIME", {"common_initialization": True}),
+    "DBO-common-init": ("DBO", {"common_initialization": True}),
+    "RIME-common-init-refine": ("RIME", {"common_initialization": True, "common_coordinate_refinement": True}),
+    "DBO-common-init-refine": ("DBO", {"common_initialization": True, "common_coordinate_refinement": True}),
+}
+
+
+def common_initial_population(system: SystemModel, population_size: int, seed: int) -> np.ndarray:
+    """Construct one non-evaluated population shared in controlled comparisons."""
+
+    rng = np.random.default_rng(derive_seed(seed, "common-initialisation"))
+    return rng.uniform(0.0, 1.0, size=(population_size, len(system.tasks), 2))
+
 
 def weights_from_config(config: dict | None) -> FitnessWeights:
     config = config or {}
@@ -66,7 +84,23 @@ def weights_from_config(config: dict | None) -> FitnessWeights:
     )
 
 
-def build_system_from_config(config: dict, seed: int, task_number: int | None = None) -> SystemModel:
+def utility_weights_from_config(config: dict | None) -> UtilityWeights:
+    config = config or {}
+    return UtilityWeights(
+        delay=float(config.get("delay", 0.45)),
+        energy=float(config.get("energy", 0.30)),
+        aoi=float(config.get("aoi", 0.25)),
+    )
+
+
+def build_system_from_config(
+    config: dict,
+    seed: int,
+    task_number: int | None = None,
+    cpu_capacity_scale: float = 1.0,
+    sla_scale: float = 1.0,
+    server_heterogeneity_scale: float = 1.0,
+) -> SystemModel:
     system = config["system"]
     return generate_system(
         seed=seed,
@@ -74,6 +108,9 @@ def build_system_from_config(config: dict, seed: int, task_number: int | None = 
         num_edge_servers=int(system["edge_servers"]),
         num_cloud_servers=int(system["cloud_servers"]),
         num_tasks=int(task_number or system["tasks"]),
+        cpu_capacity_scale=cpu_capacity_scale,
+        sla_scale=sla_scale,
+        server_heterogeneity_scale=server_heterogeneity_scale,
     )
 
 
@@ -84,14 +121,23 @@ def make_optimizer(
     max_iter: int,
     population_size: int,
     weights: FitnessWeights | None = None,
+    utility_weights: UtilityWeights | None = None,
     penalty_base: float = 1.0,
     dynamic_penalty_alpha: float = 2.0,
 ):
     label = algorithm_name
     kwargs = {}
+    if algorithm_name in CONTROLLED_VARIANTS:
+        label, controls = CONTROLLED_VARIANTS[algorithm_name]
+        if controls.get("common_initialization"):
+            kwargs["common_initial_population"] = common_initial_population(system, population_size, seed)
+        if controls.get("common_coordinate_refinement"):
+            kwargs["common_coordinate_refinement"] = True
     if algorithm_name in RDHO_VARIANTS:
         label = "RDHO"
         kwargs.update(RDHO_VARIANTS[algorithm_name])
+        if algorithm_name == "RDHO-core":
+            kwargs["common_initial_population"] = common_initial_population(system, population_size, seed)
     if label == "RDHO":
         kwargs["dynamic_penalty_alpha"] = dynamic_penalty_alpha
 
@@ -102,6 +148,7 @@ def make_optimizer(
         population_size=population_size,
         seed=derive_seed(seed, "RDHO" if label == "RDHO" else algorithm_name),
         weights=weights,
+        utility_weights=utility_weights,
         penalty_base=penalty_base,
         **kwargs,
     )
@@ -115,6 +162,7 @@ def run_optimizer(
     max_iter: int,
     population_size: int,
     weights: FitnessWeights | None = None,
+    utility_weights: UtilityWeights | None = None,
     penalty_base: float = 1.0,
     dynamic_penalty_alpha: float = 2.0,
 ) -> Tuple[Dict[str, float | int | str], List[float]]:
@@ -125,13 +173,20 @@ def run_optimizer(
         max_iter=max_iter,
         population_size=population_size,
         weights=weights,
+        utility_weights=utility_weights,
         penalty_base=penalty_base,
         dynamic_penalty_alpha=dynamic_penalty_alpha,
     )
     start = time.perf_counter()
     result = optimizer.optimize()
     runtime = time.perf_counter() - start
-    metrics = evaluate_solution(system, result.solution, weights=weights, penalty_scale=1.0)
+    metrics = evaluate_solution(
+        system,
+        result.solution,
+        weights=weights,
+        utility_weights=utility_weights,
+        penalty_scale=1.0,
+    )
     row = {
         "run_id": run_id,
         "seed": seed,
@@ -146,6 +201,10 @@ def run_optimizer(
         "qoe": metrics.qoe,
         "fairness": metrics.fairness,
         "csr": metrics.csr,
+        "hard_feasible": int(metrics.hard_feasible),
+        "capacity_utilisation_mean": metrics.capacity_utilisation_mean,
+        "capacity_utilisation_max": metrics.capacity_utilisation_max,
+        "assignment_unique": int(metrics.assignment_unique),
         "runtime": runtime,
         "nfe": result.nfe,
         "pre_refinement_fitness": result.pre_refinement_fitness,
@@ -172,9 +231,14 @@ def run_algorithm_suite(
     n_runs: int,
     seeds: Iterable[int] | None = None,
     task_number: int | None = None,
+    algorithm_iterations: dict[str, int] | None = None,
+    cpu_capacity_scale: float = 1.0,
+    sla_scale: float = 1.0,
+    server_heterogeneity_scale: float = 1.0,
 ) -> Tuple[List[Dict], List[Dict]]:
     experiment = config["experiment"]
     weights = weights_from_config(config.get("weights"))
+    utility_weights = utility_weights_from_config(config.get("utility_weights"))
     penalty = config.get("penalty", {})
     penalty_base = float(penalty.get("lambda0", penalty.get("base", 1.0)))
     dynamic_penalty_alpha = float(penalty.get("alpha", 2.0))
@@ -186,16 +250,24 @@ def run_algorithm_suite(
     convergence_rows: List[Dict] = []
 
     for run_id, seed in enumerate(seeds, start=1):
-        system = build_system_from_config(config, seed, task_number=task_number)
+        system = build_system_from_config(
+            config,
+            seed,
+            task_number=task_number,
+            cpu_capacity_scale=cpu_capacity_scale,
+            sla_scale=sla_scale,
+            server_heterogeneity_scale=server_heterogeneity_scale,
+        )
         for algorithm_name in algorithms:
             row, history = run_optimizer(
                 system=system,
                 algorithm_name=algorithm_name,
                 run_id=run_id,
                 seed=seed,
-                max_iter=max_iter,
+                max_iter=int((algorithm_iterations or {}).get(algorithm_name, max_iter)),
                 population_size=population_size,
                 weights=weights,
+                utility_weights=utility_weights,
                 penalty_base=penalty_base,
                 dynamic_penalty_alpha=dynamic_penalty_alpha,
             )
@@ -222,7 +294,7 @@ def summarize_mean_std(raw_rows: List[Dict], group_cols: List[str] | None = None
     df = pd.DataFrame(raw_rows)
     numeric_cols = [
         col
-        for col in ["fitness", "base_objective", "penalty", "search_fitness", "energy", "delay", "aoi", "qoe", "fairness", "csr", "runtime", "nfe", "pre_refinement_fitness", "local_refinement_gain"]
+        for col in ["fitness", "base_objective", "penalty", "search_fitness", "energy", "delay", "aoi", "qoe", "fairness", "csr", "hard_feasible", "capacity_utilisation_mean", "capacity_utilisation_max", "assignment_unique", "runtime", "nfe", "pre_refinement_fitness", "local_refinement_gain"]
         if col in df.columns
     ]
     records = []
@@ -251,21 +323,26 @@ def write_raw_and_summary(raw_path: str | Path, summary_path: str | Path, rows: 
     return summary
 
 
-def write_wilcoxon_results(raw_rows: List[Dict], output_path: str | Path) -> pd.DataFrame:
+def write_wilcoxon_results(
+    raw_rows: List[Dict],
+    output_path: str | Path,
+    reference: str = "RDHO",
+    preferred: list[str] | None = None,
+) -> pd.DataFrame:
     """Write paired two-sided Wilcoxon tests with Holm correction and effects."""
 
     df = pd.DataFrame(raw_rows)
     pivot = df.pivot_table(index="run_id", columns="algorithm", values="fitness", aggfunc="first")
-    if "RDHO" not in pivot:
+    if reference not in pivot:
         result = pd.DataFrame()
         result.to_csv(output_path, index=False)
         return result
 
-    preferred = ["RIME", "DBO", "TLBO-HHO", "CWTSSA", "Greedy-ED"]
-    baselines = [name for name in preferred if name in pivot]
+    preferred = preferred or ["RIME", "DBO", "TLBO-HHO", "CWTSSA", "Greedy-ED"]
+    baselines = [name for name in preferred if name in pivot and name != reference]
     records = []
     for baseline in baselines:
-        rdho = pivot["RDHO"].to_numpy(dtype=float)
+        rdho = pivot[reference].to_numpy(dtype=float)
         other = pivot[baseline].to_numpy(dtype=float)
         statistic = wilcoxon(rdho, other, alternative="two-sided", zero_method="wilcox")
         delta = rdho - other
@@ -279,7 +356,7 @@ def write_wilcoxon_results(raw_rows: List[Dict], output_path: str | Path) -> pd.
             rank_biserial = 0.0
         records.append(
             {
-                "comparison": f"RDHO vs {baseline}",
+                "comparison": f"{reference} vs {baseline}",
                 "w_statistic": float(statistic.statistic),
                 "p_value": float(statistic.pvalue),
                 "median_difference": float(np.median(rdho - other)),

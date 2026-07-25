@@ -1,7 +1,5 @@
 # Provenance Notice
 
-This work builds on an earlier group research framework.
+The current implementation was developed from and substantially revised beyond an earlier MEC-offloading framework, with permission from the project contributors.
 
-The implementation was developed and extended from internal research code with permission from the project contributors.
-
-The current repository contains substantial subsequent redesign, extension, validation, experiment expansion, analysis, documentation, manuscript writing, and submission work.
+The present repository contains the complete V2 implementation and all numerical results reported in this article, together with subsequent validation, experiment analysis, documentation, manuscript tooling, and submission artifacts.
