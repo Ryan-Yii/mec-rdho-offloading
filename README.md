@@ -2,7 +2,7 @@
 
 **Manuscript:** *RIME-DBO-Based Capacity-Feasible Task Offloading and Resource Allocation in Mobile Edge Computing*
 **Audited experiment baseline:** `0264b6d35b52bae4ec871ddaf9653285d47a7783` on `main`
-**Immutable release:** [`v2.0.0`](https://github.com/Ryan-Yii/mec-rdho-offloading/releases/tag/v2.0.0)
+**Versioned release:** [`v2.0.0`](https://github.com/Ryan-Yii/mec-rdho-offloading/releases/tag/v2.0.0)
 
 This repository is the reproducibility package for a simulated three-tier cloud-edge-device MEC study. Each task selects exactly one legal local, edge, or cloud execution node and receives a physical CPU allocation in Hz. A deterministic common repair reassigns minimum-frequency-infeasible tasks when necessary, preserves feasible decoded requests, and proportionally projects excess demand only on overloaded nodes, so every reported solution satisfies assignment, reachability, CPU-bound, and aggregate node-capacity constraints.
 
