@@ -24,6 +24,8 @@ EXPECTED = {
     },
 }
 
+CONTROLLED_EVIDENCE_SOURCE_COMMIT = "cf499f2d1a0f37859cc045cf3c902815b81927f1"
+
 
 def _same_records(actual: list[dict], expected: list[dict]) -> bool:
     if len(actual) != len(expected):
@@ -42,7 +44,6 @@ def _same_records(actual: list[dict], expected: list[dict]) -> bool:
 
 
 def verify(results_root: Path = Path("results")) -> None:
-    source_commit = subprocess.check_output(["git", "rev-parse", "cf499f2"], text=True).strip()
     current_v2 = repository_v2_hashes()
     integrity = pd.read_csv(results_root / "audit" / "controlled_evidence_v2_integrity.csv")
     if not integrity["unchanged"].all() or len(integrity) != len(current_v2):
@@ -74,7 +75,7 @@ def verify(results_root: Path = Path("results")) -> None:
             raise AssertionError(f"refinement NFE mismatch in {raw_path}")
         if not (raw["hard_feasible"] == 1).all() or not (raw["assignment_unique"] == 1).all():
             raise AssertionError(f"feasibility audit failed in {raw_path}")
-        if raw["initial_population_hash"].isna().any() or set(raw["code_commit"]) != {source_commit}:
+        if raw["initial_population_hash"].isna().any() or set(raw["code_commit"]) != {CONTROLLED_EVIDENCE_SOURCE_COMMIT}:
             raise AssertionError(f"provenance is incomplete in {raw_path}")
         for _, group in raw.groupby("scenario_seed"):
             if group["initial_population_hash"].nunique() != 1:

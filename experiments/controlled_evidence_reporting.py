@@ -24,11 +24,16 @@ def repository_commit() -> str:
 
 
 def repository_v2_hashes() -> dict[str, str]:
-    records: dict[str, str] = {}
-    for path in sorted(Path("results/v2").rglob("*")):
-        if path.is_file():
-            records[str(path)] = sha256_file(path)
-    return records
+    """Hash the versioned V2 evidence that a clean checkout can reproduce."""
+
+    output = subprocess.check_output(
+        ["git", "ls-files", "-z", "--", "results/v2"],
+    )
+    paths = [Path(value.decode("utf-8")) for value in output.split(b"\0") if value]
+    missing = [str(path) for path in paths if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(f"tracked V2 evidence is missing: {missing}")
+    return {str(path): sha256_file(path) for path in paths}
 
 
 def sha256_file(path: str | Path) -> str:

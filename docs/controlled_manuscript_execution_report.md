@@ -4,7 +4,7 @@
 
 - Manuscript editing base: `work/manuscript_final_20260724/0712_physical_model_v2_revised_with_comments.docx`.
 - Controlled evidence commit: `2a8fa7f` (`experiment: add controlled RDHO population evidence`).
-- Frozen V2 tag and source of the configured end-to-end Table 5: `v2-paper-artifacts-2026-07` at `cf499f2`.
+- Strict-control source commit: `cf499f2d1a0f37859cc045cf3c902815b81927f1`; historical V2 publication tag: `v2-paper-artifacts-2026-07` at `6c2b8a6a267d49a274bbc07faa3c18a4e4b6b2fb`.
 - Controlled evidence source files: `results/raw/controlled_population_stage_30_raw_results.csv`, `results/raw/controlled_common_pipeline_30_raw_results.csv`, `results/statistics/controlled_evidence_effect_sizes.csv`, and the audits in `results/audit/controlled_*`.
 
 ## Execution performed
@@ -21,7 +21,7 @@
 - Common-initial-population audit: 180 method rows; every three-method scenario triplet shares exactly one SHA-256 population hash.
 - Exact budgets: 3,801 NFE in Experiment A and 10,232 NFE in Experiment B for every method.
 - Hard feasibility and unique assignment: 90/90 in each controlled experiment.
-- `results/audit/controlled_evidence_v2_integrity.csv` records every protected V2 file as byte-identical.
+- `results/audit/controlled_evidence_v2_integrity.csv` records every tracked protected V2 file as byte-identical; ignored local logs are not release evidence.
 - The manuscript structural verification confirms 130 preserved base comments, 138 annotated comments after eight new replies, unresolved `w15:done=0` state for every new reply, 1,869 yellow highlights in the annotated DOCX, and no comments or yellow highlights in the clean DOCX.
 - The clean DOCX was rendered successfully to 20 PNG pages and a non-empty PDF. Every page, including the controlled Table 7/Figure 12 and conclusion pages, was visually inspected.
 

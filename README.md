@@ -1,7 +1,8 @@
 # Capacity-Feasible MEC Task Offloading and CPU Allocation
 
-**Manuscript:** *RDHO-Based Joint Task Offloading and Computing Resource Allocation in Mobile Edge Computing*
-**Research branch:** `research/physical-offloading-model-v2`
+**Manuscript:** *RIME-DBO-Based Capacity-Feasible Task Offloading and Resource Allocation in Mobile Edge Computing*
+**Audited experiment baseline:** `0264b6d35b52bae4ec871ddaf9653285d47a7783` on `main`
+**Immutable release:** [`v2.0.0`](https://github.com/Ryan-Yii/mec-rdho-offloading/releases/tag/v2.0.0)
 
 This repository is the reproducibility package for a simulated three-tier cloud-edge-device MEC study. Each task selects exactly one legal local, edge, or cloud execution node and receives a physical CPU allocation in Hz. A deterministic common repair reassigns minimum-frequency-infeasible tasks when necessary, preserves feasible decoded requests, and proportionally projects excess demand only on overloaded nodes, so every reported solution satisfies assignment, reachability, CPU-bound, and aggregate node-capacity constraints.
 
@@ -34,12 +35,13 @@ The canonical configuration uses 20 devices, 4 edge servers, 2 cloud servers, 40
 
 All main-run hard-feasibility rates are 1.0. RDHO-full has mean active-node CPU utilisation 0.8189, which also verifies that feasible allocations are not silently saturated.
 
-The paired end-to-end result must not be read as universal superiority of the hybrid population operator. At equal NFE (3801 evaluations), RDHO-core beats RIME but is worse than DBO, TLBO-HHO, and CWTSSA. With common initialisation and common coordinate refinement, RIME and DBO reach 0.9819 and 0.9671 mean fitness, respectively, close to RDHO-full at 0.9470. The common-refinement control explains much of the end-to-end difference.
+The paired end-to-end result must not be read as universal superiority of the hybrid population operator. In the strict population-stage control, one copied initial population and exactly 3,801 NFE give mean reporting fitness 1.4188 for RDHO, 1.6834 for RIME, and 1.2409 for DBO. With the same deterministic refinement and exactly 10,232 NFE, the means are 0.9732, 0.9836, and 0.9664, respectively. RDHO therefore beats RIME but is significantly worse than DBO in both strict controls. The configured V2 equal-NFE and common-control suites under `results/v2/` independently support the same bounded interpretation: common refinement explains much of the complete-pipeline difference.
 
 ## Evidence Map
 
 - [Main raw results](results/v2/raw/main_30_raw_results.csv), [summary](results/v2/summary/main_30_summary_mean_std.csv), [convergence](results/v2/raw/main_30_convergence.csv), and [paired statistics](results/v2/statistics/wilcoxon_fitness_results.csv)
 - [Equal-NFE results](results/v2/summary/equal_nfe_30_summary_mean_std.csv) and [common-control results](results/v2/summary/common_control_30_summary_mean_std.csv)
+- [Strict controlled raw results](results/raw/controlled_population_stage_30_raw_results.csv), [common-pipeline results](results/raw/controlled_common_pipeline_30_raw_results.csv), and [paired statistics](results/statistics/controlled_evidence_effect_sizes.csv)
 - [Ablation](results/v2/summary/ablation_30_summary_mean_std.csv), [scalability](results/v2/summary/scalability_summary_mean_std.csv), and [sensitivity](results/v2/sensitivity)
 - [Paper tables](paper_tables/v2), [paper figures](figures/paper), including the editable [Figure 1 source](figures/paper/fig1_system_architecture.svg), and [artifact manifest](paper_artifacts/manifest.csv)
 - [Model definition](docs/model_design_v2.md), [experiment protocol](docs/experiment_protocol_v2.md), and [execution report](docs/experiment_execution_report.md)

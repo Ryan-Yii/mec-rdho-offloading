@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use the physical-model code or generated V2 results, please cite this repository and contact the authors for manuscript status."
-title: "Capacity-Feasible Joint Task Offloading and Physical CPU Allocation in Mobile Edge Computing"
+title: "RIME-DBO-Based Capacity-Feasible Task Offloading and Resource Allocation in Mobile Edge Computing"
 type: software
 authors:
   - family-names: Su
@@ -12,8 +12,8 @@ authors:
 repository-code: "https://github.com/Ryan-Yii/mec-rdho-offloading"
 url: "https://github.com/Ryan-Yii/mec-rdho-offloading"
 license: MIT
-version: "2.0.0-research"
-date-released: "2026-07-22"
+version: "2.0.0"
+date-released: "2026-07-26"
 keywords:
   - mobile edge computing
   - task offloading

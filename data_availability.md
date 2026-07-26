@@ -14,7 +14,9 @@ Every result row retains the seed, algorithm, reporting objective and decomposit
 
 Install `requirements.txt`, run `python -m pytest tests -q`, and execute the commands in `README.md`. `python -m experiments.generate_v2_artifacts` rebuilds `paper_tables/v2/`, `figures/paper/v2/`, `paper_artifacts/manifest.csv`, and the experiment execution report solely from V2 data. The manifest records the source data, generation script, output hash, and manuscript location.
 
-The publication snapshot is the fixed tag `v2-paper-artifacts-2026-07`. Numerical experiments were generated with source-tree HEAD `78c51c13ce7405654d488aea593d184be930e16a`; the raw artifacts first entered Git at `d2ca113`, and result-affecting `src/`, `configs/`, and numerical raw CSV content are unchanged between that generation state and the publication snapshot.
+The historical configured-suite snapshot is the fixed tag `v2-paper-artifacts-2026-07` at `6c2b8a6a267d49a274bbc07faa3c18a4e4b6b2fb`. Numerical experiments were generated with source-tree HEAD `78c51c13ce7405654d488aea593d184be930e16a`; the raw artifacts first entered Git at `d2ca113`, and result-affecting `src/`, `configs/`, and numerical raw CSV content are unchanged between that generation state and the historical snapshot. The additive strict controls and manuscript evidence were merged into `main` at `0264b6d35b52bae4ec871ddaf9653285d47a7783`; their raw rows, exact-NFE audits, statistics, and artifact hashes remain separate from `results/v2/`.
+
+Release `v2.0.0` is the immutable publication snapshot that combines the audited `0264b6d` experiment baseline with the clean-checkout verification fix and the comment-preserving and clean 2026-07-26 manuscript artifacts.
 
 The public repository is:
 

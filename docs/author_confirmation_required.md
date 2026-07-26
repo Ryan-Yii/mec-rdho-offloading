@@ -6,10 +6,10 @@ must be confirmed before journal submission.
 1. **Target journal template and double-blind policy.** No journal template or
    author/anonymisation rule was supplied.  The review document format is
    preserved; final journal layout and metadata need author confirmation.
-2. **Final title.** The supervisor left the title open.  The V2 default is
-   "RDHO-Based Joint Task Offloading and Computing Resource Allocation in
-   Mobile Edge Computing" because CPU allocation and capacity repair are now
-   implemented.  Confirm whether the algorithm name should appear in title.
+2. **Journal-specific title policy.** The current title follows the latest
+   title-thread reply: "RIME-DBO-Based Capacity-Feasible Task Offloading and
+   Resource Allocation in Mobile Edge Computing." Confirm only whether the
+   target journal requires algorithm names to be removed from article titles.
 3. **Parameter provenance.** CPU ranges, link rates, fixed service overheads,
    and QoE coefficients describe a simulation scenario, not a hardware
    calibration.  Confirm data/source citations if a field deployment claim is
