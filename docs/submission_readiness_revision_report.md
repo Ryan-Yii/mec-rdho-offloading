@@ -22,7 +22,7 @@ It re-scores each already-returned solution as `F_lambda = B + lambda_ref * (1 -
 7. Parameter provenance is disclosed as versioned heterogeneous synthetic settings, not hardware calibration. Representative MEC references [1,3,11,13] support order-of-magnitude reasonableness; capacity, SLA, and heterogeneity sensitivity coverage is also stated.
 8. Related Work moves reference [12] to the learning-based class. Sections 6.3 and 6.4 are reordered logically, and duplicate legacy comparisons are removed from the main-text Table 9 location in favour of Algorithm 2 and a repository supplement reference.
 9. The experimental environment and serial runner boundary are disclosed; Table 4 gives fixed RDHO and baseline parameters and their provenance.
-10. Data Availability identifies the public GitHub repository, exact controlled paths, the lambda-analysis command, and the immutable `v2.0.0` release snapshot.
+10. Data Availability identifies the public GitHub repository, exact controlled paths, the lambda-analysis command, and the versioned `v2.0.0` release snapshot.
 11. RDHO role counts are identified as nominal full-population thresholds with exact elite/producer/follower/scout `if/elif` precedence and deterministic truncation; the text clarifies that these thresholds are not guaranteed realised population proportions. Complexity now separates the practical repair cost from the `O(N^2 M L)` per-candidate worst case. The duplicate Problem Complexity paragraph is removed.
 12. The abstract qualifies Experiment A as no-refinement and identifies common refinement as an Experiment-B condition, while retaining the prespecified `lambda_ref=1` qualification for Experiment B.
 13. The Limitations section states that the current implementation aborts an optimiser run when deterministic candidate repair fails, and records that no such failure occurred in the controlled experiments. It also states that the incremental contribution of nested objective layers has not been isolated.
@@ -34,5 +34,5 @@ At `lambda_ref=1`, the tool verifies row-wise equality with the original reporti
 ## Remaining Author/Release Gates
 
 - Confirm source citations if the paper is to describe parameters as hardware calibrated; this revision makes no such claim.
-- Release `v2.0.0` is the immutable publication snapshot for the aligned manuscript and audited evidence.
+- Release `v2.0.0` is the versioned publication snapshot for the aligned manuscript and audited evidence.
 - Confirm journal template, author metadata/double-blind policy, and final bibliography approval as listed in `docs/author_confirmation_required.md`.
