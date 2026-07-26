@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import copy
+import csv
+import subprocess
 import sys
 from pathlib import Path
 
@@ -11,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from experiments.controlled_evidence import build_system_from_config, initial_population_for_seed, run_controlled_method
+from experiments.controlled_evidence_reporting import repository_v2_hashes
 from experiments.experiment_core import load_config, utility_weights_from_config, weights_from_config
 from src.experiments.evaluation_budget import EvaluationBudgetManager
 from src.metrics import evaluate_solution
@@ -134,3 +137,23 @@ def test_all_controlled_methods_receive_the_same_initial_population_hash(control
         )
         hashes.add(result.population_audit["population_hash"])
     assert len(hashes) == 1
+
+
+def test_v2_integrity_audit_covers_exactly_the_tracked_clean_checkout_files():
+    tracked = {
+        line
+        for line in subprocess.check_output(
+            ["git", "ls-files", "--", "results/v2"], text=True
+        ).splitlines()
+        if line
+    }
+    current = set(repository_v2_hashes())
+    with (ROOT / "results/audit/controlled_evidence_v2_integrity.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        audit = list(csv.DictReader(handle))
+
+    assert current == tracked
+    assert {row["path"] for row in audit} == tracked
+    assert all(row["unchanged"] == "True" for row in audit)
+    assert all(row["sha256_before"] == row["sha256_after"] for row in audit)

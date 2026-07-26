@@ -4,9 +4,9 @@
 
 The manuscript is repositioned as **an RDHO-based capacity-feasible joint task-offloading and computing-resource-allocation framework, accompanied by controlled evidence that separates the complete pipeline effect from the isolated population-update effect**.
 
-The approved paper title is:
+The current manuscript title, following the latest title-thread reply, is:
 
-> RDHO-Based Capacity-Feasible Joint Task Offloading and Computing Resource Allocation in Mobile Edge Computing: A Controlled Evaluation
+> RIME-DBO-Based Capacity-Feasible Task Offloading and Resource Allocation in Mobile Edge Computing
 
 RDHO remains the paper's featured solver and the primary object of method design and evaluation. This framing is justified because the implemented RDHO workflow integrates legal-node encoding, physical-resource decoding, deterministic capacity repair, RIME-DBO-inspired population updates, dynamic search guidance, fixed-objective incumbent tracking and optional coordinate refinement. The controlled evidence changes the supported interpretation of the population update; it does not justify deleting RDHO or changing the model.
 
@@ -47,4 +47,4 @@ It cannot claim that the RIME-DBO population update is independently superior to
 
 ## Local Git state
 
-The controlled-evidence commit `2a8fa7f` was fast-forward integrated from `research/rdho-controlled-evidence` into the local manuscript branch `research/physical-offloading-model-v2`. The frozen tag `v2-paper-artifacts-2026-07` remains at `cf499f2`. No remote branch, tag, pull request or push was changed by this revision.
+The complete evidence branch was merged by PR #8 into `main` at `0264b6d35b52bae4ec871ddaf9653285d47a7783`. The historical tag `v2-paper-artifacts-2026-07` resolves to `6c2b8a6a267d49a274bbc07faa3c18a4e4b6b2fb`; it is not moved. The strict controlled artifacts are additive, while the tracked `results/v2/` evidence remains byte-identical to its audit baseline.

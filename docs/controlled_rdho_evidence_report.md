@@ -4,9 +4,10 @@
 
 This is an additive controlled experiment, not a manuscript revision. It ran
 on local branch `research/rdho-controlled-evidence` from
-`cf499f2d1a0f37859cc045cf3c902815b81927f1`, the unchanged target of
-`v2-paper-artifacts-2026-07`. No document, old V2 result, remote branch, PR,
-or tag was changed.
+`cf499f2d1a0f37859cc045cf3c902815b81927f1`. The historical V2 publication
+tag now resolves to `6c2b8a6a267d49a274bbc07faa3c18a4e4b6b2fb`; the tracked numerical V2
+files are byte-identical across this provenance boundary. No old V2 result was
+regenerated or consumed by the additive strict controls.
 
 Question: after equalising the initial population, physical evaluation path,
 and exact total NFE, does the implemented RDHO population stage independently
@@ -52,8 +53,10 @@ Matplotlib 3.9.4 with Agg, macOS-26.5.2-arm64-arm-64bit. The exact record is
 - Every return is hard feasible and uniquely assigns all tasks: 90/90 for A and 90/90 for B.
 - Every repair reassignment count and repair failure count is zero.
 - `tools.verify_controlled_rdho_evidence` rebuilt summaries and statistics from raw: PASS.
-- `pytest tests -q` under Agg: 47 passed; 14 existing Matplotlib/pyparsing warnings.
-- The V2 hash audit passed for every protected V2 file; `results/v2/` has no changes.
+- `pytest tests -q` under Agg on the release candidate: PASS (only existing
+  Matplotlib/pyparsing deprecation warnings).
+- The V2 hash audit passes for all 86 tracked protected V2 files; ignored local
+  logs are diagnostics and are intentionally outside the clean-checkout audit.
 
 ## Primary results
 

@@ -1,4 +1,5 @@
 import csv
+import hashlib
 import re
 from pathlib import Path
 
@@ -6,6 +7,14 @@ import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
 
 
 def test_baseline_parameters_are_available_and_parseable():
@@ -117,3 +126,38 @@ def test_paper_table_rdho_values_match_main_summary():
     assert f"{float(rdho['qoe_mean']):.6f}" in row
     assert f"{float(rdho['fairness_mean']):.6f}" in row
     assert f"{float(rdho['csr_mean']):.6f}" in row
+
+
+def test_release_manifests_match_every_versioned_artifact():
+    with (ROOT / "paper_artifacts/manifest.csv").open(newline="", encoding="utf-8") as handle:
+        paper_rows = list(csv.DictReader(handle))
+    assert len(paper_rows) == 59
+    for row in paper_rows:
+        path = ROOT / row["generated_file"]
+        assert path.is_file()
+        assert _sha256(path) == row["file_hash"]
+
+    with (ROOT / "results/audit/controlled_evidence_sha256.csv").open(
+        newline="", encoding="utf-8"
+    ) as handle:
+        controlled_rows = list(csv.DictReader(handle))
+    for row in controlled_rows:
+        path = ROOT / row["path"]
+        assert path.is_file()
+        assert path.stat().st_size == int(row["bytes"])
+        assert _sha256(path) == row["sha256"]
+
+    for manifest in sorted((ROOT / "paper_artifacts").glob("*/paper_artifact_manifest.csv")):
+        with manifest.open(newline="", encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
+        for row in rows:
+            path = ROOT / row["generated_file"]
+            assert path.is_file()
+            assert _sha256(path) == row["file_hash"]
+
+        hashes = manifest.with_name("deliverable_hashes.sha256")
+        for line in hashes.read_text(encoding="utf-8").splitlines():
+            expected, relative_path = line.split("  ", 1)
+            path = ROOT / relative_path
+            assert path.is_file()
+            assert _sha256(path) == expected
