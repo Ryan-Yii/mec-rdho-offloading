@@ -109,6 +109,90 @@ def plot_radar(df: pd.DataFrame, output_path: str | Path) -> None:
     plt.close(fig)
 
 
+def descriptive_radar_scores(df: pd.DataFrame) -> tuple[list[str], dict[str, np.ndarray]]:
+    """Return per-axis mean scores for the descriptive supplementary radar.
+
+    Scores are min-max normalised only across the methods displayed in ``df``.
+    Lower-is-better metrics are inverted so every radar axis has the same visual
+    direction. Constant axes map to one for every method.
+    """
+
+    algorithms = _ordered_algorithms(df)
+    metrics = ("energy", "delay", "aoi", "qoe", "fairness")
+    lower_is_better = {"energy", "delay", "aoi"}
+    scores: dict[str, np.ndarray] = {}
+    for metric in metrics:
+        means = np.asarray(
+            [df.loc[df["algorithm"] == algorithm, metric].mean() for algorithm in algorithms],
+            dtype=float,
+        )
+        minimum = float(np.min(means))
+        maximum = float(np.max(means))
+        if maximum == minimum:
+            scores[metric] = np.ones_like(means)
+        elif metric in lower_is_better:
+            scores[metric] = 1.0 - (means - minimum) / (maximum - minimum)
+        else:
+            scores[metric] = (means - minimum) / (maximum - minimum)
+    return algorithms, scores
+
+
+def plot_supplementary_radar(df: pd.DataFrame, output_path: str | Path) -> None:
+    """Plot the explicitly descriptive, repository-supplement radar figure."""
+
+    algorithms, scores = descriptive_radar_scores(df)
+    metrics = ("energy", "delay", "aoi", "qoe", "fairness")
+    labels = (
+        "Device-side energy",
+        "Mean delay",
+        "Average AoI",
+        "QoE",
+        "Active-user\nbase-utility fairness",
+    )
+    angles = np.linspace(0, 2 * np.pi, len(labels), endpoint=False).tolist()
+    angles += angles[:1]
+    scenario_column = "scenario_seed" if "scenario_seed" in df else "seed" if "seed" in df else None
+    scenario_count = int(df[scenario_column].nunique()) if scenario_column else 0
+
+    fig, ax = plt.subplots(figsize=(8.6, 7.4), subplot_kw={"polar": True})
+    for index, algorithm in enumerate(algorithms):
+        values = [float(scores[metric][index]) for metric in metrics]
+        values += values[:1]
+        color = COLORS.get(algorithm, "#666666")
+        ax.plot(
+            angles,
+            values,
+            label=DISPLAY_LABELS.get(algorithm, algorithm),
+            color=color,
+            linewidth=1.8,
+        )
+        ax.fill(angles, values, alpha=0.06, color=color)
+
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(labels, fontsize=10)
+    ax.set_ylim(0, 1)
+    ax.set_yticks((0.25, 0.50, 0.75, 1.00))
+    ax.set_yticklabels(("0.25", "0.50", "0.75", "1.00"), fontsize=8)
+    ax.set_title(
+        f"Descriptive mean performance over {scenario_count} paired scenarios\n"
+        "(higher is better after per-axis transformation)",
+        pad=28,
+    )
+    ax.legend(loc="upper left", bbox_to_anchor=(1.02, 1.02), frameon=True)
+    fig.text(
+        0.5,
+        0.018,
+        "Per-axis min-max normalisation across displayed methods; means only; "
+        "1 = best displayed mean, 0 = worst; no uncertainty shown.",
+        ha="center",
+        va="bottom",
+        fontsize=8.5,
+    )
+    fig.tight_layout(rect=(0.02, 0.07, 0.82, 0.92))
+    save_figure(fig, output_path)
+    plt.close(fig)
+
+
 def plot_controlled_attribution(
     equal_nfe_summary: str | Path,
     common_control_summary: str | Path,

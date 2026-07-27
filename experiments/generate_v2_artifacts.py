@@ -12,7 +12,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from experiments.analyze_results import generate_main_figures, generate_sensitivity_figures, plot_controlled_attribution
+from experiments.analyze_results import (
+    generate_main_figures,
+    generate_sensitivity_figures,
+    plot_controlled_attribution,
+    plot_supplementary_radar,
+)
 from src.utils.io import ensure_parent, write_rows
 
 
@@ -201,6 +206,10 @@ def _generate_figures() -> list[dict[str, str]]:
         V2 / "summary" / "common_control_30_summary_mean_std.csv",
         V2 / "figures" / "controlled_attribution.png",
     )
+    plot_supplementary_radar(
+        pd.read_csv(V2 / "raw" / "main_30_raw_results.csv"),
+        V2 / "figures" / "descriptive_main_comparison_radar.png",
+    )
     _normalise_svgs(V2)
 
     # Figure 12 was reassigned to controlled attribution; prevent a stale radar
@@ -228,6 +237,7 @@ def _generate_figures() -> list[dict[str, str]]:
         ("Figure S2", "S2", V2 / "figures" / "controlled" / "convergence_curve.png", V2 / "raw" / "common_control_30_convergence.csv", "Common-control convergence", "Repository supplement"),
         ("Figure S3", "S3", V2 / "sensitivity" / "figures" / "utility_sensitivity.png", V2 / "sensitivity" / "raw" / "utility_sensitivity_raw_results.csv", "Task-utility coefficient sensitivity", "Repository supplement"),
         ("Figure S4", "S4", V2 / "sensitivity" / "figures" / "physical_sensitivity.png", V2 / "sensitivity" / "raw" / "physical_sensitivity_raw_results.csv", "Capacity, SLA and server-heterogeneity sensitivity", "Repository supplement"),
+        ("Figure S5", "S5", V2 / "figures" / "descriptive_main_comparison_radar.png", V2 / "raw" / "main_30_raw_results.csv", "Descriptive per-axis min-max-normalised main-comparison means", "Repository supplement only; not cited as inferential evidence in the main manuscript"),
     ]
 
     records: list[dict[str, str]] = []
