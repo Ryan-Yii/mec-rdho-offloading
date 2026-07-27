@@ -208,9 +208,10 @@ def _generate_figures() -> list[dict[str, str]]:
     )
     plot_supplementary_radar(
         pd.read_csv(V2 / "raw" / "main_30_raw_results.csv"),
-        V2 / "figures" / "descriptive_main_comparison_radar.png",
+        FIGURES / "figure_s5_descriptive_main_comparison_radar.png",
     )
     _normalise_svgs(V2)
+    _normalise_svgs(FIGURES)
 
     # Figure 12 was reassigned to controlled attribution; prevent a stale radar
     # artifact from surviving in the publication directory or manifest.
@@ -237,7 +238,6 @@ def _generate_figures() -> list[dict[str, str]]:
         ("Figure S2", "S2", V2 / "figures" / "controlled" / "convergence_curve.png", V2 / "raw" / "common_control_30_convergence.csv", "Common-control convergence", "Repository supplement"),
         ("Figure S3", "S3", V2 / "sensitivity" / "figures" / "utility_sensitivity.png", V2 / "sensitivity" / "raw" / "utility_sensitivity_raw_results.csv", "Task-utility coefficient sensitivity", "Repository supplement"),
         ("Figure S4", "S4", V2 / "sensitivity" / "figures" / "physical_sensitivity.png", V2 / "sensitivity" / "raw" / "physical_sensitivity_raw_results.csv", "Capacity, SLA and server-heterogeneity sensitivity", "Repository supplement"),
-        ("Figure S5", "S5", V2 / "figures" / "descriptive_main_comparison_radar.png", V2 / "raw" / "main_30_raw_results.csv", "Descriptive per-axis min-max-normalised main-comparison means", "Repository supplement only; not cited as inferential evidence in the main manuscript"),
     ]
 
     records: list[dict[str, str]] = []
@@ -266,6 +266,20 @@ def _generate_figures() -> list[dict[str, str]]:
                 destination,
                 location,
             ))
+
+    for generated in (
+        FIGURES / "figure_s5_descriptive_main_comparison_radar.png",
+        FIGURES / "figure_s5_descriptive_main_comparison_radar.svg",
+    ):
+        records.append(_artifact_record(
+            "Figure S5",
+            "S5",
+            "Descriptive per-axis min-max-normalised main-comparison means",
+            "experiments/generate_v2_artifacts.py",
+            V2 / "raw" / "main_30_raw_results.csv",
+            generated,
+            "Repository supplement only; not cited as inferential evidence in the main manuscript",
+        ))
     return records
 
 

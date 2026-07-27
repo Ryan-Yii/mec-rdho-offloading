@@ -75,6 +75,8 @@ def test_controlled_attribution_replaces_paper_radar_artifact():
     assert "no uncertainty shown" in radar_text
     assert not (figure_dir / "figure_12_radar_chart.png").exists()
     assert not (figure_dir / "figure_12_radar_chart.svg").exists()
+    assert not (ROOT / "results/v2/figures/descriptive_main_comparison_radar.png").exists()
+    assert not (ROOT / "results/v2/figures/descriptive_main_comparison_radar.svg").exists()
 
 
 def test_supplementary_radar_scores_have_explicit_direction_and_bounds():
