@@ -3,7 +3,11 @@ import hashlib
 import re
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 import yaml
+
+from experiments.analyze_results import descriptive_radar_scores
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -62,8 +66,38 @@ def test_controlled_attribution_replaces_paper_radar_artifact():
     figure_dir = ROOT / "figures" / "paper" / "v2"
     assert (figure_dir / "figure_12_controlled_attribution.png").is_file()
     assert (figure_dir / "figure_12_controlled_attribution.svg").is_file()
+    assert (figure_dir / "figure_s5_descriptive_main_comparison_radar.png").is_file()
+    radar_svg = figure_dir / "figure_s5_descriptive_main_comparison_radar.svg"
+    assert radar_svg.is_file()
+    radar_text = radar_svg.read_text(encoding="utf-8")
+    assert "Active-user" in radar_text
+    assert "base-utility fairness" in radar_text
+    assert "no uncertainty shown" in radar_text
     assert not (figure_dir / "figure_12_radar_chart.png").exists()
     assert not (figure_dir / "figure_12_radar_chart.svg").exists()
+
+
+def test_supplementary_radar_scores_have_explicit_direction_and_bounds():
+    frame = pd.DataFrame(
+        {
+            "algorithm": ["RDHO", "RIME"],
+            "energy": [10.0, 20.0],
+            "delay": [2.0, 1.0],
+            "aoi": [5.0, 5.0],
+            "qoe": [0.4, 0.8],
+            "fairness": [0.6, 0.6],
+        }
+    )
+
+    algorithms, scores = descriptive_radar_scores(frame)
+
+    assert algorithms == ["RDHO", "RIME"]
+    np.testing.assert_allclose(scores["energy"], [1.0, 0.0])
+    np.testing.assert_allclose(scores["delay"], [0.0, 1.0])
+    np.testing.assert_allclose(scores["aoi"], [1.0, 1.0])
+    np.testing.assert_allclose(scores["qoe"], [0.0, 1.0])
+    np.testing.assert_allclose(scores["fairness"], [1.0, 1.0])
+    assert all(np.all((values >= 0.0) & (values <= 1.0)) for values in scores.values())
 
 
 def test_scalability_rows_record_assignment_uniqueness():
@@ -131,7 +165,7 @@ def test_paper_table_rdho_values_match_main_summary():
 def test_release_manifests_match_every_versioned_artifact():
     with (ROOT / "paper_artifacts/manifest.csv").open(newline="", encoding="utf-8") as handle:
         paper_rows = list(csv.DictReader(handle))
-    assert len(paper_rows) == 59
+    assert len(paper_rows) == 61
     for row in paper_rows:
         path = ROOT / row["generated_file"]
         assert path.is_file()

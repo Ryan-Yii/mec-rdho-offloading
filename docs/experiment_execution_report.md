@@ -36,7 +36,7 @@ python -m pytest tests -q
 - Pytest: `PASS`; 38 tests passed locally on 2026-07-23 (14 third-party deprecation warnings, no test failures).
 - Test inventory: 11 alignment/objective/statistics/figure tests; 4 experiment-pipeline tests; 1 bounded-metrics test; 12 physical-model, decoder, repair, utility and reproducibility tests; 8 artifact, 1,580-row feasibility, table and README guards; and 2 deterministic task-generation/export tests.
 - Raw audit: `1580` rows across nine suites; hard feasibility `PASS`; unique assignment `PASS`.
-- Manifest audit: `59` entries; generated-file SHA-256 verification `PASS`.
+- Manifest audit: `61` entries; generated-file SHA-256 verification `PASS`.
 - CI at report-assembly HEAD: [PASS: Tests/test on `6c2b8a6`](https://github.com/Ryan-Yii/mec-rdho-offloading/actions/runs/29994537434/job/89164954233). The final content-only commit is verified separately after push in PR #8.
 - All manuscript tables and figures are generated from the listed V2 CSV files; no paper value is entered manually.
 

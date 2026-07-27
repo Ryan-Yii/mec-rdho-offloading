@@ -1,23 +1,26 @@
 # Manuscript Figure Mapping
 
-This directory contains paper-facing copies of the figures used in the RDHO
-manuscript. The source result figures are retained under `results/figures/` and
-`results/sensitivity/figures/`.
+The canonical V2 paper-facing figures are under `figures/paper/v2/`; their
+source data, generator and SHA-256 values are recorded in
+`paper_artifacts/manifest.csv`. Main-manuscript numbering ends at Figure 12.
 
-| Manuscript item | File | Source file |
+The unversioned files directly under `figures/`, including
+`fig11_normalized_multi_metric_radar.png`, are retained only for historical
+traceability. They do not define the current manuscript numbering.
+
+## Repository Supplement
+
+| Item | Canonical file | Interpretation |
 |---|---|---|
-| Fig. 1 | `fig01_convergence_curve.png` | `results/figures/convergence_curve.png` |
-| Fig. 2 | `fig02_energy_comparison.png` | `results/figures/energy_comparison.png` |
-| Fig. 3 | `fig03_delay_comparison.png` | `results/figures/delay_comparison.png` |
-| Fig. 4 | `fig04_aoi_comparison.png` | `results/figures/aoi_comparison.png` |
-| Fig. 5 | `fig05_qoe_fairness_comparison.png` | `results/figures/qoe_fairness_comparison.png` |
-| Fig. 6 | `fig06_soft_csr_comparison.png` | `results/figures/csr_comparison.png` |
-| Fig. 7 | `fig07_ablation_study.png` | `results/figures/ablation_study_multicolor.png` |
-| Fig. 8 | `fig08_scalability.png` | `results/figures/scalability.png` |
-| Fig. 9 | `fig09_weight_sensitivity_qoe_fairness_csr.png` | `results/sensitivity/figures/weight_sensitivity_qoe_fairness_csr.png` |
-| Fig. 10 | `fig10_penalty_sensitivity_heatmaps.png` | `results/sensitivity/figures/penalty_sensitivity_heatmaps.png` |
-| Fig. 11 | `fig11_normalized_multi_metric_radar.png` | `results/figures/radar_chart.png` |
-| Supplementary | `supp_weight_sensitivity_fitness.png` | `results/sensitivity/figures/weight_sensitivity_fitness.png` |
+| Figure S1 | `paper/v2/figure_s1_convergence_curve.{png,svg}` | Equal-NFE convergence |
+| Figure S2 | `paper/v2/figure_s2_convergence_curve.{png,svg}` | Common-control convergence |
+| Figure S3 | `paper/v2/figure_s3_utility_sensitivity.{png,svg}` | Task-utility sensitivity |
+| Figure S4 | `paper/v2/figure_s4_physical_sensitivity.{png,svg}` | Physical-input sensitivity |
+| Figure S5 | `paper/v2/figure_s5_descriptive_main_comparison_radar.{png,svg}` | Descriptive main-comparison means |
 
-Use these files when preparing the manuscript submission package. Use the
-`results/` files when tracing figure provenance back to the experiment outputs.
+Figure S5 applies min-max normalisation separately on each axis across the
+displayed methods. Energy, delay and AoI are inverted so that higher displayed
+scores are consistently better. It shows means only and conveys neither
+uncertainty nor statistical significance; it is supplementary context, not a
+replacement for the absolute-value tables, error-bar figures or controlled
+attribution evidence in the main manuscript.

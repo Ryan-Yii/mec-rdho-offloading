@@ -31,8 +31,11 @@ restrained claims about metrics, ablations, baselines, and deployment scope.
   CPU-capacity, SLA, and server-heterogeneity experiments.
 - Added CSV/Markdown paper tables, PNG/SVG/PDF paper figures, SHA-256 artifact
   manifest, execution report, and V2-specific reproduction documentation.
-- Replaced the descriptive radar figure with main-paper Table 9 and Figure 12
-  for equal-NFE and common-refinement attribution.
+- Replaced the descriptive radar figure in the main manuscript with Table 9
+  and Figure 12 for equal-NFE and common-refinement attribution. A
+  semantics-corrected radar is retained as repository-supplement Figure S5;
+  it labels active-user base-utility fairness explicitly and states that its
+  per-axis min-max-normalised means convey no uncertainty or significance.
 
 ## Scientific interpretation
 
