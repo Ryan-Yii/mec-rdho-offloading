@@ -254,7 +254,11 @@ def plot_convergence(convergence_csv: str | Path, output_path: str | Path) -> No
     plt.close(fig)
 
 
-def generate_main_figures(raw_csv: str | Path, convergence_csv: str | Path, output_dir: str | Path = "results/figures") -> None:
+def generate_main_figures(
+    raw_csv: str | Path,
+    convergence_csv: str | Path,
+    output_dir: str | Path = "results/v2/figures",
+) -> None:
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
     df = pd.read_csv(raw_csv)
@@ -342,7 +346,7 @@ def plot_penalty_sensitivity(raw_csv: str | Path, output_dir: str | Path) -> Non
 def generate_sensitivity_figures(
     weight_raw_csv: str | Path,
     penalty_raw_csv: str | Path,
-    output_dir: str | Path = "results/sensitivity/figures",
+    output_dir: str | Path = "results/v2/sensitivity/figures",
     utility_raw_csv: str | Path | None = None,
     physical_raw_csv: str | Path | None = None,
 ) -> None:
@@ -383,7 +387,10 @@ def plot_factor_sensitivity(raw_csv: str | Path, category: str, xlabel: str, out
 
 
 if __name__ == "__main__":
-    generate_main_figures("results/raw/main_30_raw_results.csv", "results/raw/main_30_convergence.csv")
+    generate_main_figures(
+        "results/v2/raw/main_30_raw_results.csv",
+        "results/v2/raw/main_30_convergence.csv",
+    )
 
 
 def plot_ablation(df: pd.DataFrame, output_path: str | Path) -> None:

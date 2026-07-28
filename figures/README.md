@@ -4,9 +4,11 @@ The canonical V2 paper-facing figures are under `figures/paper/v2/`; their
 source data, generator and SHA-256 values are recorded in
 `paper_artifacts/manifest.csv`. Main-manuscript numbering ends at Figure 12.
 
-The unversioned files directly under `figures/`, including
-`fig11_normalized_multi_metric_radar.png`, are retained only for historical
-traceability. They do not define the current manuscript numbering.
+The later strict controlled-evidence plots are under `analysis/`. Superseded
+unversioned paper-facing copies, including the old normalised radar, are
+classified under [`archive/v1.0-paper/`](archive/v1.0-paper/) to match the
+fixed `v1.0-paper` tag. They are retained for historical traceability only and
+do not define the current manuscript numbering.
 
 ## Repository Supplement
 
@@ -24,3 +26,8 @@ scores are consistently better. It shows means only and conveys neither
 uncertainty nor statistical significance; it is supplementary context, not a
 replacement for the absolute-value tables, error-bar figures or controlled
 attribution evidence in the main manuscript.
+
+Its sole data source is
+`results/v2/raw/main_30_raw_results.csv`. The generator writes Figure S5 only
+to `figures/paper/v2/`; it must not add files to the frozen `results/v2/`
+evidence inventory.

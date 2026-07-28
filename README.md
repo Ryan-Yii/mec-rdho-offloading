@@ -39,12 +39,19 @@ The paired end-to-end result must not be read as universal superiority of the hy
 
 ## Evidence Map
 
+- [Results index](results/README.md), which separates current V2, strict controlled, and historical evidence
 - [Main raw results](results/v2/raw/main_30_raw_results.csv), [summary](results/v2/summary/main_30_summary_mean_std.csv), [convergence](results/v2/raw/main_30_convergence.csv), and [paired statistics](results/v2/statistics/wilcoxon_fitness_results.csv)
 - [Equal-NFE results](results/v2/summary/equal_nfe_30_summary_mean_std.csv) and [common-control results](results/v2/summary/common_control_30_summary_mean_std.csv)
 - [Strict controlled raw results](results/raw/controlled_population_stage_30_raw_results.csv), [common-pipeline results](results/raw/controlled_common_pipeline_30_raw_results.csv), and [paired statistics](results/statistics/controlled_evidence_effect_sizes.csv)
 - [Ablation](results/v2/summary/ablation_30_summary_mean_std.csv), [scalability](results/v2/summary/scalability_summary_mean_std.csv), and [sensitivity](results/v2/sensitivity)
-- [Paper tables](paper_tables/v2), [paper figures](figures/paper), including the editable [Figure 1 source](figures/paper/fig1_system_architecture.svg), and [artifact manifest](paper_artifacts/manifest.csv)
+- [Paper tables](paper_tables/v2), [paper figures](figures/paper/v2), including the editable [Figure 1 source](figures/paper/fig1_system_architecture.svg), and [artifact manifest](paper_artifacts/manifest.csv)
 - [Model definition](docs/model_design_v2.md), [experiment protocol](docs/experiment_protocol_v2.md), and [execution report](docs/experiment_execution_report.md)
+
+The superseded V1.0 paper experiment outputs are classified under
+[`results/archive/v1.0-paper`](results/archive/v1.0-paper), with matching
+figure and table copies under `figures/archive/v1.0-paper/` and
+`paper_tables/archive/v1.0-paper/`. These files match the fixed
+`v1.0-paper` tag and are retained for provenance only.
 
 ## Reproduction
 
@@ -87,8 +94,14 @@ experiments/         Runners, statistics, plotting, and artifact generation
 src/                 Physical model, decoder/repair, metrics, and algorithms
 tests/               Formula, feasibility, control, and artifact regression tests
 results/v2/          Fresh raw data, summaries, statistics, and figures
+results/raw/         Later strict controlled raw evidence only
+results/summary/     Later strict controlled summaries only
+results/statistics/  Later strict controlled statistics only
+results/audit/       Strict-control and V2-integrity audits
+results/archive/     Superseded experiment outputs; provenance only
 paper_tables/v2/     Generated CSV and Markdown manuscript tables
-figures/paper/       Figure 1 SVG/PNG/PDF and generated V2 figures
+figures/paper/v2/    Current generated V2 paper figures, including radar S5
+figures/archive/     Superseded versioned figures; provenance only
 paper_artifacts/     Hash-linked manuscript artifact manifest
 docs/                Model, protocol, audit, and execution documentation
 ```
