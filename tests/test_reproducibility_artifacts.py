@@ -79,6 +79,37 @@ def test_controlled_attribution_replaces_paper_radar_artifact():
     assert not (ROOT / "results/v2/figures/descriptive_main_comparison_radar.svg").exists()
 
 
+def test_current_result_roots_do_not_mix_superseded_outputs():
+    assert (ROOT / "results/README.md").is_file()
+    assert (ROOT / "results/archive/v1.0-paper/README.md").is_file()
+
+    assert {path.name for path in (ROOT / "results/raw").glob("*")} == {
+        "controlled_common_pipeline_30_raw_results.csv",
+        "controlled_population_stage_30_raw_results.csv",
+    }
+    assert {path.name for path in (ROOT / "results/summary").glob("*")} == {
+        "controlled_common_pipeline_30_summary.csv",
+        "controlled_population_stage_30_summary.csv",
+    }
+    assert not any((ROOT / "results/figures").glob("**/*"))
+    assert not any((ROOT / "results/sensitivity").glob("**/*"))
+    assert not list((ROOT / "figures").glob("fig*.png"))
+    assert not list((ROOT / "figures").glob("supp_*.png"))
+    assert not (ROOT / "paper_tables/main_30_summary_mean_std.md").exists()
+    assert (ROOT / "figures/archive/v1.0-paper/fig11_normalized_multi_metric_radar.png").is_file()
+    assert (ROOT / "paper_tables/archive/v1.0-paper/main_30_summary_mean_std.md").is_file()
+
+
+def test_supplementary_radar_manifest_uses_current_data_outside_frozen_v2():
+    with (ROOT / "paper_artifacts/manifest.csv").open(newline="", encoding="utf-8") as handle:
+        rows = [row for row in csv.DictReader(handle) if row["manuscript_item"] == "Figure S5"]
+
+    assert len(rows) == 2
+    assert {row["source_data"] for row in rows} == {"results/v2/raw/main_30_raw_results.csv"}
+    assert {Path(row["generated_file"]).suffix for row in rows} == {".png", ".svg"}
+    assert all(row["generated_file"].startswith("figures/paper/v2/") for row in rows)
+
+
 def test_supplementary_radar_scores_have_explicit_direction_and_bounds():
     frame = pd.DataFrame(
         {

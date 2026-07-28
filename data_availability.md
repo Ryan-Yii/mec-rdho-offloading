@@ -16,6 +16,12 @@ Install `requirements.txt`, run `python -m pytest tests -q`, and execute the com
 
 The historical configured-suite snapshot is the fixed tag `v2-paper-artifacts-2026-07` at `6c2b8a6a267d49a274bbc07faa3c18a4e4b6b2fb`. Numerical experiments were generated with source-tree HEAD `78c51c13ce7405654d488aea593d184be930e16a`; the raw artifacts first entered Git at `d2ca113`, and result-affecting `src/`, `configs/`, and numerical raw CSV content are unchanged between that generation state and the historical snapshot. The additive strict controls and manuscript evidence were merged into `main` at `0264b6d35b52bae4ec871ddaf9653285d47a7783`; their raw rows, exact-NFE audits, statistics, and artifact hashes remain separate from `results/v2/`.
 
+The superseded V1.0 paper outputs are classified under
+`results/archive/v1.0-paper/`, with corresponding copies under
+`figures/archive/v1.0-paper/` and `paper_tables/archive/v1.0-paper/`. The
+archived artifacts match the fixed `v1.0-paper` tag and are retained for
+provenance only; no current V2 or strict-control generator consumes them.
+
 Release `v2.0.0` is the versioned publication snapshot that combines the audited `0264b6d` experiment baseline with the clean-checkout verification fix and the comment-preserving and clean 2026-07-26 manuscript artifacts.
 
 The public repository is:
