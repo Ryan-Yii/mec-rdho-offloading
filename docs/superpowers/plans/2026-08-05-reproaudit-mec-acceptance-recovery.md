@@ -45,3 +45,33 @@ rewrite is authorized.
 
 The new SDD workspace and ledger are keyed by this recovery-plan path and are
 independent of the original implementation ledger.
+
+## Human Adjudication: Deterministic JSON Indentation
+
+The approved implementation plan required deterministic JSON with a fixed
+indent but did not specify its integer value.
+
+The human-approved recovery decision is:
+
+- `indent=2`
+- `ensure_ascii=False`
+- `sort_keys=True`
+- `allow_nan=False`
+- UTF-8 encoding
+- Unix LF line endings
+- exactly one trailing LF
+
+Canonical serialization:
+
+```python
+json.dumps(
+    payload,
+    ensure_ascii=False,
+    sort_keys=True,
+    indent=2,
+    allow_nan=False,
+) + "\n"
+```
+
+This adjudication resolves an implementation ambiguity only. It does not
+change the schema, payload fields, source mappings, or acceptance criteria.
