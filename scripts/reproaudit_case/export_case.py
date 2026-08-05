@@ -207,13 +207,26 @@ def _read_raw_rows(repo_root: Path) -> list[dict[str, str]]:
     expected_size = SOURCE_SIZES[RAW_PATH]
     if len(raw) != expected_size:
         raise CaseContractError(f"canonical raw results source size mismatch: expected {expected_size}, got {len(raw)}")
+    expected_columns = (
+        "run_id", "seed", "algorithm", "fitness", "base_objective", "penalty",
+        "search_fitness", "energy", "delay", "aoi", "qoe", "fairness", "csr",
+        "hard_feasible", "capacity_utilisation_mean", "capacity_utilisation_max",
+        "assignment_unique", "runtime", "nfe", "pre_refinement_fitness",
+        "local_refinement_gain",
+    )
     try:
         text = raw.decode("utf-8")
-        rows = list(csv.DictReader(text.splitlines()))
+        reader = csv.DictReader(text.splitlines())
+        if tuple(reader.fieldnames or ()) != expected_columns:
+            raise CaseContractError("canonical raw results columns mismatch")
+        rows = list(reader)
     except (UnicodeDecodeError, csv.Error) as exc:
         raise CaseContractError("cannot parse canonical raw results") from exc
-    if not rows or tuple(rows[0]) != ("run_id", "seed", "algorithm", "fitness", "base_objective", "penalty", "search_fitness", "energy", "delay", "aoi", "qoe", "fairness", "csr", "hard_feasible", "capacity_utilisation_mean", "capacity_utilisation_max", "assignment_unique", "runtime", "nfe", "pre_refinement_fitness", "local_refinement_gain"):
-        raise CaseContractError("canonical raw results columns mismatch")
+    if not rows:
+        raise CaseContractError("canonical raw results has no rows")
+    for row in rows:
+        if set(row) != set(expected_columns) or None in row:
+            raise CaseContractError("canonical raw results row width mismatch")
     return rows
 
 
