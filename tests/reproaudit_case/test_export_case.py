@@ -141,6 +141,39 @@ def test_raw_export_rejects_source_drift(tmp_path: Path, monkeypatch: pytest.Mon
         module.export_raw_results(tmp_path, tmp_path / "out.csv")
 
 
+def test_summary_export_projects_official_fields_and_structural_stats(tmp_path: Path) -> None:
+    import scripts.reproaudit_case.export_case as module
+
+    destination = tmp_path / "summary_results.csv"
+    result = module.export_summary_results(ROOT, destination)
+    assert result == destination
+    with destination.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    assert list(rows[0]) == ["algorithm", "metric", "mean", "std", "median", "n"]
+    assert len(rows) == 12
+    assert [(row["algorithm"], row["metric"]) for row in rows[:4]] == [
+        ("RDHO", "fitness"), ("RDHO", "csr"), ("RIME", "fitness"), ("RIME", "csr")
+    ]
+    rdho_fitness = rows[0]
+    assert rdho_fitness["mean"] == "0.9470392278303288"
+    assert rdho_fitness["std"] == "0.12019325475607968"
+    assert rdho_fitness["n"] == "30"
+    assert float(rdho_fitness["median"]) == pytest.approx(0.9528122665474945)
+    assert destination.read_bytes().count(b"\r") == 0
+
+
+def test_summary_export_rejects_source_drift(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import scripts.reproaudit_case.export_case as module
+
+    monkeypatch.setattr(module, "SUMMARY_PATH", "results/v2/summary/main_30_summary_mean_std.csv")
+    source = tmp_path / "results/v2/summary"
+    source.mkdir(parents=True)
+    original = (ROOT / "results/v2/summary/main_30_summary_mean_std.csv").read_bytes()
+    (source / "main_30_summary_mean_std.csv").write_bytes(original + b"\n")
+    with pytest.raises(CaseContractError, match="source hash drift"):
+        module.export_summary_results(tmp_path, tmp_path / "out.csv")
+
+
 def test_experiment_export_rejects_parameter_drift(tmp_path: Path) -> None:
     config = yaml.safe_load((ROOT / "configs/main_40tasks.yaml").read_text(encoding="utf-8"))
     config["system"]["tasks"] = 41

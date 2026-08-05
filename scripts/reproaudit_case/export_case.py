@@ -13,6 +13,7 @@ import yaml
 from .constants import (
     ALGORITHMS,
     METRIC_DIRECTIONS,
+    METRICS,
     RAW_COLUMNS,
     SOURCE_HASHES,
     SOURCE_SIZES,
@@ -23,6 +24,7 @@ from .source_inventory import CaseContractError
 
 CONFIG_PATH = "configs/main_40tasks.yaml"
 RAW_PATH = "results/v2/raw/main_30_raw_results.csv"
+SUMMARY_PATH = "results/v2/summary/main_30_summary_mean_std.csv"
 _EXPECTED_TOP_LEVEL = ("system", "experiment", "weights")
 _EXPECTED_SYSTEM = ("mobile_devices", "edge_servers", "cloud_servers", "tasks")
 _EXPECTED_EXPERIMENT = (
@@ -277,4 +279,84 @@ def export_raw_results(repo_root: Path, destination: Path) -> Path:
     return _write_csv_new(Path(destination), exported)
 
 
-__all__ = ["export_experiment", "export_raw_results"]
+def _read_summary_rows(repo_root: Path) -> list[dict[str, str]]:
+    path = resolve_source_path(repo_root, SUMMARY_PATH)
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise CaseContractError("cannot read canonical summary results") from exc
+    expected_hash = SOURCE_HASHES[SUMMARY_PATH]
+    actual_hash = hashlib.sha256(raw).hexdigest()
+    if actual_hash != expected_hash:
+        raise CaseContractError(f"canonical summary results source hash drift: expected {expected_hash}, got {actual_hash}")
+    expected_size = SOURCE_SIZES[SUMMARY_PATH]
+    if len(raw) != expected_size:
+        raise CaseContractError(f"canonical summary results source size mismatch: expected {expected_size}, got {len(raw)}")
+    try:
+        reader = csv.DictReader(raw.decode("utf-8").splitlines())
+        rows = list(reader)
+    except (UnicodeDecodeError, csv.Error) as exc:
+        raise CaseContractError("cannot parse canonical summary results") from exc
+    if not rows or len(rows) != 6 or len(reader.fieldnames or ()) != 55:
+        raise CaseContractError("canonical summary results shape mismatch")
+    if any(not row.get("algorithm") or None in row for row in rows):
+        raise CaseContractError("canonical summary results row width mismatch")
+    if tuple(row["algorithm"] for row in rows) != ALGORITHMS:
+        raise CaseContractError("canonical summary results algorithm order mismatch")
+    return rows
+
+
+def _write_summary_csv(path: Path, rows: list[dict[str, str]]) -> Path:
+    if path.exists():
+        raise FileExistsError(f"destination already exists: {path}")
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("x", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=["algorithm", "metric", "mean", "std", "median", "n"], lineterminator="\n")
+            writer.writeheader()
+            writer.writerows(rows)
+    except FileExistsError:
+        raise
+    except OSError as exc:
+        raise CaseContractError(f"cannot write summary export {path}") from exc
+    return path
+
+
+def export_summary_results(repo_root: Path, destination: Path) -> Path:
+    """Project official summary means/stds and raw-derived median/count fields."""
+
+    root = Path(repo_root)
+    summary_rows = _read_summary_rows(root)
+    raw_rows = _read_raw_rows(root)
+    values: dict[tuple[str, str], list[float]] = {(algorithm, metric): [] for algorithm in ALGORITHMS for metric in METRICS}
+    for row in raw_rows:
+        algorithm = row.get("algorithm", "")
+        try:
+            values[(algorithm, "fitness")].append(float(row["fitness"]))
+            values[(algorithm, "csr")].append(float(row["csr"]))
+        except (KeyError, TypeError, ValueError) as exc:
+            raise CaseContractError("raw metric required for summary is invalid") from exc
+    output: list[dict[str, str]] = []
+    for source in summary_rows:
+        algorithm = source["algorithm"]
+        for metric in METRICS:
+            raw_values = values[(algorithm, metric)]
+            if len(raw_values) != 30 or not all(math.isfinite(value) for value in raw_values):
+                raise CaseContractError(f"summary raw structure invalid for {algorithm}/{metric}")
+            ordered = sorted(raw_values)
+            median = (ordered[14] + ordered[15]) / 2
+            prefix = f"{metric}_"
+            try:
+                mean_text = source[prefix + "mean"]
+                std_text = source[prefix + "std"]
+                mean = float(mean_text)
+                std = float(std_text)
+            except (KeyError, TypeError, ValueError) as exc:
+                raise CaseContractError(f"official summary field missing for {algorithm}/{metric}") from exc
+            if not math.isfinite(mean) or not math.isfinite(std):
+                raise CaseContractError(f"official summary field nonfinite for {algorithm}/{metric}")
+            output.append({"algorithm": algorithm, "metric": metric, "mean": mean_text, "std": std_text, "median": format(median, ".17g"), "n": str(len(raw_values))})
+    return _write_summary_csv(Path(destination), output)
+
+
+__all__ = ["export_experiment", "export_raw_results", "export_summary_results"]
