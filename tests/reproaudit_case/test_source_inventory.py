@@ -183,11 +183,13 @@ def test_committed_canonical_mutation_after_pinned_commit_is_rejected(
     repo = _init_git_repo(tmp_path / "repo")
     (repo / "README.md").write_text("canonical\n", encoding="utf-8")
     pinned_commit = _commit_all(repo, "pinned source")
+    pinned_content = (repo / "README.md").read_bytes()
     (repo / "README.md").write_text("changed later\n", encoding="utf-8")
     _commit_all(repo, "mutate canonical source")
+    (repo / "README.md").write_bytes(pinned_content)
     _use_single_canonical_source(monkeypatch, repo, pinned_commit)
 
-    with pytest.raises(CaseContractError, match="canonical source.*pinned commit.*README.md"):
+    with pytest.raises(CaseContractError, match="canonical source.*pinned commit.*HEAD.*README.md"):
         build_source_inventory(repo)
 
 

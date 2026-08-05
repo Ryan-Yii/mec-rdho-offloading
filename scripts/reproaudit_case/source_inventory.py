@@ -136,6 +136,12 @@ def _validate_pinned_checkout(
             "rev-parse",
             f"{pinned_commit}:{relative_path}",
         )
+        head_blob = _git_output(repo_root, "rev-parse", f"HEAD:{relative_path}")
+        if head_blob != pinned_blob:
+            raise CaseContractError(
+                f"canonical source differs from pinned commit in HEAD for {relative_path}: "
+                f"expected blob {pinned_blob}, got HEAD blob {head_blob}"
+            )
         working_blob = _git_output(repo_root, "hash-object", "--", str(path))
         if working_blob != pinned_blob:
             raise CaseContractError(
