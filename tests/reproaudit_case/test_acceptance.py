@@ -37,3 +37,13 @@ def test_compare_baseline_rejects_wrong_finding_or_oracle() -> None:
     oracle = type("Oracle", (), {"payload": {"raw": {"row_count": 179}}})()
     with pytest.raises(BaselineMismatch, match="oracle"):
         compare_baseline(report, oracle, expected)
+
+
+def test_runner_rejects_nonempty_output_before_wheel_use(tmp_path) -> None:
+    from scripts.reproaudit_case.acceptance import run_acceptance
+
+    output = tmp_path / "output"
+    output.mkdir()
+    (output / "sentinel").write_text("x", encoding="utf-8")
+    with pytest.raises(CaseContractError, match="empty"):
+        run_acceptance(tmp_path, tmp_path / "wheel.whl", output)
