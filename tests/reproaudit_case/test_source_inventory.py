@@ -6,8 +6,15 @@ from pathlib import Path
 
 import pytest
 
-from scripts.reproaudit_case.constants import MEC_COMMIT, SOURCE_PATHS, SOURCE_SHA256
+from scripts.reproaudit_case.constants import (
+    MEC_COMMIT,
+    SOURCE_PATHS,
+    SOURCE_SHA256,
+    SOURCE_SIZES,
+)
+from scripts.reproaudit_case import source_inventory
 from scripts.reproaudit_case.source_inventory import (
+    CaseContractError,
     build_manifest_payload,
     build_source_inventory,
     serialize_manifest,
@@ -62,6 +69,39 @@ def test_inventory_records_exact_hashes_sizes_shapes_and_headers():
     assert all(record.size_bytes > 0 for record in inventory.files)
 
 
+def test_source_sizes_are_immutable():
+    assert dict(SOURCE_SIZES) == {
+        "configs/main_40tasks.yaml": 351,
+        "results/v2/raw/main_30_raw_results.csv": 51525,
+        "results/v2/summary/main_30_summary_mean_std.csv": 6734,
+        "README.md": 9027,
+        "docs/experiment_protocol_v2.md": 2432,
+    }
+    with pytest.raises(TypeError):
+        SOURCE_SIZES["README.md"] = 0
+
+
+def test_size_mismatch_is_rejected_with_precise_contract_error(monkeypatch):
+    expected = dict(SOURCE_SIZES)
+    expected["README.md"] += 1
+    monkeypatch.setattr(source_inventory, "SOURCE_SIZES", expected)
+    with pytest.raises(CaseContractError, match=r"canonical source size mismatch for README\.md"):
+        build_source_inventory(ROOT)
+
+
+def test_missing_pinned_commit_is_translated_to_contract_error(monkeypatch):
+    original = source_inventory.subprocess.check_output
+
+    def fail_cat_file(command, **kwargs):
+        if "cat-file" in command:
+            raise subprocess.CalledProcessError(1, command, output="missing commit")
+        return original(command, **kwargs)
+
+    monkeypatch.setattr(source_inventory.subprocess, "check_output", fail_cat_file)
+    with pytest.raises(CaseContractError, match="unable to verify Git source provenance"):
+        build_source_inventory(ROOT)
+
+
 def test_pinned_commit_is_verified_but_current_head_need_not_equal():
     current_head = subprocess.check_output(
         ["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True
@@ -98,5 +138,5 @@ def test_one_byte_temporary_source_mutation_is_rejected(tmp_path):
     source = clone / "README.md"
     original = source.read_bytes()
     source.write_bytes(original[:-1] + bytes([original[-1] ^ 1]))
-    with pytest.raises(Exception, match="hash|drift|source"):
+    with pytest.raises(CaseContractError, match="hash|drift|source"):
         build_source_inventory(clone)

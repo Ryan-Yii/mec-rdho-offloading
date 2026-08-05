@@ -32,6 +32,14 @@ SOURCE_SHA256 = (
     "c1db229a76a50c6269e1417a521135056cfbdfb29556d1c368d3e96a60a1fa42",
 )
 SOURCE_HASHES: Mapping[str, str] = MappingProxyType(dict(zip(SOURCE_PATHS, SOURCE_SHA256)))
+SOURCE_SIZES: Mapping[str, int] = MappingProxyType(
+    dict(
+        zip(
+            SOURCE_PATHS,
+            (351, 51525, 6734, 9027, 2432),
+        )
+    )
+)
 
 ALGORITHMS = ("RDHO", "RIME", "DBO", "TLBO-HHO", "CWTSSA", "Greedy-ED")
 METRICS = ("fitness", "csr")

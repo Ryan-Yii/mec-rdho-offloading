@@ -17,6 +17,7 @@ from .constants import (
     METRICS,
     SOURCE_HASHES,
     SOURCE_PATHS,
+    SOURCE_SIZES,
     resolve_source_path,
 )
 
@@ -149,6 +150,12 @@ def build_source_inventory(repo_root: Path) -> SourceInventory:
             size_bytes = path.stat().st_size
         except OSError as exc:
             raise CaseContractError(f"cannot stat canonical source {relative_path}") from exc
+        expected_size = SOURCE_SIZES[relative_path]
+        if size_bytes != expected_size:
+            raise CaseContractError(
+                f"canonical source size mismatch for {relative_path}: "
+                f"expected {expected_size}, got {size_bytes}"
+            )
         records.append(
             SourceFileRecord(
                 path=relative_path,
