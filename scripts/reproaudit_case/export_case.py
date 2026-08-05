@@ -160,7 +160,7 @@ def _experiment_payload(config: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _write_new(path: Path, payload: dict[str, Any]) -> None:
+def _write_new(path: Path, payload: dict[str, Any]) -> Path:
     if path.exists():
         raise FileExistsError(f"destination already exists: {path}")
     try:
@@ -177,16 +177,17 @@ def _write_new(path: Path, payload: dict[str, Any]) -> None:
         raise
     except OSError as exc:
         raise CaseContractError(f"cannot write experiment export {path}") from exc
+    return path
 
 
-def _export_experiment_from_config(config: dict[str, Any], destination: Path) -> None:
-    _write_new(Path(destination), _experiment_payload(config))
+def _export_experiment_from_config(config: dict[str, Any], destination: Path) -> Path:
+    return _write_new(Path(destination), _experiment_payload(config))
 
 
-def export_experiment(repo_root: Path, destination: Path) -> None:
+def export_experiment(repo_root: Path, destination: Path) -> Path:
     """Export a validated, deterministic experiment.yaml from the canonical config."""
 
-    _export_experiment_from_config(_read_config(Path(repo_root)), Path(destination))
+    return _export_experiment_from_config(_read_config(Path(repo_root)), Path(destination))
 
 
 __all__ = ["export_experiment"]

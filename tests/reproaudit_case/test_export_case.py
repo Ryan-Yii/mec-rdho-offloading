@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 def test_experiment_export_has_exact_schema_and_values(tmp_path: Path) -> None:
     destination = tmp_path / "experiment.yaml"
-    export_experiment(ROOT, destination)
+    assert export_experiment(ROOT, destination) == destination
 
     payload = yaml.safe_load(destination.read_text(encoding="utf-8"))
     assert list(payload) == [
