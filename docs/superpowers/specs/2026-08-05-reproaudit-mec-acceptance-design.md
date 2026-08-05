@@ -70,7 +70,13 @@ Official summary has `algorithm`, then each numeric metric's `_mean`, `_std`, an
 
 The six exact source algorithms in order are `RDHO`, `RIME`, `DBO`, `TLBO-HHO`, `CWTSSA`, and `Greedy-ED`; every one has 30 rows. `run_id` is 1--30 and `seed` is 20260701--20260730. Each seed/run ID is shared by all algorithms. The protocol defines it as a paired generated scenario with separately derived deterministic algorithm RNG streams. The ReproAudit key is therefore `(seed, algorithm)`; `run_id` is retained as opaque trace metadata.
 
-Source raw has no status column. All 180 rows contain finite `fitness` and `csr`, and the README reports hard-feasibility rate 1.0. The adapter maps a row to `success` only after validating these selected fields are present and finite. It stops conversion for absent/nonfinite values; it never infers a failure from result quality.
+Source raw has no status column. Each row is a formally recorded main-experiment result row and is included in the source summary. The faithful adapter therefore maps every canonical source row to `status: success`, independently of metric validity. If a future source has an explicit status column, the adapter maps that value verbatim. It never infers `failed` or another non-success value from metric quality. A source `NaN`, `+Inf`, `-Inf`, or nonnumeric metric remains `status: success` and is retained as R005 evidence; it must not be filtered or converted into a run-state error.
+
+The schema statement below that a success row is usable only when its declared
+metrics are finite is ReproAudit's statistical eligibility rule, not the
+adapter's source-status rule. Separating these decisions is intentional:
+metric validity is the audited object and must not be converted by the adapter
+into a less severe run-state finding that could hide R005.
 
 ## 5. Source-of-Truth Decisions
 
@@ -84,7 +90,7 @@ The README current V2 table has rounded fitness and CSR means for all six algori
 README "RDHO-full" -> canonical raw/config/summary "RDHO"
 ```
 
-No other name changes. README's sentence that RDHO-full beats each configured main baseline in all 30 paired scenarios is a repository-native fitness best-algorithm claim after this normalization. It is not a universal-superiority claim and does not make a CSR winner claim.
+No other name changes. README's sentence that RDHO-full “beats each configured main baseline in all 30 paired scenarios” is preserved as a candidate conclusion, but it is not entered as a best-algorithm claim: it names neither a metric nor a lowest/highest/best ranking for a metric.
 
 ## 6. ReproAudit v0.1.0 Contract
 
@@ -109,7 +115,7 @@ Tolerant rules pass when `abs(actual - expected) <= max(abs_tol, rel_tol * abs(e
 | R102 | Official sample std matches usable raw per declared algorithm/metric; PASS/INFO |
 | R103 | README rounded means match usable raw within tolerance; PASS/INFO |
 | R201 | README run/config claims equal config; PASS/INFO |
-| R202 | README-normalized RDHO is fitness-tied best among six; PASS/INFO |
+| R202 | No metric-specific repository-native best claim is supplied; SKIP/INFO |
 
 Rules R001, R002, and R003 never SKIP and fail as ERROR. R004 never SKIPs;
 missing declared algorithms fail as ERROR and undeclared raw algorithms as
@@ -145,20 +151,51 @@ The baseline is named `faithful_baseline`, never clean. It is a faithful schema 
 | `metrics.csr` | raw `csr`; summary `csr_*` | Direct numeric | ratio | Stop if nonfinite |
 | raw `seed` | raw `seed` | Base-10 integer serialization | paired scenario seed | Stop if malformed |
 | raw `algorithm` | raw `algorithm` | Preserve exact name | text | Stop if unknown to config |
-| raw `status` | no source column | `success` after finite-field validation | status | Stop on uncertainty/nonfinite |
-| raw `run_id` | raw `run_id` | Opaque extra column | 1--30 index | Retain source text |
+| raw `status` | no source column | `success` for every canonical source row | status | If an explicit future source status exists, map it verbatim |
+| source `run_id` | raw `run_id` | Not emitted into target raw; retain only as manifest evidence | 1--30 paired-row index | Stop if source mapping cannot be recorded |
 | summary `mean`, `std` | official selected `*_mean`, `*_std` | Direct decimal serialization | full source precision | Stop if absent/nonfinite |
 | summary `median`, `n` | selected raw metrics | Deterministic median/count | decimal/count | Stop if no usable values |
 | reported means | README V2 table | Four-decimal mean; normalize RDHO-full | display rounded | Omit R103 family if absent |
-| best claim | README current conclusion | fitness / RDHO after normalization | text | Omit R202 claim if absent |
+| best claim | README current conclusion | Recorded in traceability table but not represented in faithful `claims.yaml` because it lacks metric-specific best semantics | text | R202 SKIP |
 
-Raw output preserves source order: ascending `run_id`, then configured algorithm order. Summary output is configured algorithm order, then `fitness`, then `csr`. CSV uses UTF-8, LF, comma delimiter, and deterministic decimal serialization sufficient to round-trip source floats.
+Target raw emits only the supported required columns `seed, algorithm, status, fitness, csr`; source `run_id` is not an extra target CSV column and is retained in manifest traceability. Rows preserve source order (ascending `run_id`, then configured algorithm order). Summary output is a wide-to-long projection: source shape is 6 x 55; each source algorithm generates two target rows, for exactly 12 rows, ordered by declared algorithm and then `fitness`, `csr`. `fitness_mean`/`fitness_std` and `csr_mean`/`csr_std` are copied directly from those exact official-summary columns; target `median` and `n` are structural fields derived from raw, while the official mean/std are never recomputed or overwritten. The target summary contains only `algorithm, metric, mean, std, median, n`, uses UTF-8/LF/comma, and serializes source numeric values with a fixed round-trippable decimal format. The independent oracle recomputes only for comparison.
 
-Claims include README-supported run/config values, twelve rounded means (six algorithms times two metrics), and the fitness best claim. README has no std claim, so R103 checks means only. If this pinned claim source is missing in a later source version, its claim family is omitted and R103/R202 SKIP; no claim is synthesized from raw or summary.
+Claims include README-supported run/config values and twelve displayed means (six algorithms times two metrics). README has no std claim, so R103 checks means only. The README line 83 conclusion is recorded as an auditable but non-entered claim because it says only “RDHO-full beats each configured main baseline in all 30 paired scenarios”; it does not say that RDHO is best for a named metric, lowest/highest for a named metric, or the table's metric-specific first-place conclusion. It therefore cannot populate `conclusions.best_algorithm` and faithful R202 is SKIP. If the pinned claim source is missing in a later source version, its claim family is omitted and R103/R202 SKIP; no claim is synthesized from raw or summary.
+
+### Claim traceability
+
+The exporter and `source_manifest.json` must preserve the following table. These
+trace fields remain outside `claims.yaml`, whose strict v1.0 schema has no
+source-location fields.
+
+| Claim ID | Claim type | Source path | Source heading/line | Exact source text/value | Normalized representation | Rule |
+| --- | --- | --- | --- | --- | --- | --- |
+| CCFG-001 | run claim | `README.md` | Fresh V2 Evidence, line 25 | “30 paired scenarios” | `experiment_claims.runs: 30` | R201 |
+| CCFG-002 | parameter claim | `README.md` | Fresh V2 Evidence, line 25 | “20 devices” | `mobile_devices: 20` | R201 |
+| CCFG-003 | parameter claim | `README.md` | Fresh V2 Evidence, line 25 | “4 edge servers” | `edge_servers: 4` | R201 |
+| CCFG-004 | parameter claim | `README.md` | Fresh V2 Evidence, line 25 | “2 cloud servers” | `cloud_servers: 2` | R201 |
+| CCFG-005 | parameter claim | `README.md` | Fresh V2 Evidence, line 25 | “40 tasks” | `task_count: 40` | R201 |
+| CCFG-006 | parameter claim | `README.md` | Fresh V2 Evidence, line 25 | “population 50” | `population_size: 50` | R201 |
+| CCFG-007 | parameter claim | `README.md` | Fresh V2 Evidence, line 25 | “150 iterations” | `max_iterations: 150` | R201 |
+| CRES-001 | reported fitness | `README.md` | Fresh V2 Evidence, line 29 | `| RDHO-full | 0.9470 | 0.4468 | 0.9244 | 0.7206 | 7.8306 | 10232 |` (Reporting fitness cell `0.9470`) | algorithm `RDHO`, displayed fitness `0.9470` | R103 |
+| CRES-002 | reported CSR | `README.md` | Fresh V2 Evidence, line 29 | `| RDHO-full | 0.9470 | 0.4468 | 0.9244 | 0.7206 | 7.8306 | 10232 |` (Soft CSR cell `0.7206`) | algorithm `RDHO`, displayed CSR `0.7206` | R103 |
+| CRES-003 | reported fitness/CSR | `README.md` | Fresh V2 Evidence, line 30 | `| RIME | 1.5848 | 0.3551 | 0.8385 | 0.5133 | 5.9657 | 7551 |` | algorithm `RIME`, displayed fitness `1.5848`, CSR `0.5133` | R103 |
+| CRES-004 | reported fitness/CSR | `README.md` | Fresh V2 Evidence, line 31 | `| DBO | 1.1837 | 0.4145 | 0.9161 | 0.6286 | 5.8198 | 7551 |` | algorithm `DBO`, displayed fitness `1.1837`, CSR `0.6286` | R103 |
+| CRES-005 | reported fitness/CSR | `README.md` | Fresh V2 Evidence, line 32 | `| TLBO-HHO | 1.2263 | 0.4070 | 0.9098 | 0.5989 | 5.7114 | 7551 |` | algorithm `TLBO-HHO`, displayed fitness `1.2263`, CSR `0.5989` | R103 |
+| CRES-006 | reported fitness/CSR | `README.md` | Fresh V2 Evidence, line 33 | `| CWTSSA | 1.2473 | 0.4079 | 0.9140 | 0.5883 | 5.6783 | 7551 |` | algorithm `CWTSSA`, displayed fitness `1.2473`, CSR `0.5883` | R103 |
+| CRES-007 | reported fitness/CSR | `README.md` | Fresh V2 Evidence, line 34 | `| Greedy-ED | 1.0932 | 0.4282 | 0.9164 | 0.6481 | 0.5069 | 681 |` | algorithm `Greedy-ED`, displayed fitness `1.0932`, CSR `0.6481` | R103 |
+| CWIN-001 | candidate conclusion, not entered | `README.md` | Interpretation, line 83 | “RDHO-full beats each configured main baseline in all 30 paired scenarios” | no `best_algorithm` claim; retain exact text and disposition `R202_SKIP` | R202 |
+
+Reported results are extracted only from the README table and never generated
+from summary or raw. `RDHO-full` is preserved verbatim in the manifest and may
+be normalized only by the explicit single-valued mapping `RDHO-full -> RDHO`;
+an unmatched algorithm name is an adapter error, not a fuzzy match. The mapping
+is supported by the canonical config/raw/summary names and the protocol's
+primary-benchmark name, and is tested as an exact lookup.
 
 ## 8. Tolerance and Baseline Statistics
 
-The audit settings are absolute tolerance `0.00005` and relative tolerance `0.0`. Official full-precision summaries differ from independent raw calculation only by IEEE-754 noise: maximum fitness mean difference `4.440892098500626e-16`, fitness std `2.7755575615628914e-17`, CSR mean `2.220446049250313e-16`, and CSR std `1.3877787807814457e-17`. The fixed tolerance is for README's four-decimal values; it is not widened to mask a source mismatch.
+The audit settings are absolute tolerance `0.00005` and relative tolerance `0.0`. The README displayed values are parsed with decimal semantics, and the manifest preserves both the original display string (for example, `"0.9734"`) and its normalized numeric value. `0.00005` is the half-unit of four-decimal display precision. ReproAudit v0.1.0 implements an inclusive boundary in `src/reproaudit/rules/base.py:22-29`: `abs(actual - expected) <= max(abs_tol, rel_tol * abs(expected))`. A future boundary regression must test `expected + 0.00005` as PASS and `expected + 0.000050000001` as FAIL. Official full-precision summaries differ from independent raw calculation only by IEEE-754 noise: maximum fitness mean difference `4.440892098500626e-16`, fitness std `2.7755575615628914e-17`, CSR mean `2.220446049250313e-16`, and CSR std `1.3877787807814457e-17`. The fixed tolerance is applied to R101/R102 too because v0.1 uses one shared setting; this is a known tool constraint, not a summary-data requirement.
 
 | Algorithm | fitness mean | fitness std | CSR mean | CSR std |
 | --- | ---: | ---: | ---: | ---: |
@@ -169,19 +206,54 @@ The audit settings are absolute tolerance `0.00005` and relative tolerance `0.0`
 | CWTSSA | 1.2473242356211496 | 0.1513144080853995 | 0.5883333333333333 | 0.0567561835205301 |
 | Greedy-ED | 1.0932457434014435 | 0.1703119736811905 | 0.6480555555555557 | 0.0621564632675149 |
 
-No selected source inconsistency was found: all 180 keys are unique, all six seed sets match, selected values are finite, and official mean/std agree with raw. The expected baseline exit is 0 with ten PASS/INFO findings. This is an observed acceptance expectation, not grounds to call the source clean before a future run.
+The signed/absolute decimal differences for every README claim are:
+
+| Algorithm | fitness displayed -> official; signed / absolute | CSR displayed -> official; signed / absolute |
+| --- | --- | --- |
+| RDHO | 0.9470 -> 0.9470392278303288; -0.0000392278303288 / 0.0000392278303288 | 0.7206 -> 0.7205555555555556; +0.0000444444444444 / 0.0000444444444444 |
+| RIME | 1.5848 -> 1.5847950082273574; +0.0000049917726426 / 0.0000049917726426 | 0.5133 -> 0.5133333333333334; -0.0000333333333334 / 0.0000333333333334 |
+| DBO | 1.1837 -> 1.1836517627101044; +0.0000482372898956 / 0.0000482372898956 | 0.6286 -> 0.6286111111111111; -0.0000111111111111 / 0.0000111111111111 |
+| TLBO-HHO | 1.2263 -> 1.2263048231318803; -0.0000048231318803 / 0.0000048231318803 | 0.5989 -> 0.5988888888888889; +0.0000111111111111 / 0.0000111111111111 |
+| CWTSSA | 1.2473 -> 1.2473242356211496; -0.0000242356211496 / 0.0000242356211496 | 0.5883 -> 0.5883333333333333; -0.0000333333333333 / 0.0000333333333333 |
+| Greedy-ED | 1.0932 -> 1.0932457434014435; -0.0000457434014435 / 0.0000457434014435 | 0.6481 -> 0.6480555555555557; +0.0000444444444443 / 0.0000444444444443 |
+
+The maximum actual absolute claim difference is `0.0000482372898956`, below
+the inclusive boundary. R101/R102's independent oracle output must retain the
+unrounded signed and absolute differences rather than output only PASS.
+
+No selected source inconsistency was found: all 180 keys are unique, all six seed sets match, selected values are finite, and official mean/std agree with raw. The expected baseline exit is 0 with nine PASS/INFO findings and one SKIP/INFO finding. This is an observed acceptance expectation, not grounds to call the source clean before a future run.
+
+### Faithful-baseline expected rule matrix
+
+| Rule | Expected status | Reason |
+| --- | --- | --- |
+| R001 | PASS/INFO | All six declared algorithms have 30 source rows mapped to success |
+| R002 | PASS/INFO | All 180 `(seed, algorithm)` keys are unique |
+| R003 | PASS/INFO | Every declared algorithm covers the paired seed set 20260701--20260730 |
+| R004 | PASS/INFO | Observed algorithm names equal the six declared names |
+| R005 | PASS/INFO | All canonical rows are success and selected source metrics are finite |
+| R101 | PASS/INFO | Twelve target mean checks match official `fitness_mean`/`csr_mean` within the shared tolerance |
+| R102 | PASS/INFO | Twelve target sample-std checks match official `fitness_std`/`csr_std` within the shared tolerance |
+| R103 | PASS/INFO | Twelve README displayed means are real source claims and each is within the shared tolerance |
+| R201 | PASS/INFO | The real README run and parameter claims match the canonical configuration |
+| R202 | SKIP/INFO | README line 83 is not a metric-specific best claim and is not entered into `claims.yaml` |
+
+Baseline acceptance means the installed ReproAudit report exactly matches this
+source-availability matrix and the independent oracle agrees on every
+non-SKIP observation. Exit 0 is expected because the matrix has no WARNING or
+ERROR; exit 0 does not mean every rule is PASS.
 
 ## 9. Source Manifest
 
 `source_manifest.json` is sidecar provenance, not a ReproAudit input and never participates in rule computation. It uses UTF-8, sorted keys, canonical JSON separators, a trailing newline, repository-relative POSIX paths, no hostname, username, absolute path, temporary path, random UUID, or wall-clock generation time.
 
-It records `case_id`, fixed exporter identifier/version, `generated_at_policy: omitted_for_byte_determinism`, MEC repository/commit, ReproAudit repository/tag/commit/release-wheel hash, ordered source paths/hashes, selected experiment/metrics, excluded columns, mapping version, README label normalization, rounding policy, and tolerance rationale. It proves source identity, not source validity.
+It records `case_id`, fixed exporter identifier/version, `generated_at_policy: omitted_for_byte_determinism`, MEC repository/commit, ReproAudit repository/tag/commit/release-wheel hash, ordered source paths/hashes, selected experiment/metrics, excluded columns, mapping version, README label normalization, rounding policy, tolerance rationale, `status_source: absent`, and `status_mapping: all canonical source rows mapped to success`. It also stores the complete claim-traceability records, including original displayed decimal strings, normalized values, source line locations, and an explicit disposition for claims not represented in `claims.yaml`. It proves source identity, not source validity.
 
 ## 10. Independent Oracle
 
 The oracle uses Python 3.11, standard-library `csv`, `json`, `math`, and `statistics` (or independently written pandas grouping). It must not import `reproaudit`, ReproAudit rules/tolerance helpers, exporter statistics helpers, or consume a ReproAudit report.
 
-Its `oracle-report.json` has sorted keys, UTF-8, trailing newline, and no timestamp. It independently records declarations; success counts; key multiplicities; seed sets/common union; missing/undeclared algorithms; non-success and nonfinite rows; usable values; mean/median/sample std; official-summary differences; README claims; exact config claims; directions; tolerance-aware ties; and normalized observable rule outcomes.
+Its `oracle-report.json` has sorted keys, UTF-8, trailing newline, and no timestamp. It independently applies the source-status decision: absent source status means every canonical source row is success, while a fault package's explicit status is read exactly. It records declarations; success counts; key multiplicities; seed sets/common union; missing/undeclared algorithms; non-success and nonfinite rows; usable values; mean/median/sample std; official-summary differences; README claims; exact config claims; directions; tolerance-aware ties; and normalized observable rule outcomes.
 
 For finite `x_1...x_n`, mean is `sum(x)/n` and sample std is `sqrt(sum((x_i-mean)^2)/(n-1))` for `n >= 2`. It passes a numeric comparison iff absolute difference is at most `0.00005`. It independently finds the fitness minimum and CSR maximum and includes all values within tolerance.
 
@@ -193,20 +265,20 @@ Faults are deterministic specifications applied only to a temporary `faithful_ba
 
 | ID | Mutation | Required finding | Allowed cascades | Forbidden findings | Exit |
 | --- | --- | --- | --- | --- | --- |
-| F001 | RDHO seed 20260701 status becomes `failed` | R001 ERROR | R003, R005 WARNING, R101, R102, R103 ERROR | R002, R004, R201, R202 | 2 |
-| F002 | RDHO seed 20260702 becomes 20260701; recompute only affected adapted summary and README-derived claim | R002 ERROR | R003 ERROR | R001, R004, R005, R101, R102, R103, R201, R202 | 2 |
-| F003 | RDHO seed 20260730 becomes 20260731 | R003 ERROR | none | R001, R002, R004, R005, R101, R102, R103, R201, R202 | 2 |
-| F004 | Add `UNDECLARED-CONTROL` with 30 copied finite Greedy-ED values, all source seeds, success status, matching summary | R004 WARNING | none | R001, R002, R003, R005, R101, R102, R103, R201, R202 | 1 |
-| F005A | RDHO seed 20260701 status becomes `timeout` | R005 WARNING | R001, R003, R101, R102, R103 ERROR | R002, R004, R201, R202 | 2 |
-| F005B | RDHO seed 20260701 fitness becomes literal `NaN`, status success | R005 ERROR | R101, R102, R103 ERROR | R001, R002, R003, R004, R201, R202 | 2 |
-| F101 | Add 0.01 to RDHO/fitness summary mean only | R101 ERROR | none | R001-R005, R102, R103, R201, R202 | 2 |
-| F102 | Add 0.01 to RDHO/fitness summary std only | R102 ERROR | none | R001-R005, R101, R103, R201, R202 | 2 |
-| F103 | Change RDHO/fitness README-derived mean claim 0.9470 to 1.0470 | R103 ERROR | none | R001-R005, R101, R102, R201, R202 | 2 |
-| F201 | Change parameter claim `max_iterations` from 150 to 151 | R201 ERROR | none | R001-R005, R101-R103, R202 | 2 |
-| F202 | Change fitness best claim RDHO to DBO | R202 ERROR | none | R001-R005, R101-R103, R201 | 2 |
+| F001 | RDHO seed 20260701 status becomes `failed` | R001 ERROR | R003, R005 WARNING, R101, R102, R103 ERROR; R202 remains SKIP | R002, R004, R201 | 2 |
+| F002 | RDHO seed 20260702 becomes 20260701; recompute only affected adapted summary and README-derived claims | R002 ERROR | R003 ERROR; R202 remains SKIP | R001, R004, R005, R101, R102, R103, R201 | 2 |
+| F003 | RDHO seed 20260730 becomes 20260731 | R003 ERROR | R202 remains SKIP | R001, R002, R004, R005, R101, R102, R103, R201 | 2 |
+| F004 | Add `UNDECLARED-CONTROL` with 30 copied finite Greedy-ED values, all source seeds, success status, matching summary | R004 WARNING | R202 remains SKIP | R001, R002, R003, R005, R101, R102, R103, R201 | 1 |
+| F005A | RDHO seed 20260701 status becomes `timeout` | R005 WARNING | R001, R003, R101, R102, R103 ERROR; R202 remains SKIP | R002, R004, R201 | 2 |
+| F005B | RDHO seed 20260701 fitness becomes literal `NaN`, status remains `success` | R005 ERROR | R101, R102, R103 ERROR; R202 remains SKIP | R001, R002, R003, R004, R201 | 2 |
+| F101 | Add 0.01 to RDHO/fitness summary mean only | R101 ERROR | R202 remains SKIP | R001-R005, R102, R103, R201 | 2 |
+| F102 | Add 0.01 to RDHO/fitness summary std only | R102 ERROR | R202 remains SKIP | R001-R005, R101, R103, R201 | 2 |
+| F103 | Change RDHO/fitness README-derived mean claim 0.9470 to 0.9480 | R103 ERROR | R202 remains SKIP | R001-R005, R101, R102, R201 | 2 |
+| F201 | Change parameter claim `max_iterations` from 150 to 151 | R201 ERROR | R202 remains SKIP | R001-R005, R101-R103 | 2 |
+| F202 | Add a fault-fixture-only `conclusions.best_algorithm: {metric: fitness, algorithm: DBO}` with traceability marked synthetic | R202 ERROR | none | R001-R005, R101-R103, R201 | 2 |
 | F900 | Remove temporary `claims.yaml` | input validation error | no normal report | all normal findings | 3 |
 
-F001/F005A intentionally overlap in data-quality effect but establish count versus non-success ownership. F002 preserves 30 RDHO rows but duplicates seed 20260701 and removes 20260702; dependent recalculation prevents a statistical mismatch masking R002/R003. F005B leaves 30 success statuses, so R001/R003 remain PASS while valid statistics exclude the bad metric. F202 ranks all six main candidates and never repurposes strict-control conclusions.
+Every numeric mutation is at least 0.001 from its original claimed/summary value, far beyond 0.00005; the injector uses fixed values and never reads an audit report to select one. F001/F005A intentionally overlap in data-quality effect but establish count versus non-success ownership. F002 preserves 30 RDHO rows but duplicates seed 20260701 and removes 20260702; dependent recalculation prevents a statistical mismatch masking R002/R003. F005B leaves 30 success statuses, so R001/R003 remain PASS while valid statistics exclude the bad metric. F103 exists because the faithful source has README reported claims. F202 exists even though faithful R202 SKIPs: its temporary claim includes the fixed fixture identifier, synthetic source text, metric, direction, target algorithm, and explicit `fault_fixture_only` manifest disposition; it never enters faithful `claims.yaml` or claims to be README evidence.
 
 ## 12. Determinism and Immutability
 
@@ -257,10 +329,10 @@ Existing MEC PR CI stays fast synthetic/unit coverage: exporter/oracle/injector 
 | Area | Passing criterion |
 | --- | --- |
 | Source identity | Pinned commit and all manifest hashes match before and after execution |
-| Mapping | Six algorithms, 180 rows, common seeds 20260701--20260730, two metrics, no undocumented transform |
-| Baseline | Wheel CLI and oracle agree on ten PASS/INFO outcomes and exit 0 |
+| Mapping | Six algorithms, 180 rows, common seeds 20260701--20260730, two metrics, target raw has only supported columns, no undocumented transform |
+| Baseline | Wheel CLI exactly matches the expected rule matrix; all non-SKIP outcomes agree with oracle |
 | Official summary | All 12 mean and 12 sample-std checks agree at the fixed tolerance |
-| Claims | README-rounded means and normalized RDHO fitness conclusion are traceable and pass |
+| Claims | README rounded means and configuration claims are traceable and pass; R202 correctly SKIPs because no metric-specific best claim exists |
 | Faults | Required findings/severities, allowed cascades only, forbidden-finding absence, stated exit |
 | Determinism | Two exports, two oracle reports, and normalized audit reports agree |
 | Hygiene | Source hashes/worktree unchanged; no source reports, committed faults, push, or PR |
@@ -280,7 +352,7 @@ It must not claim complete paper reproducibility, algorithm correctness, univers
 | Raw/summary version mismatch | Pin commit/hashes; use main writer provenance; reject drift |
 | Summary display rounding | Preserve full official values; fixed 0.00005 only for four-decimal README claims |
 | Seed is scenario ID, not solver RNG | Document paired-scenario semantics; use source seed as key, retain run ID |
-| Missing status | Map finite selected rows to success; stop on ambiguity, never invent failure |
+| Missing status | Map every canonical row to success; retain invalid metrics for R005 and never invent non-success |
 | Algorithm naming mismatch | One explicit README RDHO-full to RDHO mapping |
 | CSR definition drift | Pin config/protocol/commit; audit stored-value consistency only |
 | Historical/control contamination | Source precedence excludes archive and non-main families |
@@ -294,4 +366,4 @@ It must not claim complete paper reproducibility, algorithm correctness, univers
 
 ## 18. Implementation Boundaries
 
-Begin implementation only after human review. Preserve these fixed decisions: V2 main source paths, `faithful_baseline`, fitness/CSR directions, `(seed, algorithm)` key, paired scenario seed semantics, constrained success mapping, `ddof=1`, absolute tolerance `0.00005`, README provenance/label normalization, official-summary preservation, sidecar manifest, independent oracle, listed faults, release-wheel path, ignored dynamic reports, and synthetic-PR/manual-real CI split.
+Begin implementation only after human review. Preserve these fixed decisions: V2 main source paths, `faithful_baseline`, fitness/CSR directions, `(seed, algorithm)` key, paired scenario seed semantics, all-canonical-row success mapping, `ddof=1`, absolute tolerance `0.00005`, README provenance/label normalization, official-summary preservation, sidecar manifest, independent oracle, listed faults, release-wheel path, ignored dynamic reports, and synthetic-PR/manual-real CI split.
