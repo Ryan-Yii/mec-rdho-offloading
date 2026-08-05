@@ -15,6 +15,8 @@ from scripts.reproaudit_case.constants import (
 from scripts.reproaudit_case import source_inventory
 from scripts.reproaudit_case.source_inventory import (
     CaseContractError,
+    SourceFileRecord,
+    SourceInventory,
     build_manifest_payload,
     build_source_inventory,
     serialize_manifest,
@@ -44,6 +46,45 @@ SUMMARY_COLUMNS = (
     "pre_refinement_fitness", "local_refinement_gain_mean", "local_refinement_gain_std",
     "local_refinement_gain",
 )
+
+
+def _git(repo: Path, *args: str) -> str:
+    return subprocess.check_output(
+        ["git", "-C", str(repo), *args],
+        stderr=subprocess.STDOUT,
+        text=True,
+    ).strip()
+
+
+def _init_git_repo(path: Path) -> Path:
+    path.mkdir()
+    subprocess.run(["git", "init", "-q", str(path)], check=True)
+    _git(path, "config", "user.name", "Task 2 Test")
+    _git(path, "config", "user.email", "task2@example.invalid")
+    return path
+
+
+def _commit_all(repo: Path, message: str) -> str:
+    _git(repo, "add", ".")
+    _git(repo, "commit", "-q", "-m", message)
+    return _git(repo, "rev-parse", "HEAD")
+
+
+def _use_single_canonical_source(
+    monkeypatch: pytest.MonkeyPatch,
+    repo: Path,
+    pinned_commit: str,
+) -> None:
+    relative_path = "README.md"
+    content = (repo / relative_path).read_bytes()
+    monkeypatch.setattr(source_inventory, "MEC_COMMIT", pinned_commit)
+    monkeypatch.setattr(source_inventory, "SOURCE_PATHS", (relative_path,))
+    monkeypatch.setattr(
+        source_inventory,
+        "SOURCE_HASHES",
+        {relative_path: hashlib.sha256(content).hexdigest()},
+    )
+    monkeypatch.setattr(source_inventory, "SOURCE_SIZES", {relative_path: len(content)})
 
 
 def test_inventory_records_exact_hashes_sizes_shapes_and_headers():
@@ -102,13 +143,68 @@ def test_missing_pinned_commit_is_translated_to_contract_error(monkeypatch):
         build_source_inventory(ROOT)
 
 
-def test_pinned_commit_is_verified_but_current_head_need_not_equal():
-    current_head = subprocess.check_output(
-        ["git", "-C", str(ROOT), "rev-parse", "HEAD"], text=True
-    ).strip()
-    assert current_head != MEC_COMMIT
-    inventory = build_source_inventory(ROOT)
-    assert inventory.mec_commit == MEC_COMMIT
+def test_non_ancestor_pinned_commit_is_rejected(tmp_path, monkeypatch):
+    repo = _init_git_repo(tmp_path / "repo")
+    (repo / "README.md").write_text("canonical\n", encoding="utf-8")
+    base_commit = _commit_all(repo, "base")
+
+    _git(repo, "checkout", "-q", "-b", "branch-a")
+    (repo / "branch-a.txt").write_text("a\n", encoding="utf-8")
+    _commit_all(repo, "branch a")
+
+    _git(repo, "checkout", "-q", "-b", "branch-b", base_commit)
+    (repo / "branch-b.txt").write_text("b\n", encoding="utf-8")
+    pinned_commit = _commit_all(repo, "branch b")
+    _git(repo, "checkout", "-q", "branch-a")
+    _use_single_canonical_source(monkeypatch, repo, pinned_commit)
+
+    with pytest.raises(CaseContractError, match="pinned commit.*ancestor.*HEAD"):
+        build_source_inventory(repo)
+
+
+def test_ancestor_pinned_commit_with_unchanged_source_is_accepted(tmp_path, monkeypatch):
+    repo = _init_git_repo(tmp_path / "repo")
+    (repo / "README.md").write_text("canonical\n", encoding="utf-8")
+    pinned_commit = _commit_all(repo, "pinned source")
+    (repo / "implementation.txt").write_text("later code\n", encoding="utf-8")
+    _commit_all(repo, "later implementation")
+    _use_single_canonical_source(monkeypatch, repo, pinned_commit)
+
+    inventory = build_source_inventory(repo)
+
+    assert inventory.mec_commit == pinned_commit
+    assert _git(repo, "rev-parse", "HEAD") != pinned_commit
+
+
+def test_committed_canonical_mutation_after_pinned_commit_is_rejected(
+    tmp_path,
+    monkeypatch,
+):
+    repo = _init_git_repo(tmp_path / "repo")
+    (repo / "README.md").write_text("canonical\n", encoding="utf-8")
+    pinned_commit = _commit_all(repo, "pinned source")
+    (repo / "README.md").write_text("changed later\n", encoding="utf-8")
+    _commit_all(repo, "mutate canonical source")
+    _use_single_canonical_source(monkeypatch, repo, pinned_commit)
+
+    with pytest.raises(CaseContractError, match="canonical source.*pinned commit.*README.md"):
+        build_source_inventory(repo)
+
+
+def test_working_tree_canonical_mutation_after_pinned_commit_is_rejected(
+    tmp_path,
+    monkeypatch,
+):
+    repo = _init_git_repo(tmp_path / "repo")
+    (repo / "README.md").write_text("canonical\n", encoding="utf-8")
+    pinned_commit = _commit_all(repo, "pinned source")
+    (repo / "implementation.txt").write_text("later code\n", encoding="utf-8")
+    _commit_all(repo, "later implementation")
+    (repo / "README.md").write_text("working tree change\n", encoding="utf-8")
+    _use_single_canonical_source(monkeypatch, repo, pinned_commit)
+
+    with pytest.raises(CaseContractError, match="canonical source.*pinned commit.*README.md"):
+        build_source_inventory(repo)
 
 
 def test_manifest_payload_and_bytes_are_timestamp_free_and_deterministic():
@@ -123,6 +219,76 @@ def test_manifest_payload_and_bytes_are_timestamp_free_and_deterministic():
     assert "generated_at" not in payload
     assert str(ROOT) not in first.decode("utf-8")
     assert hashlib.sha256(first).hexdigest()
+
+
+def test_manifest_serialization_matches_exact_json_contract():
+    inventory = SourceInventory(
+        mec_commit="commit-é",
+        files=(
+            SourceFileRecord(
+                path="résultats/数据.csv",
+                sha256="abc123",
+                size_bytes=7,
+                shape=(1, 2),
+                columns=("seed", "指标"),
+            ),
+        ),
+        algorithms=("RDHO",),
+        metrics=("fitness",),
+    )
+    expected = (
+        "{\n"
+        '  "algorithms": [\n'
+        '    "RDHO"\n'
+        "  ],\n"
+        '  "files": [\n'
+        "    {\n"
+        '      "columns": [\n'
+        '        "seed",\n'
+        '        "指标"\n'
+        "      ],\n"
+        '      "path": "résultats/数据.csv",\n'
+        '      "sha256": "abc123",\n'
+        '      "shape": [\n'
+        "        1,\n"
+        "        2\n"
+        "      ],\n"
+        '      "size_bytes": 7\n'
+        "    }\n"
+        "  ],\n"
+        '  "mec_commit": "commit-é",\n'
+        '  "metrics": [\n'
+        '    "fitness"\n'
+        "  ]\n"
+        "}\n"
+    ).encode("utf-8")
+
+    first = serialize_manifest(inventory)
+    second = serialize_manifest(inventory)
+
+    assert first == expected
+    assert second == expected
+    assert first.count(b"\n") > 1
+    assert not first.endswith(b"\n\n")
+    assert b"\\u" not in first
+
+
+def test_manifest_serialization_rejects_nonfinite_numbers():
+    inventory = SourceInventory(
+        mec_commit="commit",
+        files=(
+            SourceFileRecord(
+                path="README.md",
+                sha256="abc123",
+                size_bytes=float("nan"),
+            ),
+        ),
+        algorithms=("RDHO",),
+        metrics=("fitness",),
+    )
+
+    with pytest.raises(ValueError, match="Out of range float values"):
+        serialize_manifest(inventory)
 
 
 def test_one_byte_temporary_source_mutation_is_rejected(tmp_path):

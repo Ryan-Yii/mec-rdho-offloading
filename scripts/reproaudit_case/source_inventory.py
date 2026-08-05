@@ -89,6 +89,63 @@ def _git_output(repo_root: Path, *args: str) -> str:
         raise CaseContractError(f"unable to verify Git source provenance: {detail}") from exc
 
 
+def _validate_pinned_checkout(
+    repo_root: Path,
+    pinned_commit: str,
+    canonical_paths: tuple[str, ...],
+) -> str:
+    current_head = _git_output(repo_root, "rev-parse", "HEAD")
+    if not current_head:
+        raise CaseContractError("repository HEAD is empty")
+    _git_output(repo_root, "cat-file", "-e", f"{pinned_commit}^{{commit}}")
+
+    try:
+        ancestry = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(repo_root),
+                "merge-base",
+                "--is-ancestor",
+                pinned_commit,
+                "HEAD",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=False,
+        )
+    except OSError as exc:
+        raise CaseContractError(f"unable to verify Git source provenance: {exc}") from exc
+    if ancestry.returncode == 1:
+        raise CaseContractError(
+            f"pinned commit {pinned_commit} is not an ancestor of HEAD {current_head}"
+        )
+    if ancestry.returncode != 0:
+        detail = ancestry.stdout.strip()
+        raise CaseContractError(
+            f"unable to verify pinned commit ancestry: {detail or ancestry.returncode}"
+        )
+
+    for relative_path in canonical_paths:
+        path = resolve_source_path(repo_root, relative_path)
+        if not path.is_file():
+            raise CaseContractError(f"canonical source is missing: {relative_path}")
+        pinned_blob = _git_output(
+            repo_root,
+            "rev-parse",
+            f"{pinned_commit}:{relative_path}",
+        )
+        working_blob = _git_output(repo_root, "hash-object", "--", str(path))
+        if working_blob != pinned_blob:
+            raise CaseContractError(
+                f"canonical source differs from pinned commit for {relative_path}: "
+                f"expected blob {pinned_blob}, got {working_blob}"
+            )
+
+    return current_head
+
+
 def _sha256(path: Path) -> str:
     digest = hashlib.sha256()
     try:
@@ -125,10 +182,7 @@ def build_source_inventory(repo_root: Path) -> SourceInventory:
     """Validate and inventory all pinned sources without modifying repository data."""
 
     root = Path(repo_root).resolve()
-    current_head = _git_output(root, "rev-parse", "HEAD")
-    if not current_head:
-        raise CaseContractError("repository HEAD is empty")
-    _git_output(root, "cat-file", "-e", f"{MEC_COMMIT}^{{commit}}")
+    _validate_pinned_checkout(root, MEC_COMMIT, SOURCE_PATHS)
 
     records: list[SourceFileRecord] = []
     for relative_path in SOURCE_PATHS:
@@ -202,7 +256,8 @@ def serialize_manifest(inventory: SourceInventory) -> bytes:
             build_manifest_payload(inventory),
             ensure_ascii=False,
             sort_keys=True,
-            separators=(",", ":"),
+            indent=2,
+            allow_nan=False,
         ).encode("utf-8")
         + b"\n"
     )
