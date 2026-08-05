@@ -1,0 +1,16 @@
+{
+  "exit_code": 0,
+  "findings": [
+    {"rule_id": "R001", "rule_name": "R001", "status": "PASS", "severity": "INFO", "message": "ok", "evidence": {}},
+    {"rule_id": "R002", "rule_name": "R002", "status": "PASS", "severity": "INFO", "message": "ok", "evidence": {}},
+    {"rule_id": "R003", "rule_name": "R003", "status": "PASS", "severity": "INFO", "message": "ok", "evidence": {}},
+    {"rule_id": "R004", "rule_name": "R004", "status": "PASS", "severity": "INFO", "message": "ok", "evidence": {}},
+    {"rule_id": "R005", "rule_name": "R005", "status": "PASS", "severity": "INFO", "message": "ok", "evidence": {}},
+    {"rule_id": "R101", "rule_name": "R101", "status": "PASS", "severity": "INFO", "message": "ok", "evidence": {}},
+    {"rule_id": "R102", "rule_name": "R102", "status": "PASS", "severity": "INFO", "message": "ok", "evidence": {}},
+    {"rule_id": "R103", "rule_name": "R103", "status": "PASS", "severity": "INFO", "message": "ok", "evidence": {}},
+    {"rule_id": "R201", "rule_name": "R201", "status": "PASS", "severity": "INFO", "message": "ok", "evidence": {}},
+    {"rule_id": "R202", "rule_name": "R202", "status": "SKIP", "severity": "INFO", "message": "ok", "evidence": {}}
+  ],
+  "oracle": {"raw": {"row_count": 180}}
+}
