@@ -174,6 +174,35 @@ def test_summary_export_rejects_source_drift(tmp_path: Path, monkeypatch: pytest
         module.export_summary_results(tmp_path, tmp_path / "out.csv")
 
 
+def test_faithful_export_is_complete_deterministic_and_source_safe(tmp_path: Path) -> None:
+    import scripts.reproaudit_case.export_case as module
+
+    first = tmp_path / "case-a"
+    second = tmp_path / "case-b"
+    result = module.export_faithful_case(ROOT, first)
+    module.export_faithful_case(ROOT, second)
+    assert result.output_dir == first
+    expected = {"experiment.yaml", "claims.yaml", "raw_results.csv", "summary_results.csv", "source_manifest.json"}
+    assert {path.name for path in first.iterdir()} == expected
+    for name in expected:
+        assert (first / name).read_bytes() == (second / name).read_bytes()
+    manifest = (first / "source_manifest.json").read_text(encoding="utf-8")
+    assert "/Users/" not in manifest and '"generated_at":' not in manifest
+    assert "faithful_baseline" in manifest
+
+
+def test_faithful_export_rejects_nonempty_and_source_contained_output(tmp_path: Path) -> None:
+    import scripts.reproaudit_case.export_case as module
+
+    nonempty = tmp_path / "nonempty"
+    nonempty.mkdir()
+    (nonempty / "sentinel").write_text("x", encoding="utf-8")
+    with pytest.raises(CaseContractError, match="empty"):
+        module.export_faithful_case(ROOT, nonempty)
+    with pytest.raises(CaseContractError, match="inside repository"):
+        module.export_faithful_case(ROOT, ROOT / "case_studies/reproaudit_v0_1/faithful_baseline")
+
+
 def test_experiment_export_rejects_parameter_drift(tmp_path: Path) -> None:
     config = yaml.safe_load((ROOT / "configs/main_40tasks.yaml").read_text(encoding="utf-8"))
     config["system"]["tasks"] = 41

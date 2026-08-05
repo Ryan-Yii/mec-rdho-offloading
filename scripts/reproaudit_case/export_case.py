@@ -5,6 +5,11 @@ from __future__ import annotations
 import hashlib
 import csv
 import math
+import json
+import os
+import shutil
+import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -20,11 +25,18 @@ from .constants import (
     resolve_source_path,
 )
 from .source_inventory import CaseContractError
+from .source_inventory import build_source_inventory, serialize_manifest
 
 
 CONFIG_PATH = "configs/main_40tasks.yaml"
 RAW_PATH = "results/v2/raw/main_30_raw_results.csv"
 SUMMARY_PATH = "results/v2/summary/main_30_summary_mean_std.csv"
+
+
+@dataclass(frozen=True)
+class ExportResult:
+    output_dir: Path
+    files: tuple[Path, ...]
 _EXPECTED_TOP_LEVEL = ("system", "experiment", "weights")
 _EXPECTED_SYSTEM = ("mobile_devices", "edge_servers", "cloud_servers", "tasks")
 _EXPECTED_EXPERIMENT = (
@@ -359,4 +371,43 @@ def export_summary_results(repo_root: Path, destination: Path) -> Path:
     return _write_summary_csv(Path(destination), output)
 
 
-__all__ = ["export_experiment", "export_raw_results", "export_summary_results"]
+def export_faithful_case(repo_root: Path, output_dir: Path) -> ExportResult:
+    """Assemble the deterministic faithful baseline input set."""
+
+    root = Path(repo_root).resolve()
+    destination = Path(output_dir).resolve()
+    try:
+        destination.relative_to(root)
+    except ValueError:
+        pass
+    else:
+        raise CaseContractError("output directory is inside repository")
+    if destination.exists() and (not destination.is_dir() or any(destination.iterdir())):
+        raise CaseContractError("output directory must be absent or empty")
+    destination.mkdir(parents=True, exist_ok=True)
+    parent = destination.parent
+    temp_dir = Path(tempfile.mkdtemp(prefix="reproaudit-case-", dir=parent))
+    try:
+        experiment = export_experiment(root, temp_dir / "experiment.yaml")
+        claims_traces = __import__("scripts.reproaudit_case.extract_claims", fromlist=["extract_claims"]).extract_claims(root, temp_dir / "claims.yaml")
+        raw = export_raw_results(root, temp_dir / "raw_results.csv")
+        summary = export_summary_results(root, temp_dir / "summary_results.csv")
+        inventory = build_source_inventory(root)
+        manifest = json.loads(serialize_manifest(inventory).decode("utf-8"))
+        manifest.update({"case_id": "faithful_baseline", "generated_at_policy": "omitted_for_byte_determinism", "claim_traces": list(claims_traces), "status_source": "absent", "status_mapping": "all canonical source rows mapped to success"})
+        manifest_path = temp_dir / "source_manifest.json"
+        manifest_path.write_bytes((json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n").encode("utf-8"))
+        files = (experiment, temp_dir / "claims.yaml", raw, summary, manifest_path)
+        for source in files:
+            target = destination / source.name
+            if target.exists():
+                raise CaseContractError("output directory must not overwrite files")
+            os.replace(source, target)
+        return ExportResult(destination, tuple(destination / source.name for source in files))
+    except Exception:
+        raise
+    finally:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+__all__ = ["ExportResult", "export_experiment", "export_raw_results", "export_summary_results", "export_faithful_case"]
