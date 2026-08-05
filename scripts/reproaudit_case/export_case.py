@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import csv
+import math
 from pathlib import Path
 from typing import Any
 
@@ -11,6 +13,7 @@ import yaml
 from .constants import (
     ALGORITHMS,
     METRIC_DIRECTIONS,
+    RAW_COLUMNS,
     SOURCE_HASHES,
     SOURCE_SIZES,
     resolve_source_path,
@@ -19,6 +22,7 @@ from .source_inventory import CaseContractError
 
 
 CONFIG_PATH = "configs/main_40tasks.yaml"
+RAW_PATH = "results/v2/raw/main_30_raw_results.csv"
 _EXPECTED_TOP_LEVEL = ("system", "experiment", "weights")
 _EXPECTED_SYSTEM = ("mobile_devices", "edge_servers", "cloud_servers", "tasks")
 _EXPECTED_EXPERIMENT = (
@@ -190,4 +194,74 @@ def export_experiment(repo_root: Path, destination: Path) -> Path:
     return _export_experiment_from_config(_read_config(Path(repo_root)), Path(destination))
 
 
-__all__ = ["export_experiment"]
+def _read_raw_rows(repo_root: Path) -> list[dict[str, str]]:
+    path = resolve_source_path(repo_root, RAW_PATH)
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise CaseContractError("cannot read canonical raw results") from exc
+    expected_hash = SOURCE_HASHES[RAW_PATH]
+    actual_hash = hashlib.sha256(raw).hexdigest()
+    if actual_hash != expected_hash:
+        raise CaseContractError(f"canonical raw results source hash drift: expected {expected_hash}, got {actual_hash}")
+    expected_size = SOURCE_SIZES[RAW_PATH]
+    if len(raw) != expected_size:
+        raise CaseContractError(f"canonical raw results source size mismatch: expected {expected_size}, got {len(raw)}")
+    try:
+        text = raw.decode("utf-8")
+        rows = list(csv.DictReader(text.splitlines()))
+    except (UnicodeDecodeError, csv.Error) as exc:
+        raise CaseContractError("cannot parse canonical raw results") from exc
+    if not rows or tuple(rows[0]) != ("run_id", "seed", "algorithm", "fitness", "base_objective", "penalty", "search_fitness", "energy", "delay", "aoi", "qoe", "fairness", "csr", "hard_feasible", "capacity_utilisation_mean", "capacity_utilisation_max", "assignment_unique", "runtime", "nfe", "pre_refinement_fitness", "local_refinement_gain"):
+        raise CaseContractError("canonical raw results columns mismatch")
+    return rows
+
+
+def _write_csv_new(path: Path, rows: list[dict[str, str]]) -> Path:
+    if path.exists():
+        raise FileExistsError(f"destination already exists: {path}")
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("x", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(RAW_COLUMNS), lineterminator="\n", quoting=csv.QUOTE_MINIMAL)
+            writer.writeheader()
+            writer.writerows(rows)
+    except FileExistsError:
+        raise
+    except OSError as exc:
+        raise CaseContractError(f"cannot write raw export {path}") from exc
+    return path
+
+
+def export_raw_results(repo_root: Path, destination: Path) -> Path:
+    """Project canonical raw results into the fixed ReproAudit input shape."""
+
+    source_rows = _read_raw_rows(Path(repo_root))
+    exported: list[dict[str, str]] = []
+    seen: set[tuple[int, str]] = set()
+    for row in source_rows:
+        try:
+            seed = int(row["seed"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise CaseContractError("raw seed must be an integer") from exc
+        algorithm = row.get("algorithm", "")
+        if algorithm not in ALGORITHMS:
+            raise CaseContractError(f"unknown raw algorithm: {algorithm}")
+        key = (seed, algorithm)
+        if key in seen:
+            raise CaseContractError(f"duplicate raw key: {key}")
+        seen.add(key)
+        try:
+            fitness = float(row["fitness"])
+            csr = float(row["csr"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise CaseContractError("raw metrics must be numeric") from exc
+        if not math.isfinite(fitness) or not math.isfinite(csr):
+            raise CaseContractError("raw metrics must be finite")
+        exported.append({"seed": str(seed), "algorithm": algorithm, "status": "success", "fitness": format(fitness, ".17g"), "csr": format(csr, ".17g")})
+    if len(exported) != 180:
+        raise CaseContractError(f"raw results row count mismatch: expected 180, got {len(exported)}")
+    return _write_csv_new(Path(destination), exported)
+
+
+__all__ = ["export_experiment", "export_raw_results"]

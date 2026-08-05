@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import csv
 
 import pytest
 import yaml
@@ -96,6 +97,48 @@ def test_experiment_export_rejects_config_source_drift(tmp_path: Path, monkeypat
     monkeypatch.setattr(module, "CONFIG_PATH", "configs/main_40tasks.yaml")
     with pytest.raises(CaseContractError, match="source hash drift"):
         module.export_experiment(tmp_path, tmp_path / "out.yaml")
+
+
+def test_raw_export_has_fixed_shape_order_status_and_roundtrip(tmp_path: Path) -> None:
+    import scripts.reproaudit_case.export_case as module
+
+    destination = tmp_path / "raw_results.csv"
+    result = module.export_raw_results(ROOT, destination)
+    assert result == destination
+    with destination.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    assert list(rows[0]) == ["seed", "algorithm", "status", "fitness", "csr"]
+    assert len(rows) == 180
+    assert {row["status"] for row in rows} == {"success"}
+    assert len({(row["seed"], row["algorithm"]) for row in rows}) == 180
+    assert {row["algorithm"] for row in rows} == {
+        "RDHO", "RIME", "DBO", "TLBO-HHO", "CWTSSA", "Greedy-ED"
+    }
+    assert "run_id" not in rows[0]
+    assert destination.read_bytes().count(b"\r") == 0
+    assert destination.read_bytes().endswith(b"\n")
+
+
+def test_raw_export_does_not_overwrite(tmp_path: Path) -> None:
+    import scripts.reproaudit_case.export_case as module
+
+    destination = tmp_path / "raw_results.csv"
+    destination.write_bytes(b"sentinel\n")
+    with pytest.raises(FileExistsError):
+        module.export_raw_results(ROOT, destination)
+    assert destination.read_bytes() == b"sentinel\n"
+
+
+def test_raw_export_rejects_source_drift(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import scripts.reproaudit_case.export_case as module
+
+    monkeypatch.setattr(module, "RAW_PATH", "results/v2/raw/main_30_raw_results.csv")
+    source = tmp_path / "results/v2/raw"
+    source.mkdir(parents=True)
+    original = (ROOT / "results/v2/raw/main_30_raw_results.csv").read_bytes()
+    (source / "main_30_raw_results.csv").write_bytes(original + b"\n")
+    with pytest.raises(CaseContractError, match="source hash drift"):
+        module.export_raw_results(tmp_path, tmp_path / "out.csv")
 
 
 def test_experiment_export_rejects_parameter_drift(tmp_path: Path) -> None:
