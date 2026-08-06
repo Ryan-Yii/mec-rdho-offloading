@@ -22,6 +22,7 @@ MACHINE_PATH_PATTERNS = (
     re.compile(r"/home/[^/<\s]+/"),
     re.compile(r"[A-Za-z]:\\Users\\[^\\<>\s]+\\"),
 )
+URL_PATTERN = re.compile(r"\b(?:https?|file)://[^\s<>`]+")
 
 
 def test_tracked_text_has_no_machine_local_absolute_paths() -> None:
@@ -41,8 +42,15 @@ def test_tracked_text_has_no_machine_local_absolute_paths() -> None:
         except (OSError, UnicodeDecodeError):
             continue
         for line_number, line in enumerate(lines, start=1):
+            line_without_urls = URL_PATTERN.sub("", line)
             for pattern in MACHINE_PATH_PATTERNS:
-                match = pattern.search(line)
+                match = pattern.search(line_without_urls)
                 if match:
                     violations.append(f"{path}:{line_number}: {match.group(0)}")
     assert not violations, "machine-local absolute paths found:\n" + "\n".join(violations)
+
+
+def test_url_paths_are_not_machine_local_absolute_paths() -> None:
+    line = "See https://example.com/Users/example/ and https://example.com/home/example/."
+    line_without_urls = URL_PATTERN.sub("", line)
+    assert all(pattern.search(line_without_urls) is None for pattern in MACHINE_PATH_PATTERNS)
