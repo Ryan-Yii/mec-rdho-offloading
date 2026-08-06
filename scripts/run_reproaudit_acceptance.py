@@ -11,8 +11,18 @@ def main() -> int:
     parser.add_argument("--repo-root", type=Path, required=True)
     parser.add_argument("--wheel", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--requirements", type=Path, required=True)
+    parser.add_argument("--wheelhouse", type=Path, required=True)
+    parser.add_argument("--wheelhouse-manifest", type=Path, required=True)
     args = parser.parse_args()
-    return run_acceptance(args.repo_root, args.wheel, args.output_dir).exit_code
+    return run_acceptance(
+        args.repo_root,
+        args.wheel,
+        args.output_dir,
+        args.requirements,
+        args.wheelhouse,
+        args.wheelhouse_manifest,
+    ).exit_code
 
 
 if __name__ == "__main__":

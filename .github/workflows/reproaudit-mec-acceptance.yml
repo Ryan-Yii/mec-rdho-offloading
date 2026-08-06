@@ -7,6 +7,10 @@ on:
         description: Absolute path to the prevalidated official wheel on the runner
         required: true
         type: string
+      requirements_path:
+        description: Pinned dependency requirements file for this runner platform
+        required: true
+        type: string
 
 jobs:
   acceptance:
@@ -16,12 +20,26 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: python -m pip install -r requirements.txt
+      - name: Acquire third-party dependency wheels
+        run: >-
+          python -m pip download --dest "$RUNNER_TEMP/dependency-wheelhouse"
+          --only-binary=:all: -r "${{ inputs.requirements_path }}"
+      - name: Record dependency wheelhouse hashes
+        run: >-
+          python -c "from pathlib import Path; from scripts.reproaudit_case.release_runtime import write_dependency_wheelhouse_manifest; write_dependency_wheelhouse_manifest(Path('${{ inputs.requirements_path }}'), Path('$RUNNER_TEMP/dependency-wheelhouse'), Path('$RUNNER_TEMP/dependency-wheelhouse-manifest.json'))"
+      - name: Create fresh offline acceptance venv
+        run: |-
+          python -m venv "$RUNNER_TEMP/reproaudit-acceptance-venv"
+          "$RUNNER_TEMP/reproaudit-acceptance-venv/bin/python" -m pip install --no-index --find-links "$RUNNER_TEMP/dependency-wheelhouse" -r "${{ inputs.requirements_path }}"
+          "$RUNNER_TEMP/reproaudit-acceptance-venv/bin/python" -m pip install --no-index --no-deps "${{ inputs.wheel_path }}"
+          "$RUNNER_TEMP/reproaudit-acceptance-venv/bin/python" -m pip check
       - name: Run official-wheel acceptance
         env:
-          REPROAUDIT_WHEEL_PATH: ${{ inputs.wheel_path }}
         run: >-
-          python scripts/run_reproaudit_acceptance.py
+          "$RUNNER_TEMP/reproaudit-acceptance-venv/bin/python" -m scripts.run_reproaudit_acceptance
           --repo-root .
-          --wheel "$REPROAUDIT_WHEEL_PATH"
+          --wheel "${{ inputs.wheel_path }}"
           --output-dir "$RUNNER_TEMP/reproaudit-mec-acceptance"
+          --requirements "${{ inputs.requirements_path }}"
+          --wheelhouse "$RUNNER_TEMP/dependency-wheelhouse"
+          --wheelhouse-manifest "$RUNNER_TEMP/dependency-wheelhouse-manifest.json"

@@ -84,7 +84,14 @@ def _compare_directories(first: Path, second: Path) -> None:
             raise CaseContractError(f"deterministic output mismatch: {name}")
 
 
-def run_acceptance(repo_root: Path, wheel: Path, output_dir: Path) -> AcceptanceResult:
+def run_acceptance(
+    repo_root: Path,
+    wheel: Path,
+    output_dir: Path,
+    requirements: Path | None = None,
+    wheelhouse: Path | None = None,
+    wheelhouse_manifest: Path | None = None,
+) -> AcceptanceResult:
     """Run the full staged acceptance workflow outside canonical sources."""
 
     root = Path(repo_root).resolve()
@@ -107,7 +114,9 @@ def run_acceptance(repo_root: Path, wheel: Path, output_dir: Path) -> Acceptance
     oracle_b = run_independent_oracle(case_b, output / "oracle-b")
     if oracle_a != oracle_b:
         raise CaseContractError("deterministic oracle mismatch")
-    runtime_python = prepare_reproaudit_runtime(Path(wheel), output / "runtime")
+    runtime_python = prepare_reproaudit_runtime(
+        Path(wheel), output / "runtime", requirements, wheelhouse, wheelhouse_manifest
+    )
     baseline_report = run_reproaudit(runtime_python, case_a, output / "baseline-report")
     expected_path = root / "case_studies/reproaudit_v0_1/expected/baseline_expectations.json"
     try:

@@ -9,8 +9,9 @@ def test_manual_workflow_is_dispatch_only_and_official_wheel_bound() -> None:
     text = (ROOT / ".github/workflows/reproaudit-mec-acceptance.yml").read_text(encoding="utf-8")
     assert "workflow_dispatch:" in text
     assert "schedule:" not in text and "cron:" not in text
-    assert "REPROAUDIT_WHEEL_PATH" in text
-    assert "run_reproaudit_acceptance.py" in text
+    assert "wheel_path" in text
+    assert "--no-index" in text and "--no-deps" in text
+    assert "scripts.run_reproaudit_acceptance" in text
     assert "run_main_30" not in text and "experiments.run_main_30" not in text
 
 
