@@ -12,7 +12,7 @@ implementation plan is pinned at `69928cc4124f9f1cf87e560847b66f99cec06ae4`.
 ## Recovery decision
 
 The former implementation branch `feat/reproaudit-mec-acceptance-case` at
-`/Users/ryan_yi/Documents/mec-rdho-reproaudit-implementation` is preserved as
+`<NONCOMPLIANT_WORKTREE>` is preserved as
 an audit artifact. Commit `643e8a6deab782d4c866fd4410ae0fa6b0890ad5` bundled
 Tasks 3-7, and its untracked Task 8 files were created before the required
 TDD and review gates. Task 2 has no complete SDD evidence, and Task 1 has no
@@ -22,7 +22,7 @@ implementation task is accepted as complete for recovery purposes.
 Recovery starts from the approved plan commit `69928cc4124f9f1cf87e560847b66f99cec06ae4`.
 Tasks 1-15 are reimplemented in order on branch
 `feat/reproaudit-mec-acceptance-case-recovery` at
-`/Users/ryan_yi/Documents/mec-rdho-reproaudit-recovery`.
+`<RECOVERY_WORKTREE>`.
 
 The original task text is the sole technical specification. Each task gets a
 fresh brief extracted from that plan, a fresh implementer, a RED/GREEN TDD
@@ -37,8 +37,8 @@ rewrite is authorized.
 ## Audit references
 
 - Noncompliant branch: `feat/reproaudit-mec-acceptance-case`
-- Noncompliant worktree: `/Users/ryan_yi/Documents/mec-rdho-reproaudit-implementation`
-- Audit directory: `/Users/ryan_yi/Documents/reproaudit-mec-recovery-audit`
+- Noncompliant worktree: `<NONCOMPLIANT_WORKTREE>`
+- Audit directory: `<RECOVERY_AUDIT_DIR>`
 - Recovery base: `69928cc4124f9f1cf87e560847b66f99cec06ae4`
 - Accepted completed tasks: none
 - Tasks requiring reimplementation: 1-15

@@ -16,7 +16,7 @@ Future implementation is limited to an MEC case adapter, independent oracle, fau
 
 ### Local Investigation Context
 
-The safe existing base clone was `/Users/ryan_yi/Documents/MEC_paper_collection_2026-07-24/_review_current_main`. Its origin is `https://github.com/Ryan-Yii/mec-rdho-offloading.git`; it was clean and was not switched or edited. The design worktree is `/Users/ryan_yi/Documents/mec-rdho-reproaudit-design`, on `docs/reproaudit-mec-acceptance-design`, created from remote `main` commit `b8abb436f215a9b2f4d646cf5fc0cf048174b68d`.
+The safe existing base clone was `<PINNED_MEC_SOURCE_WORKTREE>`. Its origin is `https://github.com/Ryan-Yii/mec-rdho-offloading.git`; it was clean and was not switched or edited. The design worktree is `<DESIGN_WORKTREE>`, on `docs/reproaudit-mec-acceptance-design`, created from remote `main` commit `b8abb436f215a9b2f4d646cf5fc0cf048174b68d`.
 
 Future committed case artifacts must not contain either local path, a local username, a temporary directory, or machine-specific timestamps.
 
