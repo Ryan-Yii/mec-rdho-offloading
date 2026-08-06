@@ -7,6 +7,19 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def _workflow_checkout_step(workflow_path: Path, job_name: str) -> dict[str, object]:
+    workflow = yaml.safe_load(workflow_path.read_text(encoding="utf-8"))
+    steps = workflow["jobs"][job_name]["steps"]
+    return next(step for step in steps if step.get("uses") == "actions/checkout@v4")
+
+
+def _assert_full_history_checkout(workflow_path: Path, job_name: str) -> None:
+    checkout = _workflow_checkout_step(workflow_path, job_name)
+    assert checkout.get("with", {}).get("fetch-depth") in (0, "0"), (
+        f"{workflow_path.name} checkout step is missing fetch-depth: 0"
+    )
+
+
 def test_manual_workflow_is_dispatch_only_and_official_wheel_bound() -> None:
     text = (ROOT / ".github/workflows/reproaudit-mec-acceptance.yml").read_text(encoding="utf-8")
     assert "workflow_dispatch:" in text
@@ -18,6 +31,9 @@ def test_manual_workflow_is_dispatch_only_and_official_wheel_bound() -> None:
     workflow = yaml.safe_load(text)
     for step in workflow["jobs"]["acceptance"]["steps"]:
         assert step.get("env", {}) is not None
+    _assert_full_history_checkout(
+        ROOT / ".github/workflows/reproaudit-mec-acceptance.yml", "acceptance"
+    )
 
 
 def test_pr_ci_has_no_network_wheel_or_experiment_invocation() -> None:
@@ -46,3 +62,6 @@ def test_pr_ci_has_no_network_wheel_or_experiment_invocation() -> None:
     assert "schedule" not in triggers and "cron" not in triggers
     assert all("reproaudit-mec-acceptance" not in command for command in run_commands)
     assert all("run_main_30" not in command for command in run_commands)
+    assert all("continue-on-error" not in step for step in steps)
+    assert all("-k" not in command for command in run_commands)
+    _assert_full_history_checkout(ROOT / ".github/workflows/tests.yml", "test")
