@@ -47,3 +47,16 @@ def test_runner_rejects_nonempty_output_before_wheel_use(tmp_path) -> None:
     (output / "sentinel").write_text("x", encoding="utf-8")
     with pytest.raises(CaseContractError, match="empty"):
         run_acceptance(tmp_path, tmp_path / "wheel.whl", output)
+
+
+def test_fault_comparison_ignores_passing_rules_but_keeps_skip_and_fail() -> None:
+    from scripts.reproaudit_case.acceptance import _observed_nonpass_rule_ids
+
+    report = {
+        "findings": [
+            {"rule_id": "R001", "status": "ERROR"},
+            {"rule_id": "R002", "status": "PASS"},
+            {"rule_id": "R202", "status": "SKIP"},
+        ]
+    }
+    assert _observed_nonpass_rule_ids(report) == {"R001", "R202"}

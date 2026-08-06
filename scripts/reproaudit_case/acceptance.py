@@ -84,6 +84,16 @@ def _compare_directories(first: Path, second: Path) -> None:
             raise CaseContractError(f"deterministic output mismatch: {name}")
 
 
+def _observed_nonpass_rule_ids(report: dict[str, Any]) -> set[str]:
+    return {
+        finding["rule_id"]
+        for finding in report.get("findings", [])
+        if isinstance(finding, dict)
+        and isinstance(finding.get("rule_id"), str)
+        and finding.get("status") != "PASS"
+    }
+
+
 def run_acceptance(
     repo_root: Path,
     wheel: Path,
@@ -135,7 +145,7 @@ def run_acceptance(
             raise
         if report.get("exit_code") != fault.expected_exit_code:
             raise BaselineMismatch(f"{fault_id} exit code mismatch")
-        observed = {finding.get("rule_id") for finding in report.get("findings", []) if isinstance(finding, dict)}
+        observed = _observed_nonpass_rule_ids(report)
         if not set(fault.expected_findings).issubset(observed):
             raise BaselineMismatch(f"{fault_id} required finding missing")
         if set(fault.forbidden_findings) & observed:
