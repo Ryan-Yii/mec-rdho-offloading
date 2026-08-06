@@ -75,3 +75,28 @@ json.dumps(
 
 This adjudication resolves an implementation ambiguity only. It does not
 change the schema, payload fields, source mappings, or acceptance criteria.
+
+## Human Adjudication: Offline Runtime Dependency Wheelhouse
+
+The official ReproAudit v0.1.0 wheel declares external runtime dependencies
+and is not a self-contained executable artifact.
+
+For final acceptance:
+
+1. ReproAudit itself must be installed exclusively from the verified official
+   GitHub Release wheel.
+2. Third-party runtime dependencies may be acquired separately.
+3. Dependency acquisition and acceptance execution are separate phases.
+4. The acceptance phase must install dependencies from a local wheelhouse with
+   `--no-index`.
+5. The official ReproAudit wheel must then be installed with both `--no-index`
+   and `--no-deps`.
+6. No local, editable, source-tree, or fallback ReproAudit installation is
+   permitted.
+7. Exact dependency versions, wheel filenames, and SHA-256 values must be
+   recorded in the temporary acceptance evidence.
+8. Dependency wheels and virtual environments must not be committed.
+
+This adjudication changes only the runtime provisioning contract. It does not
+weaken official-wheel provenance, source immutability, deterministic case
+generation, expected findings, or acceptance rules.
