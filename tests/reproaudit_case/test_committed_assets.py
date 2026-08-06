@@ -21,6 +21,13 @@ def test_committed_assets_have_fixed_files_shapes_and_matrices() -> None:
     assert manifest["mec_commit"] == "b8abb436f215a9b2f4d646cf5fc0cf048174b68d"
     expected = json.loads((ASSET / "expected/baseline_expectations.json").read_text(encoding="utf-8"))
     assert expected["exit_code"] == 0
+    assert expected["summary"] == {
+        "error": 0,
+        "exit_code": 0,
+        "pass": 9,
+        "skip": 1,
+        "warning": 0,
+    }
     assert [finding["rule_id"] for finding in expected["findings"]] == ["R001", "R002", "R003", "R004", "R005", "R101", "R102", "R103", "R201", "R202"]
     fault = json.loads((ASSET / "expected/fault_matrix.json").read_text(encoding="utf-8"))
     assert set(fault) == {"F001", "F002", "F003", "F004", "F005A", "F005B", "F101", "F102", "F103", "F201", "F202", "F900"}

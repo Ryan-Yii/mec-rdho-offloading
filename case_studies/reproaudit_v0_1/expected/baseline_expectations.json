@@ -12,5 +12,6 @@
     {"rule_id": "R201", "rule_name": "Parameter Claim Consistency", "status": "PASS", "severity": "INFO", "message": "All stated configuration claims match the experiment declaration.", "evidence": {}},
     {"rule_id": "R202", "rule_name": "Best Algorithm Consistency", "status": "SKIP", "severity": "INFO", "message": "No best-algorithm conclusion was supplied.", "evidence": {"candidates": []}}
   ],
+  "summary": {"error": 0, "exit_code": 0, "pass": 9, "skip": 1, "warning": 0},
   "oracle": {"raw": {"row_count": 180}}
 }

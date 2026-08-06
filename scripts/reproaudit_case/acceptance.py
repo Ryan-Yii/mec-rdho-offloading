@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 from .export_case import export_faithful_case
-from .faults import FaultScenario, inject_fault
+from .faults import FaultResult, FaultScenario, inject_fault
 from .oracle import run_independent_oracle
 from .release_runtime import ReleaseCLIError, prepare_reproaudit_runtime, run_reproaudit
 from .source_inventory import CaseContractError, SourceFileRecord, build_source_inventory
@@ -16,6 +16,20 @@ from .source_inventory import CaseContractError, SourceFileRecord, build_source_
 
 class BaselineMismatch(AssertionError):
     """Raised when a structured baseline contract differs."""
+
+
+_RULE_ORDER = (
+    "R001",
+    "R002",
+    "R003",
+    "R004",
+    "R005",
+    "R101",
+    "R102",
+    "R103",
+    "R201",
+    "R202",
+)
 
 
 @dataclass(frozen=True)
@@ -59,16 +73,27 @@ def compare_baseline(report: dict[str, Any], oracle: Any, expected: dict[str, An
     expected_findings = expected.get("findings")
     if not isinstance(actual_findings, list) or not isinstance(expected_findings, list):
         raise BaselineMismatch("findings must be lists")
-    actual_by_rule = {item.get("rule_id"): item for item in actual_findings if isinstance(item, dict)}
-    for expected_finding in expected_findings:
+    if len(actual_findings) != len(expected_findings):
+        raise BaselineMismatch(
+            f"finding count mismatch: expected {len(expected_findings)}, got {len(actual_findings)}"
+        )
+    for index, (actual_finding, expected_finding) in enumerate(
+        zip(actual_findings, expected_findings)
+    ):
+        if not isinstance(actual_finding, dict):
+            raise BaselineMismatch(f"finding[{index}] must be an object")
         if not isinstance(expected_finding, dict):
             raise BaselineMismatch("expected finding must be an object")
         rule_id = expected_finding.get("rule_id")
-        if rule_id not in actual_by_rule:
-            raise BaselineMismatch(f"missing finding {rule_id}")
-        _assert_subset(actual_by_rule[rule_id], expected_finding, f"finding[{rule_id}]")
-    if len(actual_by_rule) != len(expected_findings):
-        raise BaselineMismatch("unexpected finding rule")
+        if actual_finding.get("rule_id") != rule_id:
+            raise BaselineMismatch(
+                f"finding order mismatch at index {index}: expected {rule_id!r}, "
+                f"got {actual_finding.get('rule_id')!r}"
+            )
+        _assert_subset(actual_finding, expected_finding, f"finding[{rule_id}]")
+    if "summary" not in expected:
+        raise BaselineMismatch("expected baseline summary is missing")
+    _assert_subset(report.get("summary"), expected["summary"], "summary")
     oracle_payload = getattr(oracle, "payload", oracle)
     if "oracle" in expected:
         _assert_subset(oracle_payload, _without_generated_at(expected["oracle"]), "oracle")
@@ -84,14 +109,89 @@ def _compare_directories(first: Path, second: Path) -> None:
             raise CaseContractError(f"deterministic output mismatch: {name}")
 
 
-def _observed_nonpass_rule_ids(report: dict[str, Any]) -> set[str]:
+def _failure_severity(fault_id: str, rule_id: str) -> str:
+    if rule_id == "R004" or (rule_id == "R005" and fault_id != "F005B"):
+        return "WARNING"
+    return "ERROR"
+
+
+def _summary_from_findings(findings: list[dict[str, Any]], exit_code: int) -> dict[str, int]:
     return {
-        finding["rule_id"]
-        for finding in report.get("findings", [])
-        if isinstance(finding, dict)
-        and isinstance(finding.get("rule_id"), str)
-        and finding.get("status") != "PASS"
+        "error": sum(
+            item.get("status") == "FAIL" and item.get("severity") == "ERROR"
+            for item in findings
+        ),
+        "exit_code": exit_code,
+        "pass": sum(item.get("status") == "PASS" for item in findings),
+        "skip": sum(item.get("status") == "SKIP" for item in findings),
+        "warning": sum(
+            item.get("status") == "FAIL" and item.get("severity") == "WARNING"
+            for item in findings
+        ),
     }
+
+
+def _validate_fault_report(fault: FaultResult, report: dict[str, Any]) -> None:
+    fault_id = fault.scenario_id
+    if fault_id == "F900":
+        raise BaselineMismatch("F900 produced a normal JSON report")
+    if not isinstance(report, dict):
+        raise BaselineMismatch(f"{fault_id} report must be an object")
+    if report.get("exit_code") != fault.expected_exit_code:
+        raise BaselineMismatch(f"{fault_id} exit code mismatch")
+    findings = report.get("findings")
+    if not isinstance(findings, list) or len(findings) != len(_RULE_ORDER):
+        raise BaselineMismatch(
+            f"{fault_id} must contain exactly {len(_RULE_ORDER)} findings"
+        )
+    actual_order = tuple(
+        finding.get("rule_id") if isinstance(finding, dict) else None
+        for finding in findings
+    )
+    if actual_order != _RULE_ORDER:
+        raise BaselineMismatch(
+            f"{fault_id} finding order mismatch: expected {_RULE_ORDER!r}, got {actual_order!r}"
+        )
+
+    required = set(fault.expected_findings)
+    allowed = set(fault.allowed_cascades)
+    forbidden = set(fault.forbidden_findings)
+    if required | allowed | forbidden != set(_RULE_ORDER):
+        raise BaselineMismatch(f"{fault_id} expectation matrix does not cover every rule")
+    if required & allowed or required & forbidden or allowed & forbidden:
+        raise BaselineMismatch(f"{fault_id} expectation matrix categories overlap")
+
+    for finding in findings:
+        rule_id = finding["rule_id"]
+        actual = (finding.get("status"), finding.get("severity"))
+        if rule_id in required:
+            expected = ("FAIL", _failure_severity(fault_id, rule_id))
+            if actual != expected:
+                raise BaselineMismatch(
+                    f"{fault_id} {rule_id} mismatch: expected {expected!r}, got {actual!r}"
+                )
+        elif rule_id == "R202" and rule_id in allowed:
+            if actual != ("SKIP", "INFO"):
+                raise BaselineMismatch(
+                    f"{fault_id} R202 mismatch: expected ('SKIP', 'INFO'), got {actual!r}"
+                )
+        elif rule_id in allowed:
+            allowed_outcomes = {
+                ("PASS", "INFO"),
+                ("FAIL", _failure_severity(fault_id, rule_id)),
+            }
+            if actual not in allowed_outcomes:
+                raise BaselineMismatch(
+                    f"{fault_id} {rule_id} has invalid allowed-cascade outcome {actual!r}"
+                )
+        elif actual != ("PASS", "INFO"):
+            raise BaselineMismatch(
+                f"{fault_id} forbidden {rule_id} mismatch: expected ('PASS', 'INFO'), "
+                f"got {actual!r}"
+            )
+
+    expected_summary = _summary_from_findings(findings, fault.expected_exit_code)
+    _assert_subset(report.get("summary"), expected_summary, f"{fault_id}.summary")
 
 
 def _validate_expected_input_error(
@@ -99,7 +199,8 @@ def _validate_expected_input_error(
 ) -> None:
     if fault_id != "F900" or expected_exit_code != 3:
         raise error
-    if error.exit_code != 3 or "INPUT_ERROR" not in error.output:
+    expected_output = "INPUT_ERROR: claims.yaml: missing required file"
+    if error.exit_code != 3 or error.output.strip() != expected_output:
         raise BaselineMismatch("F900 did not produce the required input-validation exit")
 
 
@@ -125,49 +226,104 @@ def run_acceptance(
         raise CaseContractError("acceptance output must be outside repository")
     output.mkdir(parents=True, exist_ok=True)
     before = build_source_inventory(root)
-    case_a, case_b = output / "case-a", output / "case-b"
-    export_faithful_case(root, case_a)
-    export_faithful_case(root, case_b)
-    _compare_directories(case_a, case_b)
-    oracle_a = run_independent_oracle(case_a, output / "oracle-a")
-    oracle_b = run_independent_oracle(case_b, output / "oracle-b")
-    if oracle_a != oracle_b:
-        raise CaseContractError("deterministic oracle mismatch")
-    runtime_python = prepare_reproaudit_runtime(
-        Path(wheel), output / "runtime", requirements, wheelhouse, wheelhouse_manifest
-    )
-    baseline_report = run_reproaudit(runtime_python, case_a, output / "baseline-report")
-    expected_path = root / "case_studies/reproaudit_v0_1/expected/baseline_expectations.json"
+    after = None
     try:
-        expected = json.loads(expected_path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise CaseContractError("baseline expectations are missing or invalid") from exc
-    compare_baseline(baseline_report, oracle_a, expected)
-    fault_ids = ("F001", "F002", "F003", "F004", "F005A", "F005B", "F101", "F102", "F103", "F201", "F202", "F900")
-    fault_exit_codes: dict[str, int] = {}
-    for fault_id in fault_ids:
-        fault = inject_fault(case_a, FaultScenario(fault_id), output / "faults" / fault_id)
+        case_a, case_b = output / "case-a", output / "case-b"
+        export_faithful_case(root, case_a)
+        export_faithful_case(root, case_b)
+        _compare_directories(case_a, case_b)
+        oracle_a = run_independent_oracle(case_a, output / "oracle-a")
+        oracle_b = run_independent_oracle(case_b, output / "oracle-b")
+        if oracle_a != oracle_b:
+            raise CaseContractError("deterministic oracle mismatch")
+        runtime_python = prepare_reproaudit_runtime(
+            Path(wheel), output / "runtime", requirements, wheelhouse, wheelhouse_manifest
+        )
+        baseline_report = run_reproaudit(runtime_python, case_a, output / "baseline-report")
+        expected_path = root / "case_studies/reproaudit_v0_1/expected/baseline_expectations.json"
         try:
-            report = run_reproaudit(runtime_python, fault.output_dir, output / "fault-reports" / fault_id)
-        except ReleaseCLIError as exc:
-            _validate_expected_input_error(fault_id, fault.expected_exit_code, exc)
-            fault_exit_codes[fault_id] = exc.exit_code
-            continue
-        fault_exit_codes[fault_id] = int(report.get("exit_code", -1))
-        if report.get("exit_code") != fault.expected_exit_code:
-            raise BaselineMismatch(f"{fault_id} exit code mismatch")
-        observed = _observed_nonpass_rule_ids(report)
-        if not set(fault.expected_findings).issubset(observed):
-            raise BaselineMismatch(f"{fault_id} required finding missing")
-        if set(fault.forbidden_findings) & observed:
-            raise BaselineMismatch(f"{fault_id} forbidden finding observed")
-    after = build_source_inventory(root)
-    if before.files != after.files:
-        raise CaseContractError("canonical source hashes changed during acceptance")
+            expected = json.loads(expected_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise CaseContractError("baseline expectations are missing or invalid") from exc
+        compare_baseline(baseline_report, oracle_a, expected)
+        fault_ids = (
+            "F001",
+            "F002",
+            "F003",
+            "F004",
+            "F005A",
+            "F005B",
+            "F101",
+            "F102",
+            "F103",
+            "F201",
+            "F202",
+            "F900",
+        )
+        fault_exit_codes: dict[str, int] = {}
+        fault_evidence: dict[str, Any] = {}
+        for fault_id in fault_ids:
+            fault = inject_fault(case_a, FaultScenario(fault_id), output / "faults" / fault_id)
+            try:
+                report = run_reproaudit(
+                    runtime_python,
+                    fault.output_dir,
+                    output / "fault-reports" / fault_id,
+                )
+            except ReleaseCLIError as exc:
+                _validate_expected_input_error(fault_id, fault.expected_exit_code, exc)
+                fault_exit_codes[fault_id] = exc.exit_code
+                fault_evidence[fault_id] = {
+                    "exit_code": exc.exit_code,
+                    "input_error": exc.output.strip(),
+                    "normal_json_report": False,
+                }
+                continue
+            _validate_fault_report(fault, report)
+            fault_exit_codes[fault_id] = int(report["exit_code"])
+            fault_evidence[fault_id] = {
+                "exit_code": report["exit_code"],
+                "findings": [
+                    {
+                        "rule_id": finding["rule_id"],
+                        "severity": finding["severity"],
+                        "status": finding["status"],
+                    }
+                    for finding in report["findings"]
+                ],
+                "summary": report["summary"],
+            }
+    finally:
+        after = build_source_inventory(root)
+        if before.files != after.files:
+            raise CaseContractError("canonical source hashes changed during acceptance")
+
+    if after is None:
+        raise CaseContractError("canonical source inventory was not revalidated")
     from .constants import REPROAUDIT_WHEEL_SHA256
-    result = AcceptanceResult(output, before.files, after.files, fault_ids, REPROAUDIT_WHEEL_SHA256, 0)
-    final_payload = {"exit_code": 0, "fault_exit_codes": fault_exit_codes, "fault_ids": list(fault_ids), "wheel_sha256": result.wheel_sha256, "source_hashes": [{"path": item.path, "sha256": item.sha256} for item in after.files]}
-    (output / "acceptance-result.json").write_text(json.dumps(final_payload, sort_keys=True, indent=2) + "\n", encoding="utf-8", newline="\n")
+    result = AcceptanceResult(
+        output,
+        before.files,
+        after.files,
+        fault_ids,
+        REPROAUDIT_WHEEL_SHA256,
+        0,
+    )
+    final_payload = {
+        "exit_code": 0,
+        "fault_evidence": fault_evidence,
+        "fault_exit_codes": fault_exit_codes,
+        "fault_ids": list(fault_ids),
+        "wheel_sha256": result.wheel_sha256,
+        "source_hashes": [
+            {"path": item.path, "sha256": item.sha256} for item in after.files
+        ],
+    }
+    (output / "acceptance-result.json").write_text(
+        json.dumps(final_payload, sort_keys=True, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
     return result
 
 
