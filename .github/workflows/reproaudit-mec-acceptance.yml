@@ -34,7 +34,6 @@ jobs:
           "$RUNNER_TEMP/reproaudit-acceptance-venv/bin/python" -m pip install --no-index --no-deps "${{ inputs.wheel_path }}"
           "$RUNNER_TEMP/reproaudit-acceptance-venv/bin/python" -m pip check
       - name: Run official-wheel acceptance
-        env:
         run: >-
           "$RUNNER_TEMP/reproaudit-acceptance-venv/bin/python" -m scripts.run_reproaudit_acceptance
           --repo-root .

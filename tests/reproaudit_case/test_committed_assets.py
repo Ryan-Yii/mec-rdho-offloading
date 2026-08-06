@@ -40,13 +40,17 @@ def test_committed_claims_match_current_exporter_and_official_shape(tmp_path: Pa
     generated = tmp_path / "generated"
     export_faithful_case(ROOT, generated)
     committed = ASSET / "faithful_baseline" / "claims.yaml"
-    assert (generated / "claims.yaml").read_bytes() == committed.read_bytes()
+    for name in ("experiment.yaml", "claims.yaml", "raw_results.csv", "summary_results.csv"):
+        assert (generated / name).read_bytes() == (ASSET / "faithful_baseline" / name).read_bytes()
+    assert (generated / "source_manifest.json").read_bytes() == (ASSET / "source_manifest.json").read_bytes()
 
     claims = yaml.safe_load(committed.read_text(encoding="utf-8"))
     assert claims["experiment_claims"] == {"runs": 30}
     assert claims["parameter_claims"]["max_iterations"] == 150
     assert claims["reported_results"]["RDHO"]["fitness"] == {"mean": 0.9470}
     assert "parameters" not in claims["experiment_claims"]
+    manifest = json.loads((ASSET / "source_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["claim_traces"][0]["display"] == "0.9470"
 
 
 def test_official_release_schema_accepts_generated_and_committed_claims(tmp_path: Path) -> None:

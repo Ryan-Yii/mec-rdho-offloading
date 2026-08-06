@@ -10,7 +10,7 @@ from pathlib import Path
 from .export_case import export_faithful_case
 from .faults import FaultScenario, inject_fault
 from .oracle import run_independent_oracle
-from .release_runtime import prepare_reproaudit_runtime, run_reproaudit
+from .release_runtime import ReleaseCLIError, prepare_reproaudit_runtime, run_reproaudit
 from .source_inventory import CaseContractError, SourceFileRecord, build_source_inventory
 
 
@@ -94,6 +94,15 @@ def _observed_nonpass_rule_ids(report: dict[str, Any]) -> set[str]:
     }
 
 
+def _validate_expected_input_error(
+    fault_id: str, expected_exit_code: int, error: ReleaseCLIError
+) -> None:
+    if fault_id != "F900" or expected_exit_code != 3:
+        raise error
+    if error.exit_code != 3 or "INPUT_ERROR" not in error.output:
+        raise BaselineMismatch("F900 did not produce the required input-validation exit")
+
+
 def run_acceptance(
     repo_root: Path,
     wheel: Path,
@@ -135,14 +144,16 @@ def run_acceptance(
         raise CaseContractError("baseline expectations are missing or invalid") from exc
     compare_baseline(baseline_report, oracle_a, expected)
     fault_ids = ("F001", "F002", "F003", "F004", "F005A", "F005B", "F101", "F102", "F103", "F201", "F202", "F900")
+    fault_exit_codes: dict[str, int] = {}
     for fault_id in fault_ids:
         fault = inject_fault(case_a, FaultScenario(fault_id), output / "faults" / fault_id)
         try:
             report = run_reproaudit(runtime_python, fault.output_dir, output / "fault-reports" / fault_id)
-        except CaseContractError:
-            if fault_id == "F900" and fault.expected_exit_code == 3:
-                continue
-            raise
+        except ReleaseCLIError as exc:
+            _validate_expected_input_error(fault_id, fault.expected_exit_code, exc)
+            fault_exit_codes[fault_id] = exc.exit_code
+            continue
+        fault_exit_codes[fault_id] = int(report.get("exit_code", -1))
         if report.get("exit_code") != fault.expected_exit_code:
             raise BaselineMismatch(f"{fault_id} exit code mismatch")
         observed = _observed_nonpass_rule_ids(report)
@@ -155,7 +166,7 @@ def run_acceptance(
         raise CaseContractError("canonical source hashes changed during acceptance")
     from .constants import REPROAUDIT_WHEEL_SHA256
     result = AcceptanceResult(output, before.files, after.files, fault_ids, REPROAUDIT_WHEEL_SHA256, 0)
-    final_payload = {"exit_code": 0, "fault_ids": list(fault_ids), "wheel_sha256": result.wheel_sha256, "source_hashes": [{"path": item.path, "sha256": item.sha256} for item in after.files]}
+    final_payload = {"exit_code": 0, "fault_exit_codes": fault_exit_codes, "fault_ids": list(fault_ids), "wheel_sha256": result.wheel_sha256, "source_hashes": [{"path": item.path, "sha256": item.sha256} for item in after.files]}
     (output / "acceptance-result.json").write_text(json.dumps(final_payload, sort_keys=True, indent=2) + "\n", encoding="utf-8", newline="\n")
     return result
 

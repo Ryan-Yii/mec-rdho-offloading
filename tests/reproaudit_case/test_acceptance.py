@@ -60,3 +60,19 @@ def test_fault_comparison_ignores_passing_rules_but_keeps_skip_and_fail() -> Non
         ]
     }
     assert _observed_nonpass_rule_ids(report) == {"R001", "R202"}
+
+
+def test_f900_requires_exact_input_error_exit() -> None:
+    from scripts.reproaudit_case.acceptance import (
+        BaselineMismatch,
+        _validate_expected_input_error,
+    )
+    from scripts.reproaudit_case.release_runtime import ReleaseCLIError
+
+    _validate_expected_input_error(
+        "F900", 3, ReleaseCLIError("input", exit_code=3, output="INPUT_ERROR: missing")
+    )
+    with pytest.raises(BaselineMismatch, match="input-validation exit"):
+        _validate_expected_input_error(
+            "F900", 3, ReleaseCLIError("crash", exit_code=1, output="traceback")
+        )

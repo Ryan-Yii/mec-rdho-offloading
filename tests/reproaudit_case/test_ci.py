@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import yaml
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -13,6 +15,9 @@ def test_manual_workflow_is_dispatch_only_and_official_wheel_bound() -> None:
     assert "--no-index" in text and "--no-deps" in text
     assert "scripts.run_reproaudit_acceptance" in text
     assert "run_main_30" not in text and "experiments.run_main_30" not in text
+    workflow = yaml.safe_load(text)
+    for step in workflow["jobs"]["acceptance"]["steps"]:
+        assert step.get("env", {}) is not None
 
 
 def test_pr_ci_has_no_network_wheel_or_experiment_invocation() -> None:

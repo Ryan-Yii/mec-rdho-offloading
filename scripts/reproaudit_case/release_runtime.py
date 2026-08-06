@@ -15,6 +15,13 @@ from .constants import REPROAUDIT_WHEEL_NAME, REPROAUDIT_WHEEL_SHA256
 from .source_inventory import CaseContractError
 
 
+class ReleaseCLIError(CaseContractError):
+    def __init__(self, message: str, *, exit_code: int, output: str) -> None:
+        super().__init__(message)
+        self.exit_code = exit_code
+        self.output = output
+
+
 def _sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -202,7 +209,11 @@ def run_reproaudit(runtime_python: Path, case_dir: Path, report_dir: Path) -> di
     candidates = sorted(reports.glob("*.json"))
     if not candidates:
         if result.returncode:
-            raise CaseContractError(f"release CLI failed without JSON report (exit {result.returncode}): {result.stdout}")
+            raise ReleaseCLIError(
+                f"release CLI failed without JSON report (exit {result.returncode}): {result.stdout}",
+                exit_code=result.returncode,
+                output=result.stdout,
+            )
         raise CaseContractError("release CLI produced no JSON report")
     try:
         payload = json.loads(candidates[0].read_text(encoding="utf-8"))
@@ -216,6 +227,7 @@ def run_reproaudit(runtime_python: Path, case_dir: Path, report_dir: Path) -> di
 
 __all__ = [
     "install_offline_dependencies",
+    "ReleaseCLIError",
     "prepare_reproaudit_runtime",
     "run_reproaudit",
     "validate_dependency_wheelhouse",

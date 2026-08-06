@@ -70,6 +70,14 @@ def test_run_reproaudit_keeps_console_entry_point_beside_symlinked_venv_python(
         module.run_reproaudit(runtime_python, tmp_path / "case", reports)
 
 
+def test_release_cli_error_preserves_exit_and_output() -> None:
+    from scripts.reproaudit_case.release_runtime import ReleaseCLIError
+
+    error = ReleaseCLIError("failed", exit_code=3, output="INPUT_ERROR: missing")
+    assert error.exit_code == 3
+    assert error.output == "INPUT_ERROR: missing"
+
+
 def test_dependency_wheelhouse_rejects_unpinned_hash_mismatch_and_sdist(tmp_path: Path) -> None:
     from scripts.reproaudit_case.release_runtime import (
         validate_dependency_wheelhouse,
