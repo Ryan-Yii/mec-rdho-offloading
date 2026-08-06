@@ -107,19 +107,27 @@ def run_independent_oracle(case_dir: Path, output_dir: Path) -> OracleReport:
             key = f"{algorithm}/{metric}"
             differences.append(abs(observations[algorithm][metric]["mean"] - summary_observations[key]["mean"]))
             differences.append(abs(observations[algorithm][metric]["std"] - summary_observations[key]["std"]))
-    for claim in claims.get("reported_results", []):
-        try:
-            displayed = Decimal(str(claim["mean"]))
-            actual = Decimal(str(observations[claim["algorithm"]][claim["metric"]]["mean"]))
-        except (KeyError, InvalidOperation) as exc:
-            raise CaseContractError("invalid oracle claim") from exc
-        differences.append(float(abs(actual - displayed)))
+    reported_results = claims.get("reported_results", {})
+    if not isinstance(reported_results, dict):
+        raise CaseContractError("invalid oracle reported results")
+    entered_count = 0
+    for algorithm, metric_claims in reported_results.items():
+        if not isinstance(metric_claims, dict):
+            raise CaseContractError("invalid oracle claim")
+        for metric, claim in metric_claims.items():
+            try:
+                displayed = Decimal(str(claim["mean"]))
+                actual = Decimal(str(observations[algorithm][metric]["mean"]))
+            except (KeyError, TypeError, InvalidOperation) as exc:
+                raise CaseContractError("invalid oracle claim") from exc
+            differences.append(float(abs(actual - displayed)))
+            entered_count += 1
     payload: dict[str, Any] = {
         "schema_version": "1.0",
         "raw": {"row_count": len(raw), "algorithms": algorithms, "statuses": statuses, "unique_keys": len(keys)},
         "observations": observations,
         "summary": {"row_count": len(summary), "official": summary_observations},
-        "claims": {"entered_count": len(claims.get("reported_results", [])), "max_absolute_difference": max(differences)},
+        "claims": {"entered_count": entered_count, "max_absolute_difference": max(differences)},
     }
     output.mkdir(parents=True, exist_ok=True)
     report_path = output / "oracle-report.json"

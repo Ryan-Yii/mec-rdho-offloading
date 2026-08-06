@@ -107,9 +107,9 @@ def inject_fault(case_dir: Path, scenario: FaultScenario, output_dir: Path) -> F
         path = destination / "claims.yaml"
         payload = yaml.safe_load(path.read_text(encoding="utf-8"))
         if scenario_id == "F103":
-            next(item for item in payload["reported_results"] if item["algorithm"] == "RDHO" and item["metric"] == "fitness")["mean"] = "0.9480"
+            payload["reported_results"]["RDHO"]["fitness"]["mean"] = 0.9480
         else:
-            payload["experiment_claims"]["parameters"]["max_iterations"] = 151
+            payload["parameter_claims"]["max_iterations"] = 151
         path.write_text(yaml.safe_dump(payload, sort_keys=False, allow_unicode=True), encoding="utf-8")
         changed.append("claims.yaml")
     else:

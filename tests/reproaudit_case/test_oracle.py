@@ -31,6 +31,7 @@ def test_oracle_is_independent_and_deterministic(tmp_path: Path) -> None:
     payload = json.loads((first / "oracle-report.json").read_text(encoding="utf-8"))
     assert payload["raw"]["row_count"] == 180
     assert payload["raw"]["algorithms"] == ["RDHO", "RIME", "DBO", "TLBO-HHO", "CWTSSA", "Greedy-ED"]
+    assert payload["claims"]["entered_count"] == 12
     assert payload["claims"]["max_absolute_difference"] == pytest.approx(0.0000482372898956)
     assert 'reproaudit' not in module.__dict__
 
