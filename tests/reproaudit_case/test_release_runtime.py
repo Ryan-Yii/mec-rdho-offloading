@@ -40,6 +40,36 @@ def test_run_reproaudit_requires_installed_console_entry_point(tmp_path: Path) -
         run_reproaudit(runtime_python, tmp_path / "case", tmp_path / "reports")
 
 
+def test_run_reproaudit_keeps_console_entry_point_beside_symlinked_venv_python(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import scripts.reproaudit_case.release_runtime as module
+
+    base_python = tmp_path / "base" / "python3.11"
+    base_python.parent.mkdir()
+    base_python.write_text("", encoding="utf-8")
+    runtime_python = tmp_path / "runtime" / "bin" / "python"
+    runtime_python.parent.mkdir(parents=True)
+    runtime_python.symlink_to(base_python)
+    cli = runtime_python.parent / "reproaudit"
+    cli.write_text("", encoding="utf-8")
+    monkeypatch.setattr(
+        module,
+        "_run",
+        lambda command, *, cwd: type(
+            "Result", (), {"returncode": 0, "stdout": "", "args": command}
+        )(),
+    )
+    reports = tmp_path / "reports"
+    monkeypatch.setattr(
+        module.Path,
+        "glob",
+        lambda self, pattern: [],
+    )
+    with pytest.raises(CaseContractError, match="produced no JSON report"):
+        module.run_reproaudit(runtime_python, tmp_path / "case", reports)
+
+
 def test_dependency_wheelhouse_rejects_unpinned_hash_mismatch_and_sdist(tmp_path: Path) -> None:
     from scripts.reproaudit_case.release_runtime import (
         validate_dependency_wheelhouse,

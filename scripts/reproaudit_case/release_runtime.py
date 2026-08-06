@@ -189,7 +189,7 @@ def prepare_reproaudit_runtime(
 
 
 def run_reproaudit(runtime_python: Path, case_dir: Path, report_dir: Path) -> dict[str, Any]:
-    runtime_python = Path(runtime_python).resolve()
+    runtime_python = Path(runtime_python).absolute()
     if not runtime_python.is_file():
         raise CaseContractError("runtime Python is missing")
     case = Path(case_dir).resolve()
