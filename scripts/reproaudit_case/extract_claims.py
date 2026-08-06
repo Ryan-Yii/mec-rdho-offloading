@@ -100,16 +100,18 @@ def extract_claims(repo_root: Path, destination: Path) -> tuple[dict[str, Any], 
     traces: list[dict[str, Any]] = []
     for index, (source_name, fitness, csr) in enumerate(table, start=1):
         algorithm = _normalize_algorithm(source_name)
-        fitness = _decimal_value(fitness, f"{algorithm}.fitness")
-        csr = _decimal_value(csr, f"{algorithm}.csr")
+        fitness_display = fitness
+        csr_display = csr
+        fitness = _decimal_value(fitness_display, f"{algorithm}.fitness")
+        csr = _decimal_value(csr_display, f"{algorithm}.csr")
         reported[algorithm] = {
             "fitness": {"mean": fitness},
             "csr": {"mean": csr},
         }
         exact = lines[table_start + index + 1]
         traces.extend((
-            {"claim_id": f"CRES-{2 * index - 1:03d}", "claim_type": "reported_fitness", "source_path": README_PATH, "source_line": table_start + index + 2, "source_text": exact, "algorithm": algorithm, "metric": "fitness", "display": fitness, "disposition": "entered"},
-            {"claim_id": f"CRES-{2 * index:03d}", "claim_type": "reported_csr", "source_path": README_PATH, "source_line": table_start + index + 2, "source_text": exact, "algorithm": algorithm, "metric": "csr", "display": csr, "disposition": "entered"},
+            {"claim_id": f"CRES-{2 * index - 1:03d}", "claim_type": "reported_fitness", "source_path": README_PATH, "source_line": table_start + index + 2, "source_text": exact, "algorithm": algorithm, "metric": "fitness", "display": fitness_display, "disposition": "entered"},
+            {"claim_id": f"CRES-{2 * index:03d}", "claim_type": "reported_csr", "source_path": README_PATH, "source_line": table_start + index + 2, "source_text": exact, "algorithm": algorithm, "metric": "csr", "display": csr_display, "disposition": "entered"},
         ))
     config_match = re.search(r"canonical configuration uses (\d+) devices, (\d+) edge servers, (\d+) cloud servers, (\d+) tasks, population (\d+), (\d+) iterations, and (\d+) paired scenarios", text)
     if not config_match:

@@ -191,6 +191,18 @@ def test_faithful_export_is_complete_deterministic_and_source_safe(tmp_path: Pat
     assert "faithful_baseline" in manifest
 
 
+def test_faithful_export_materializes_official_claim_shape(tmp_path: Path) -> None:
+    import scripts.reproaudit_case.export_case as module
+
+    case = tmp_path / "case"
+    module.export_faithful_case(ROOT, case)
+    claims = yaml.safe_load((case / "claims.yaml").read_text(encoding="utf-8"))
+    assert claims["experiment_claims"] == {"runs": 30}
+    assert claims["parameter_claims"]["max_iterations"] == 150
+    assert claims["reported_results"]["RDHO"]["fitness"] == {"mean": 0.9470}
+    assert "parameters" not in claims["experiment_claims"]
+
+
 def test_faithful_export_rejects_nonempty_and_source_contained_output(tmp_path: Path) -> None:
     import scripts.reproaudit_case.export_case as module
 
