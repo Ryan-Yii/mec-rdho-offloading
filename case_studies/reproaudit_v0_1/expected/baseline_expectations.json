@@ -1,0 +1,17 @@
+{
+  "exit_code": 0,
+  "findings": [
+    {"rule_id": "R001", "rule_name": "Expected Run Count", "status": "PASS", "severity": "INFO", "message": "All declared algorithms have 30 successful runs.", "evidence": {"counted_status": "success"}},
+    {"rule_id": "R002", "rule_name": "Duplicate Run Key", "status": "PASS", "severity": "INFO", "message": "Every raw run key is unique.", "evidence": {"duplicate_keys": []}},
+    {"rule_id": "R003", "rule_name": "Common Seed Coverage", "status": "PASS", "severity": "INFO", "message": "Declared algorithms share identical successful seed coverage.", "evidence": {}},
+    {"rule_id": "R004", "rule_name": "Declared Algorithm Coverage", "status": "PASS", "severity": "INFO", "message": "Raw results exactly cover the declared algorithms.", "evidence": {"missing_declared_algorithms": [], "undeclared_raw_algorithms": []}},
+    {"rule_id": "R005", "rule_name": "Invalid or Failed Runs", "status": "PASS", "severity": "INFO", "message": "All raw rows are successful and contain valid declared metrics.", "evidence": {"invalid_metrics": [], "run_keys_by_status": {}}},
+    {"rule_id": "R101", "rule_name": "Recomputed Mean Consistency", "status": "PASS", "severity": "INFO", "message": "All comparable summary means match recomputed values.", "evidence": {}},
+    {"rule_id": "R102", "rule_name": "Recomputed Standard Deviation Consistency", "status": "PASS", "severity": "INFO", "message": "All comparable sample standard deviations match recomputed values.", "evidence": {}},
+    {"rule_id": "R103", "rule_name": "Reported Result Consistency", "status": "PASS", "severity": "INFO", "message": "All comparable reported result claims match usable raw values.", "evidence": {}},
+    {"rule_id": "R201", "rule_name": "Parameter Claim Consistency", "status": "PASS", "severity": "INFO", "message": "All stated configuration claims match the experiment declaration.", "evidence": {}},
+    {"rule_id": "R202", "rule_name": "Best Algorithm Consistency", "status": "SKIP", "severity": "INFO", "message": "No best-algorithm conclusion was supplied.", "evidence": {"candidates": []}}
+  ],
+  "summary": {"error": 0, "exit_code": 0, "pass": 9, "skip": 1, "warning": 0},
+  "oracle": {"raw": {"row_count": 180}}
+}

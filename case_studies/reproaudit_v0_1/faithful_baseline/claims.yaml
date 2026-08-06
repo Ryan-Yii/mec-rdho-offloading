@@ -1,0 +1,44 @@
+schema_version: '1.0'
+experiment_claims:
+  runs: 30
+parameter_claims:
+  mobile_devices: 20
+  edge_servers: 4
+  cloud_servers: 2
+  task_count: 40
+  population_size: 50
+  max_iterations: 150
+reported_results:
+  RDHO:
+    fitness:
+      mean: 0.947
+    csr:
+      mean: 0.7206
+  RIME:
+    fitness:
+      mean: 1.5848
+    csr:
+      mean: 0.5133
+  DBO:
+    fitness:
+      mean: 1.1837
+    csr:
+      mean: 0.6286
+  TLBO-HHO:
+    fitness:
+      mean: 1.2263
+    csr:
+      mean: 0.5989
+  CWTSSA:
+    fitness:
+      mean: 1.2473
+    csr:
+      mean: 0.5883
+  Greedy-ED:
+    fitness:
+      mean: 1.0932
+    csr:
+      mean: 0.6481
+audit:
+  absolute_tolerance: 5.0e-05
+  relative_tolerance: 0.0

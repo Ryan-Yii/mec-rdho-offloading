@@ -1,0 +1,14 @@
+{
+  "F001": {"required": ["R001"], "allowed": ["R003", "R005", "R101", "R102", "R103", "R202"], "forbidden": ["R002", "R004", "R201"], "exit_code": 2},
+  "F002": {"required": ["R002"], "allowed": ["R003", "R202"], "forbidden": ["R001", "R004", "R005", "R101", "R102", "R103", "R201"], "exit_code": 2},
+  "F003": {"required": ["R003"], "allowed": ["R202"], "forbidden": ["R001", "R002", "R004", "R005", "R101", "R102", "R103", "R201"], "exit_code": 2},
+  "F004": {"required": ["R004"], "allowed": ["R202"], "forbidden": ["R001", "R002", "R003", "R005", "R101", "R102", "R103", "R201"], "exit_code": 1},
+  "F005A": {"required": ["R005"], "allowed": ["R001", "R003", "R101", "R102", "R103", "R202"], "forbidden": ["R002", "R004", "R201"], "exit_code": 2},
+  "F005B": {"required": ["R005"], "allowed": ["R101", "R102", "R103", "R202"], "forbidden": ["R001", "R002", "R003", "R004", "R201"], "exit_code": 2},
+  "F101": {"required": ["R101"], "allowed": ["R202"], "forbidden": ["R001", "R002", "R003", "R004", "R005", "R102", "R103", "R201"], "exit_code": 2},
+  "F102": {"required": ["R102"], "allowed": ["R202"], "forbidden": ["R001", "R002", "R003", "R004", "R005", "R101", "R103", "R201"], "exit_code": 2},
+  "F103": {"required": ["R103"], "allowed": ["R202"], "forbidden": ["R001", "R002", "R003", "R004", "R005", "R101", "R102", "R201"], "exit_code": 2},
+  "F201": {"required": ["R201"], "allowed": ["R202"], "forbidden": ["R001", "R002", "R003", "R004", "R005", "R101", "R102", "R103"], "exit_code": 2},
+  "F202": {"required": ["R202"], "allowed": [], "forbidden": ["R001", "R002", "R003", "R004", "R005", "R101", "R102", "R103", "R201"], "exit_code": 2},
+  "F900": {"required": [], "allowed": [], "forbidden": ["R001", "R002", "R003", "R004", "R005", "R101", "R102", "R103", "R201", "R202"], "exit_code": 3}
+}

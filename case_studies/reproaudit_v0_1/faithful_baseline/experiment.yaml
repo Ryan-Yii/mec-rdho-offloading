@@ -1,0 +1,29 @@
+schema_version: '1.0'
+experiment:
+  name: MEC main 40-task paired benchmark
+  task: MEC task offloading and CPU allocation
+execution:
+  runs: 30
+  seed_column: seed
+algorithms:
+- RDHO
+- RIME
+- DBO
+- TLBO-HHO
+- CWTSSA
+- Greedy-ED
+parameters:
+  mobile_devices: 20
+  edge_servers: 4
+  cloud_servers: 2
+  task_count: 40
+  population_size: 50
+  max_iterations: 150
+  seed_start: 20260701
+metrics:
+  fitness:
+    direction: minimize
+    primary: true
+  csr:
+    direction: maximize
+    primary: false

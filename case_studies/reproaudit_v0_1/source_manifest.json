@@ -1,0 +1,359 @@
+{
+  "algorithms": [
+    "RDHO",
+    "RIME",
+    "DBO",
+    "TLBO-HHO",
+    "CWTSSA",
+    "Greedy-ED"
+  ],
+  "case_id": "faithful_baseline",
+  "claim_traces": [
+    {
+      "algorithm": "RDHO",
+      "claim_id": "CRES-001",
+      "claim_type": "reported_fitness",
+      "display": "0.9470",
+      "disposition": "entered",
+      "metric": "fitness",
+      "source_line": 29,
+      "source_path": "README.md",
+      "source_text": "| RDHO-full | 0.9470 | 0.4468 | 0.9244 | 0.7206 | 7.8306 | 10232 |"
+    },
+    {
+      "algorithm": "RDHO",
+      "claim_id": "CRES-002",
+      "claim_type": "reported_csr",
+      "display": "0.7206",
+      "disposition": "entered",
+      "metric": "csr",
+      "source_line": 29,
+      "source_path": "README.md",
+      "source_text": "| RDHO-full | 0.9470 | 0.4468 | 0.9244 | 0.7206 | 7.8306 | 10232 |"
+    },
+    {
+      "algorithm": "RIME",
+      "claim_id": "CRES-003",
+      "claim_type": "reported_fitness",
+      "display": "1.5848",
+      "disposition": "entered",
+      "metric": "fitness",
+      "source_line": 30,
+      "source_path": "README.md",
+      "source_text": "| RIME | 1.5848 | 0.3551 | 0.8385 | 0.5133 | 5.9657 | 7551 |"
+    },
+    {
+      "algorithm": "RIME",
+      "claim_id": "CRES-004",
+      "claim_type": "reported_csr",
+      "display": "0.5133",
+      "disposition": "entered",
+      "metric": "csr",
+      "source_line": 30,
+      "source_path": "README.md",
+      "source_text": "| RIME | 1.5848 | 0.3551 | 0.8385 | 0.5133 | 5.9657 | 7551 |"
+    },
+    {
+      "algorithm": "DBO",
+      "claim_id": "CRES-005",
+      "claim_type": "reported_fitness",
+      "display": "1.1837",
+      "disposition": "entered",
+      "metric": "fitness",
+      "source_line": 31,
+      "source_path": "README.md",
+      "source_text": "| DBO | 1.1837 | 0.4145 | 0.9161 | 0.6286 | 5.8198 | 7551 |"
+    },
+    {
+      "algorithm": "DBO",
+      "claim_id": "CRES-006",
+      "claim_type": "reported_csr",
+      "display": "0.6286",
+      "disposition": "entered",
+      "metric": "csr",
+      "source_line": 31,
+      "source_path": "README.md",
+      "source_text": "| DBO | 1.1837 | 0.4145 | 0.9161 | 0.6286 | 5.8198 | 7551 |"
+    },
+    {
+      "algorithm": "TLBO-HHO",
+      "claim_id": "CRES-007",
+      "claim_type": "reported_fitness",
+      "display": "1.2263",
+      "disposition": "entered",
+      "metric": "fitness",
+      "source_line": 32,
+      "source_path": "README.md",
+      "source_text": "| TLBO-HHO | 1.2263 | 0.4070 | 0.9098 | 0.5989 | 5.7114 | 7551 |"
+    },
+    {
+      "algorithm": "TLBO-HHO",
+      "claim_id": "CRES-008",
+      "claim_type": "reported_csr",
+      "display": "0.5989",
+      "disposition": "entered",
+      "metric": "csr",
+      "source_line": 32,
+      "source_path": "README.md",
+      "source_text": "| TLBO-HHO | 1.2263 | 0.4070 | 0.9098 | 0.5989 | 5.7114 | 7551 |"
+    },
+    {
+      "algorithm": "CWTSSA",
+      "claim_id": "CRES-009",
+      "claim_type": "reported_fitness",
+      "display": "1.2473",
+      "disposition": "entered",
+      "metric": "fitness",
+      "source_line": 33,
+      "source_path": "README.md",
+      "source_text": "| CWTSSA | 1.2473 | 0.4079 | 0.9140 | 0.5883 | 5.6783 | 7551 |"
+    },
+    {
+      "algorithm": "CWTSSA",
+      "claim_id": "CRES-010",
+      "claim_type": "reported_csr",
+      "display": "0.5883",
+      "disposition": "entered",
+      "metric": "csr",
+      "source_line": 33,
+      "source_path": "README.md",
+      "source_text": "| CWTSSA | 1.2473 | 0.4079 | 0.9140 | 0.5883 | 5.6783 | 7551 |"
+    },
+    {
+      "algorithm": "Greedy-ED",
+      "claim_id": "CRES-011",
+      "claim_type": "reported_fitness",
+      "display": "1.0932",
+      "disposition": "entered",
+      "metric": "fitness",
+      "source_line": 34,
+      "source_path": "README.md",
+      "source_text": "| Greedy-ED | 1.0932 | 0.4282 | 0.9164 | 0.6481 | 0.5069 | 681 |"
+    },
+    {
+      "algorithm": "Greedy-ED",
+      "claim_id": "CRES-012",
+      "claim_type": "reported_csr",
+      "display": "0.6481",
+      "disposition": "entered",
+      "metric": "csr",
+      "source_line": 34,
+      "source_path": "README.md",
+      "source_text": "| Greedy-ED | 1.0932 | 0.4282 | 0.9164 | 0.6481 | 0.5069 | 681 |"
+    },
+    {
+      "claim_id": "CCFG-001",
+      "claim_type": "config",
+      "disposition": "entered",
+      "normalized": {
+        "runs": 30
+      },
+      "source_line": 25,
+      "source_path": "README.md",
+      "source_text": "canonical configuration uses 20 devices, 4 edge servers, 2 cloud servers, 40 tasks, population 50, 150 iterations, and 30 paired scenarios"
+    },
+    {
+      "claim_id": "CCFG-002",
+      "claim_type": "config",
+      "disposition": "entered",
+      "normalized": {
+        "mobile_devices": 20
+      },
+      "source_line": 25,
+      "source_path": "README.md",
+      "source_text": "canonical configuration uses 20 devices, 4 edge servers, 2 cloud servers, 40 tasks, population 50, 150 iterations, and 30 paired scenarios"
+    },
+    {
+      "claim_id": "CCFG-003",
+      "claim_type": "config",
+      "disposition": "entered",
+      "normalized": {
+        "edge_servers": 4
+      },
+      "source_line": 25,
+      "source_path": "README.md",
+      "source_text": "canonical configuration uses 20 devices, 4 edge servers, 2 cloud servers, 40 tasks, population 50, 150 iterations, and 30 paired scenarios"
+    },
+    {
+      "claim_id": "CCFG-004",
+      "claim_type": "config",
+      "disposition": "entered",
+      "normalized": {
+        "cloud_servers": 2
+      },
+      "source_line": 25,
+      "source_path": "README.md",
+      "source_text": "canonical configuration uses 20 devices, 4 edge servers, 2 cloud servers, 40 tasks, population 50, 150 iterations, and 30 paired scenarios"
+    },
+    {
+      "claim_id": "CCFG-005",
+      "claim_type": "config",
+      "disposition": "entered",
+      "normalized": {
+        "task_count": 40
+      },
+      "source_line": 25,
+      "source_path": "README.md",
+      "source_text": "canonical configuration uses 20 devices, 4 edge servers, 2 cloud servers, 40 tasks, population 50, 150 iterations, and 30 paired scenarios"
+    },
+    {
+      "claim_id": "CCFG-006",
+      "claim_type": "config",
+      "disposition": "entered",
+      "normalized": {
+        "population_size": 50
+      },
+      "source_line": 25,
+      "source_path": "README.md",
+      "source_text": "canonical configuration uses 20 devices, 4 edge servers, 2 cloud servers, 40 tasks, population 50, 150 iterations, and 30 paired scenarios"
+    },
+    {
+      "claim_id": "CCFG-007",
+      "claim_type": "config",
+      "disposition": "entered",
+      "normalized": {
+        "max_iterations": 150
+      },
+      "source_line": 25,
+      "source_path": "README.md",
+      "source_text": "canonical configuration uses 20 devices, 4 edge servers, 2 cloud servers, 40 tasks, population 50, 150 iterations, and 30 paired scenarios"
+    },
+    {
+      "claim_id": "CWIN-001",
+      "claim_type": "candidate_conclusion",
+      "disposition": "R202_SKIP",
+      "source_line": 83,
+      "source_path": "README.md",
+      "source_text": "RDHO-full beats each configured main baseline in all 30 paired scenarios"
+    }
+  ],
+  "files": [
+    {
+      "columns": [],
+      "path": "configs/main_40tasks.yaml",
+      "sha256": "d99ba17554e67f6d1ad9aef9bbec9a4470b5b6bde8c77309ed82951e159fe8c4",
+      "shape": null,
+      "size_bytes": 351
+    },
+    {
+      "columns": [
+        "run_id",
+        "seed",
+        "algorithm",
+        "fitness",
+        "base_objective",
+        "penalty",
+        "search_fitness",
+        "energy",
+        "delay",
+        "aoi",
+        "qoe",
+        "fairness",
+        "csr",
+        "hard_feasible",
+        "capacity_utilisation_mean",
+        "capacity_utilisation_max",
+        "assignment_unique",
+        "runtime",
+        "nfe",
+        "pre_refinement_fitness",
+        "local_refinement_gain"
+      ],
+      "path": "results/v2/raw/main_30_raw_results.csv",
+      "sha256": "f885d8dd171e277d351ef268449f0aa5179a26f6e9c66256d4596d37a360c639",
+      "shape": [
+        180,
+        21
+      ],
+      "size_bytes": 51525
+    },
+    {
+      "columns": [
+        "algorithm",
+        "fitness_mean",
+        "fitness_std",
+        "fitness",
+        "base_objective_mean",
+        "base_objective_std",
+        "base_objective",
+        "penalty_mean",
+        "penalty_std",
+        "penalty",
+        "search_fitness_mean",
+        "search_fitness_std",
+        "search_fitness",
+        "energy_mean",
+        "energy_std",
+        "energy",
+        "delay_mean",
+        "delay_std",
+        "delay",
+        "aoi_mean",
+        "aoi_std",
+        "aoi",
+        "qoe_mean",
+        "qoe_std",
+        "qoe",
+        "fairness_mean",
+        "fairness_std",
+        "fairness",
+        "csr_mean",
+        "csr_std",
+        "csr",
+        "hard_feasible_mean",
+        "hard_feasible_std",
+        "hard_feasible",
+        "capacity_utilisation_mean_mean",
+        "capacity_utilisation_mean_std",
+        "capacity_utilisation_mean",
+        "capacity_utilisation_max_mean",
+        "capacity_utilisation_max_std",
+        "capacity_utilisation_max",
+        "assignment_unique_mean",
+        "assignment_unique_std",
+        "assignment_unique",
+        "runtime_mean",
+        "runtime_std",
+        "runtime",
+        "nfe_mean",
+        "nfe_std",
+        "nfe",
+        "pre_refinement_fitness_mean",
+        "pre_refinement_fitness_std",
+        "pre_refinement_fitness",
+        "local_refinement_gain_mean",
+        "local_refinement_gain_std",
+        "local_refinement_gain"
+      ],
+      "path": "results/v2/summary/main_30_summary_mean_std.csv",
+      "sha256": "751a936d794c642f640d6d9ae0309b153d728932c27e077c5188861feafa28d6",
+      "shape": [
+        6,
+        55
+      ],
+      "size_bytes": 6734
+    },
+    {
+      "columns": [],
+      "path": "README.md",
+      "sha256": "519b055257d1525806d0fbb3edf72f58848ee6ecc96112544158e93eb8f01cb6",
+      "shape": null,
+      "size_bytes": 9027
+    },
+    {
+      "columns": [],
+      "path": "docs/experiment_protocol_v2.md",
+      "sha256": "c1db229a76a50c6269e1417a521135056cfbdfb29556d1c368d3e96a60a1fa42",
+      "shape": null,
+      "size_bytes": 2432
+    }
+  ],
+  "generated_at_policy": "omitted_for_byte_determinism",
+  "mec_commit": "b8abb436f215a9b2f4d646cf5fc0cf048174b68d",
+  "metrics": [
+    "fitness",
+    "csr"
+  ],
+  "status_mapping": "all canonical source rows mapped to success",
+  "status_source": "absent"
+}
