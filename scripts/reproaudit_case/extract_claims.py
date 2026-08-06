@@ -64,14 +64,14 @@ def _normalize_algorithm(name: str) -> str:
     return name
 
 
-def _decimal_text(value: str, label: str) -> str:
+def _decimal_value(value: str, label: str) -> float:
     try:
         number = Decimal(value)
     except InvalidOperation as exc:
         raise CaseContractError(f"invalid README decimal for {label}") from exc
     if not number.is_finite():
         raise CaseContractError(f"nonfinite README decimal for {label}")
-    return value
+    return float(number)
 
 
 def _write_claims(path: Path, payload: dict[str, Any]) -> Path:
@@ -96,16 +96,16 @@ def extract_claims(repo_root: Path, destination: Path) -> tuple[dict[str, Any], 
     table = _README_TABLE(text)
     lines = text.splitlines()
     table_start = lines.index(_TABLE_HEADER)
-    reported: list[dict[str, str]] = []
+    reported: dict[str, dict[str, dict[str, float]]] = {}
     traces: list[dict[str, Any]] = []
     for index, (source_name, fitness, csr) in enumerate(table, start=1):
         algorithm = _normalize_algorithm(source_name)
-        fitness = _decimal_text(fitness, f"{algorithm}.fitness")
-        csr = _decimal_text(csr, f"{algorithm}.csr")
-        reported.extend((
-            {"algorithm": algorithm, "metric": "fitness", "mean": fitness},
-            {"algorithm": algorithm, "metric": "csr", "mean": csr},
-        ))
+        fitness = _decimal_value(fitness, f"{algorithm}.fitness")
+        csr = _decimal_value(csr, f"{algorithm}.csr")
+        reported[algorithm] = {
+            "fitness": {"mean": fitness},
+            "csr": {"mean": csr},
+        }
         exact = lines[table_start + index + 1]
         traces.extend((
             {"claim_id": f"CRES-{2 * index - 1:03d}", "claim_type": "reported_fitness", "source_path": README_PATH, "source_line": table_start + index + 2, "source_text": exact, "algorithm": algorithm, "metric": "fitness", "display": fitness, "disposition": "entered"},
@@ -115,14 +115,27 @@ def extract_claims(repo_root: Path, destination: Path) -> tuple[dict[str, Any], 
     if not config_match:
         raise CaseContractError("README configuration claims are missing")
     devices, edge, cloud, tasks, population, iterations, runs = (int(value) for value in config_match.groups())
-    config_claims = {"runs": runs, "parameters": {"mobile_devices": devices, "edge_servers": edge, "cloud_servers": cloud, "task_count": tasks, "population_size": population, "max_iterations": iterations}}
+    parameter_claims = {
+        "mobile_devices": devices,
+        "edge_servers": edge,
+        "cloud_servers": cloud,
+        "task_count": tasks,
+        "population_size": population,
+        "max_iterations": iterations,
+    }
     for number, (name, value) in enumerate((("runs", runs), ("mobile_devices", devices), ("edge_servers", edge), ("cloud_servers", cloud), ("task_count", tasks), ("population_size", population), ("max_iterations", iterations)), start=1):
         traces.append({"claim_id": f"CCFG-{number:03d}", "claim_type": "config", "source_path": README_PATH, "source_line": config_match.string[:config_match.start()].count("\n") + 1, "source_text": config_match.group(0), "normalized": {name: value}, "disposition": "entered"})
     conclusion = "RDHO-full beats each configured main baseline in all 30 paired scenarios"
     if conclusion not in text:
         raise CaseContractError("README candidate conclusion is missing")
     traces.append({"claim_id": "CWIN-001", "claim_type": "candidate_conclusion", "source_path": README_PATH, "source_line": text[: text.index(conclusion)].count("\n") + 1, "source_text": conclusion, "disposition": "R202_SKIP"})
-    payload = {"schema_version": "1.0", "experiment_claims": config_claims, "reported_results": reported, "audit": {"absolute_tolerance": 0.00005, "relative_tolerance": 0.0}}
+    payload = {
+        "schema_version": "1.0",
+        "experiment_claims": {"runs": runs},
+        "parameter_claims": parameter_claims,
+        "reported_results": reported,
+        "audit": {"absolute_tolerance": 0.00005, "relative_tolerance": 0.0},
+    }
     _write_claims(Path(destination), payload)
     return tuple(traces)
 
